@@ -74,7 +74,29 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
   #bar{flex-direction:column;padding:8px 10px 8px 4px;overflow:auto}
   .tb{min-height:44px;flex-direction:row;gap:6px}
 }
-@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on{animation:none}}
+/* Endless Milestone Badges */
+.badges-box{background:#ebd8b0;border:1px solid #c4a46a;border-radius:14px;padding:10px 12px;margin:10px 0 8px}
+.badges-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.badges-title{font:700 12px/1.2 "Segoe UI",system-ui,sans-serif;text-transform:uppercase;letter-spacing:.06em;color:#5a2a18}
+.badges-count{font:700 12px/1.2 "Segoe UI",system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#7a5638}
+.badges-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.badge-btn{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:56px;min-width:44px;padding:6px 2px;border:1.5px solid #c2a875;border-radius:10px;background:#f5ede0;color:var(--paper-ink);cursor:pointer;transition:transform .15s,border-color .15s}
+.badge-btn:hover{background:#fff;border-color:#a63f27}
+.badge-btn:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.badge-btn.sel{border-color:#a63f27;box-shadow:0 0 0 1px #a63f27,0 2px 6px rgba(166,63,39,.25)}
+.badge-btn.unlocked{background:#fdfaf4;border-color:#b8935a}
+.badge-btn.locked{opacity:.65;background:#e5d4b4}
+.badge-svg{width:28px;height:28px;display:block;flex:none}
+.badge-lvl{font:700 11px/1 "Segoe UI",sans-serif;letter-spacing:.02em;color:#5a2a18}
+.badge-btn.locked .badge-lvl{color:#7a6551}
+.badge-detail{margin-top:8px;padding-top:6px;border-top:1px dashed #c4a46a;font-size:12px;line-height:1.3;color:#5b4a36;text-align:center;min-height:32px;display:flex;flex-direction:column;justify-content:center}
+.badge-detail b{color:#5a2a18;font-size:13px}
+.badge-banner{margin:8px 0 10px;padding:10px 12px;border-radius:12px;background:#fff8ec;border:1.5px solid #d6453d;display:flex;align-items:center;gap:10px;box-shadow:0 4px 12px rgba(166,63,39,.18);animation:pop .22s ease-out}
+.badge-banner .bb-icon{flex:none;width:34px;height:34px}
+.badge-banner .bb-info{flex:1;min-width:0;text-align:left}
+.badge-banner .bb-info b{display:block;font-size:14px;color:#5a2a18;line-height:1.2}
+.badge-banner .bb-info span{display:block;font-size:12px;color:#7a5638;line-height:1.2;margin-top:2px}
+@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on,.badge-banner{animation:none}.badge-btn{transition:none}}
 </style>
 </head>
 <body>
@@ -104,6 +126,14 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
     <p class="sub" id="mSub"></p>
     <button class="btn" id="bDaily"></button>
     <button class="btn" id="bEndless"></button>
+    <div class="badges-box" id="mBadges" role="region" aria-labelledby="tBadgesTitle">
+      <div class="badges-head">
+        <span class="badges-title" id="tBadgesTitle"></span>
+        <span class="badges-count" id="vBadgesCount"></span>
+      </div>
+      <div class="badges-grid" id="mBadgeList"></div>
+      <div class="badge-detail" id="mBadgeDetail" aria-live="polite"></div>
+    </div>
     <button class="btn alt" id="bHow"></button>
     <div class="mini"><button id="mLang"></button><button id="mSound"></button></div>
   </div>
@@ -120,6 +150,7 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
   <div class="panel">
     <h2 id="rTitle"></h2>
     <div class="big-stars" id="rStars"></div>
+    <div id="rMilestone" class="badge-banner" style="display:none" role="status" aria-live="polite"></div>
     <p class="res-line" id="rLine"></p>
     <div class="share-prev" id="rShare"></div>
     <button class="btn" id="bShare" style="text-align:center"></button>
@@ -548,6 +579,9 @@ const STR = {
     resLine: '{m} moves · par {p}', share: 'Share result', next: 'Next level', toEndless: 'Play endless', back: 'Menu',
     copied: 'Copied to clipboard', tomorrow: 'A new map tomorrow.', endlessNote: 'Level {n} done.', movesWord: 'moves',
     gotIt: 'Got it', solvedOn: 'Solved', playTag: 'same map for everyone', board: 'Puzzle board',
+    badgesTitle: 'Endless Milestones', badgeUnlocked: 'Unlocked', badgeLocked: '{rem} levels left',
+    badgeProgress: '{cur}/{tot}', badgeNew: 'Milestone Unlocked!', nextMilestone: 'Next: {name} ({rem} left)',
+    allMilestonesDone: 'All milestones achieved!',
     h1: 'Drag a row sideways or a column up or down (or tap the arrows). Tiles wrap around the edge.',
     h2: 'Villages, mountains, the spring and the caravanserai never move: tiles slide past them.',
     h3: 'Lead the river from the spring and the road from the caravanserai to every village that asks for them.',
@@ -563,6 +597,9 @@ const STR = {
     resLine: '{m} hamle · hedef {p}', share: 'Sonucu paylaş', next: 'Sonraki bölüm', toEndless: 'Sonsuz moda geç', back: 'Menü',
     copied: 'Panoya kopyalandı', tomorrow: 'Yarın yeni bir harita.', endlessNote: '{n}. bölüm tamam.', movesWord: 'hamle',
     gotIt: 'Anladım', solvedOn: 'Çözüldü', playTag: 'herkes için aynı harita', board: 'Bulmaca tahtası',
+    badgesTitle: 'Sonsuz Mod Aşamaları', badgeUnlocked: 'Kazanıldı', badgeLocked: '{rem} seviye kaldı',
+    badgeProgress: '{cur}/{tot}', badgeNew: 'Yeni Aşama Rozeti!', nextMilestone: 'Sıradaki: {name} ({rem} seviye kaldı)',
+    allMilestonesDone: 'Tüm aşamalar tamamlandı!',
     h1: 'Bir satırı yana, bir sütunu yukarı ya da aşağı sürükle (ya da oklara dokun). Taşlar kenardan dolanır.',
     h2: 'Köyler, dağlar, pınar ve kervansaray yerinden oynamaz: taşlar onların yanından kayar.',
     h3: 'Nehri pınardan, yolu kervansaraydan, onları isteyen her köye ulaştır.',
@@ -627,12 +664,21 @@ const sfx = {
   ping(i) { if (!audio()) return; const t0 = AC.currentTime, f = [587.3, 740, 880, 1174.7][i % 4]; tone(t0, f, 0.5, 'sine', 0.2); tone(t0, f * 2.01, 0.25, 'sine', 0.06); },
   // Hicaz-flavoured run on D: D Eb F# G A D
   win() { if (!audio()) return; const t0 = AC.currentTime; [293.7, 311.1, 370, 392, 440, 587.3].forEach((f, i) => pluck(t0 + i * 0.09, f, 0.16)); tone(t0 + 0.55, 587.3, 1.2, 'sine', 0.12); tone(t0 + 0.55, 880, 1.2, 'sine', 0.07); },
+  // Milestone fanfare: grounding drone, ascending Anatolian modal cadence and harmonic chime
+  badge() {
+    if (!audio()) return;
+    const t0 = AC.currentTime;
+    pluck(t0, 146.8, 0.22);
+    [293.7, 370, 440, 493.9, 587.3, 659.3, 739.99].forEach((f, i) => pluck(t0 + 0.07 + i * 0.08, f, 0.18));
+    tone(t0 + 0.65, 739.99, 1.4, 'sine', 0.15);
+    tone(t0 + 0.65, 1108.7, 1.2, 'triangle', 0.08);
+  },
   click() { if (!audio()) return; tone(AC.currentTime, 900, 0.04, 'square', 0.04); },
   undo() { if (!audio()) return; noise(AC.currentTime, 0.1, 'bandpass', 500, 1300, 0.16, 1.2); },
 };
 
 // ---------------------------------------------------------------- game state
-const G = { mode: 'daily', seed: '', level: 1, pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], bot: null, celebrateAt: 0, place: '' };
+const G = { mode: 'daily', seed: '', level: 1, pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], bot: null, celebrateAt: 0, place: '', newMilestone: null };
 let anims = [], shake = 0, particles = [], botTimer = 0, disp = null;
 
 function starsFor(moves, par) { return moves <= par ? 3 : moves <= par + 2 ? 2 : 1; }
@@ -651,7 +697,7 @@ function startPuzzle(mode, arg, firstHelp = true) {
     let pz = null;
     for (let k = 0; !pz && k < 5; k++) pz = makePuzzle(seed + k * 7919, cfg);
     G.genMs = Math.round(performance.now() - t0);
-    G.pz = pz; G.ids = pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.sat = [];
+    G.pz = pz; G.ids = pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.sat = []; G.newMilestone = null;
     G.place = PLACES[hashStr('p' + G.seed) % PLACES.length];
     G.state = 'play';
     buildCaches(); settle(true); updateHud();
@@ -693,19 +739,28 @@ function undo() {
 function restart() {
   if (!G.pz || G.bot) return;
   flushAnims(); closeAll();
-  G.ids = G.pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.state = 'play'; particles = [];
+  G.ids = G.pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.state = 'play'; G.newMilestone = null; particles = [];
   sfx.undo(); settle(true); updateHud();
 }
 function win() {
   const pz = G.pz;
   G.state = 'won';
+  let newMilestone = null;
   if (G.mode === 'daily') { if (!store.get('daily.' + G.seed, null)) store.set('daily.' + G.seed, { m: G.moves, s: G.stars }); }
-  else store.set('endless', Math.max(store.get('endless', 1), G.level + 1));
+  else {
+    const curEndless = store.get('endless', 1);
+    const nextEndless = Math.max(curEndless, G.level + 1);
+    store.set('endless', nextEndless);
+    const ms = MILESTONES.find((m) => m.level === G.level);
+    if (ms && curEndless <= ms.level && nextEndless > ms.level) newMilestone = ms;
+  }
   G.celebrateAt = performance.now();
-  sfx.win();
+  G.newMilestone = newMilestone;
+  if (newMilestone) sfx.badge(); else sfx.win();
   if (!RM) for (const v of pz.villages) burst(v.cell);
   setTimeout(showResult, AUTO || RM ? 500 : 1400);
-  $('live').textContent = t('solvedT') + ' ' + t('resLine', { m: G.moves, p: pz.par });
+  const msAnnounce = newMilestone ? ' · ' + t('badgeNew') + ' ' + (newMilestone[lang] || newMilestone.en).name : '';
+  $('live').textContent = t('solvedT') + ' ' + t('resLine', { m: G.moves, p: pz.par }) + msAnnounce;
   updateHud();
 }
 
@@ -1167,11 +1222,90 @@ function updateHud() {
   document.documentElement.lang = lang;
   dbg();
 }
+// Endless mode milestone definitions (Anatolian cultural motifs: Su Yolu, Koçboynuzu, Bereket Sandığı, Selçuklu Yıldızı)
+const MILESTONES = [
+  { id: 'wayfarer', level: 5, tr: { name: 'Yolcu', desc: '5 seviye tamamla (Su Yolu)' }, en: { name: 'Wayfarer', desc: 'Complete 5 levels (Waterway)' } },
+  { id: 'caravaneer', level: 10, tr: { name: 'Kervancı', desc: '10 seviye tamamla (Koçboynuzu)' }, en: { name: 'Caravaneer', desc: 'Complete 10 levels (Ram\'s Horn)' } },
+  { id: 'cartographer', level: 25, tr: { name: 'Haritacı', desc: '25 seviye tamamla (Bereket Sandığı)' }, en: { name: 'Cartographer', desc: 'Complete 25 levels (Bounty Chest)' } },
+  { id: 'sage', level: 50, tr: { name: 'Fay Bilgesi', desc: '50 seviye tamamla (Selçuklu Yıldızı)' }, en: { name: 'Fault Sage', desc: 'Complete 50 levels (Seljuk Star)' } },
+];
+
+function badgeSvg(id, unl) {
+  if (id === 'wayfarer') {
+    return unl
+      ? '<svg viewBox="0 0 32 32" class="badge-svg" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#1d5a7a"/><path d="M4 16 L8 12 L12 16 L16 12 L20 16 L24 12 L28 16 L24 20 L20 16 L16 20 L12 16 L8 20 Z" fill="#5ac4e6" stroke="#e2f7ff" stroke-width="0.8"/><circle cx="10" cy="8" r="1.6" fill="#f2b33d"/><circle cx="22" cy="8" r="1.6" fill="#f2b33d"/><circle cx="10" cy="24" r="1.6" fill="#f2b33d"/><circle cx="22" cy="24" r="1.6" fill="#f2b33d"/></svg>'
+      : '<svg viewBox="0 0 32 32" class="badge-svg" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#dfd0b5"/><path d="M4 16 L8 12 L12 16 L16 12 L20 16 L24 12 L28 16 L24 20 L20 16 L16 20 L12 16 L8 20 Z" fill="none" stroke="#8d7f69" stroke-width="1.2" stroke-dasharray="2 2"/><circle cx="10" cy="8" r="1.6" fill="#8d7f69"/><circle cx="22" cy="8" r="1.6" fill="#8d7f69"/><circle cx="10" cy="24" r="1.6" fill="#8d7f69"/><circle cx="22" cy="24" r="1.6" fill="#8d7f69"/></svg>';
+  }
+  if (id === 'caravaneer') {
+    return unl
+      ? '<svg viewBox="0 0 32 32" class="badge-svg" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#5c2317"/><path d="M16 25 V14 M16 14 C13 14 9 12 9 8 C9 5.2 12.5 4.5 14.5 7 C15.5 8.5 14.8 10.5 13 9.8 M16 14 C19 14 23 12 23 8 C23 5.2 19.5 4.5 17.5 7 C16.5 8.5 17.2 10.5 19 9.8" fill="none" stroke="#f2b33d" stroke-width="2.2" stroke-linecap="round"/><polygon points="16,20 12,25 20,25" fill="#f5ede0"/></svg>'
+      : '<svg viewBox="0 0 32 32" class="badge-svg" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#dfd0b5"/><path d="M16 25 V14 M16 14 C13 14 9 12 9 8 C9 5.2 12.5 4.5 14.5 7 M16 14 C19 14 23 12 23 8 C23 5.2 19.5 4.5 17.5 7" fill="none" stroke="#8d7f69" stroke-width="1.8" stroke-dasharray="2 2" stroke-linecap="round"/><polygon points="16,20 12,25 20,25" fill="#8d7f69"/></svg>';
+  }
+  if (id === 'cartographer') {
+    return unl
+      ? '<svg viewBox="0 0 32 32" class="badge-svg" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#23343d"/><polygon points="16,4 27,16 16,28 5,16" fill="#a63f27"/><polygon points="16,8 23,16 16,24 9,16" fill="#f2b33d"/><circle cx="16" cy="16" r="2.2" fill="#e2f7ff"/><path d="M5 16 H2 M27 16 H30 M16 4 V1 M16 28 V31" stroke="#f2b33d" stroke-width="1.8" stroke-linecap="round"/></svg>'
+      : '<svg viewBox="0 0 32 32" class="badge-svg" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#dfd0b5"/><polygon points="16,4 27,16 16,28 5,16" fill="none" stroke="#8d7f69" stroke-width="1.2" stroke-dasharray="2 2"/><polygon points="16,8 23,16 16,24 9,16" fill="none" stroke="#8d7f69" stroke-width="1"/><circle cx="16" cy="16" r="2.2" fill="#8d7f69"/><path d="M5 16 H2 M27 16 H30 M16 4 V1 M16 28 V31" stroke="#8d7f69" stroke-width="1.4" stroke-linecap="round"/></svg>';
+  }
+  // Seljuk 8-pointed star
+  return unl
+    ? '<svg viewBox="0 0 32 32" class="badge-svg" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#3a140d"/><polygon points="16,3 19.1,8.6 25.2,6.8 23.4,12.9 29,16 23.4,19.1 25.2,25.2 19.1,23.4 16,29 12.9,23.4 6.8,25.2 8.6,19.1 3,16 8.6,12.9 6.8,6.8 12.9,8.6" fill="#f2b33d" stroke="#ffd966" stroke-width="0.8"/><circle cx="16" cy="16" r="3.2" fill="#e0553a"/><circle cx="16" cy="16" r="1.2" fill="#fff"/></svg>'
+    : '<svg viewBox="0 0 32 32" class="badge-svg" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#dfd0b5"/><polygon points="16,3 19.1,8.6 25.2,6.8 23.4,12.9 29,16 23.4,19.1 25.2,25.2 19.1,23.4 16,29 12.9,23.4 6.8,25.2 8.6,19.1 3,16 8.6,12.9 6.8,6.8 12.9,8.6" fill="none" stroke="#8d7f69" stroke-width="1.2" stroke-dasharray="2 2"/><circle cx="16" cy="16" r="2" fill="#8d7f69"/></svg>';
+}
+
+let selectedBadgeId = null;
+function renderMilestones() {
+  const highest = store.get('endless', 1);
+  const completed = Math.max(0, highest - 1);
+  const unlockedCount = MILESTONES.filter((m) => completed >= m.level).length;
+  $('tBadgesTitle').textContent = t('badgesTitle');
+  $('vBadgesCount').textContent = `${unlockedCount}/${MILESTONES.length}`;
+
+  const listEl = $('mBadgeList');
+  listEl.innerHTML = MILESTONES.map((m) => {
+    const unl = completed >= m.level;
+    const isSel = selectedBadgeId === m.id;
+    const info = m[lang] || m.en;
+    const statusText = unl ? t('badgeUnlocked') : t('badgeProgress', { cur: Math.min(completed, m.level), tot: m.level });
+    return `<button type="button" class="badge-btn ${unl ? 'unlocked' : 'locked'} ${isSel ? 'sel' : ''}" data-id="${m.id}" aria-label="${info.name} (L${m.level}) — ${statusText}" aria-pressed="${isSel}">
+      ${badgeSvg(m.id, unl)}
+      <span class="badge-lvl">L${m.level}</span>
+    </button>`;
+  }).join('');
+
+  listEl.querySelectorAll('.badge-btn').forEach((btn) => {
+    btn.onclick = () => {
+      sfx.click();
+      selectedBadgeId = selectedBadgeId === btn.dataset.id ? null : btn.dataset.id;
+      renderMilestones();
+    };
+  });
+
+  const detailEl = $('mBadgeDetail');
+  if (selectedBadgeId) {
+    const selM = MILESTONES.find((m) => m.id === selectedBadgeId);
+    if (selM) {
+      const unl = completed >= selM.level;
+      const info = selM[lang] || selM.en;
+      const statusStr = unl ? `✓ ${t('badgeUnlocked')}` : t('badgeLocked', { rem: selM.level - completed });
+      detailEl.innerHTML = `<b>${info.name} (L${selM.level})</b><span>${info.desc} · ${statusStr}</span>`;
+      return;
+    }
+  }
+  const nextM = MILESTONES.find((m) => completed < m.level);
+  if (nextM) {
+    const nextInfo = nextM[lang] || nextM.en;
+    detailEl.innerHTML = `<span>${t('nextMilestone', { name: nextInfo.name, rem: nextM.level - completed })}</span>`;
+  } else {
+    detailEl.innerHTML = `<span>★ ${t('allMilestonesDone')}</span>`;
+  }
+}
+
 function fillMenu() {
   $('mSub').textContent = t('sub');
   const ds = todaySeed(), done = store.get('daily.' + ds, null);
   $('bDaily').innerHTML = `${t('daily')}<small>${seedLabel(ds)} · ${done ? t('solvedOn') + ' ' + '★'.repeat(done.s) + ' ' + done.m + ' ' + t('movesWord') : t('playTag')}</small>`;
   $('bEndless').innerHTML = `${t('endless')}<small>${t('level', { n: store.get('endless', 1) })}</small>`;
+  renderMilestones();
   $('bHow').textContent = t('how');
   $('mLang').textContent = lang === 'tr' ? 'English' : 'Türkçe';
   $('mSound').textContent = t('sound') + ': ' + (muted ? t('off') : t('on'));
@@ -1196,6 +1330,15 @@ function showResult() {
   closeAll();
   $('rTitle').textContent = t('solvedT');
   $('rStars').innerHTML = [0, 1, 2].map((i) => starSvg(i < G.stars, 46)).join('');
+  const mb = $('rMilestone');
+  if (G.newMilestone) {
+    const ms = G.newMilestone, info = ms[lang] || ms.en;
+    mb.style.display = 'flex';
+    mb.innerHTML = `<div class="bb-icon">${badgeSvg(ms.id, true)}</div><div class="bb-info"><b>${t('badgeNew')}: ${info.name}</b><span>${info.desc}</span></div>`;
+  } else {
+    mb.style.display = 'none';
+    mb.innerHTML = '';
+  }
   $('rLine').textContent = t('resLine', { m: G.moves, p: G.pz.par });
   $('rShare').textContent = shareText() + '\n' + shareUrl();
   $('bShare').textContent = t('share');
@@ -1247,6 +1390,13 @@ window.fayHatti = {
   get nextQuake() { const q = nextQuake(); return q < 0 ? null : { row: q >> 1, dir: moveDir(q) }; },
   get bot() { return G.bot ? { strategy: G.bot.strategy, planned: G.bot.plan.length, played: G.bot.i } : null; },
   get genMs() { return G.genMs; }, get fps() { return fps; }, get plan() { return G.pz ? G.pz.solution.slice() : null; },
+  get badges() {
+    const highest = store.get('endless', 1), completed = Math.max(0, highest - 1);
+    return MILESTONES.map((m) => ({
+      id: m.id, level: m.level, name: (m[lang] || m.en).name,
+      unlocked: completed >= m.level, progress: Math.min(completed, m.level), target: m.level,
+    }));
+  },
   get board() { if (!G.pz) return null; const v = toVals(G.pz, G.ids), out = []; for (let r = 0; r < N; r++) { const row = []; for (let c = 0; c < N; c++) { const x = v[r * N + c], k = x >> 4; row.push(k === KR ? 'r' + (x & 15).toString(16) : k === KD ? 'd' + (x & 15).toString(16) : GLYPH[k]); } out.push(row.join(' ')); } return out; },
   move: (m) => doMove(m), undo, restart, start: (mode, arg) => startPuzzle(mode, arg, false),
 };
