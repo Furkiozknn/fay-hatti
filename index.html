@@ -31,10 +31,11 @@ button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 @keyframes pulse{70%{box-shadow:0 0 0 8px rgba(224,85,58,0)}100%{box-shadow:0 0 0 0 rgba(224,85,58,0)}}
 #stage{grid-area:stage;position:relative;min-height:0;min-width:0}
 #cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
-#bar{grid-area:bar;display:flex;justify-content:center;gap:8px;padding:6px 12px calc(10px + env(safe-area-inset-bottom))}
-.tb{min-width:58px;min-height:48px;padding:4px 8px;border:1px solid #3d5561;border-radius:12px;background:var(--bg2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:12px;color:var(--ink)}
+#bar{grid-area:bar;display:flex;justify-content:center;gap:6px;padding:6px 8px calc(10px + env(safe-area-inset-bottom));max-width:620px;margin:0 auto;width:100%}
+.tb{flex:1 1 0;max-width:64px;min-width:44px;min-height:48px;padding:4px 4px;border:1px solid #3d5561;border-radius:12px;background:var(--bg2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:12px;color:var(--ink)}
 .tb svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .tb:hover{background:#2c434e}.tb:disabled{opacity:.4;cursor:default}
+.tb.active{color:var(--gold);border-color:var(--gold);box-shadow:0 0 10px rgba(242,179,61,.3)}
 .tb b{font-size:15px;line-height:22px}
 .ov{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(14,22,27,.74);z-index:10}
 .ov.on{display:flex}
@@ -74,7 +75,7 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
   #bar{flex-direction:column;padding:8px 10px 8px 4px;overflow:auto}
   .tb{min-height:44px;flex-direction:row;gap:6px}
 }
-@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on{animation:none}}
+@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on{animation:none}.tb.active{box-shadow:none}}
 </style>
 </head>
 <body>
@@ -92,6 +93,7 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
   <footer id="bar">
     <button class="tb" id="bUndo"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span id="lUndo">Undo</span></button>
     <button class="tb" id="bRestart"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/></svg><span id="lRestart">Restart</span></button>
+    <button class="tb" id="bHint" aria-label="Hint"><svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 2.6 1.4 4.5 3 6v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2c1.6-1.5 3-3.4 3-6a7 7 0 0 0-7-7z"/><path d="M9 21h6"/><path d="M10 18h4"/></svg><span id="lHint">Hint</span></button>
     <button class="tb" id="bMenu"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span id="lMenu">Menu</span></button>
     <button class="tb" id="bSound" aria-label="Sound"><svg viewBox="0 0 24 24" id="iSound"></svg><span id="lSound">Sound</span></button>
     <button class="tb" id="bLang" aria-label="Language"><b id="vLang">TR</b><span id="lLang">Türkçe</span></button>
@@ -543,6 +545,7 @@ const STR = {
   en: {
     sub: 'Shift the land of Anatolia. Bring water and roads to every village.',
     daily: 'Daily puzzle', endless: 'Endless', how: 'How to play', moves: 'Moves', par: 'Par', undo: 'Undo', restart: 'Restart',
+    hint: 'Hint', hintRow: 'Hint: Row {n} glowing', hintCol: 'Hint: Column {n} glowing', hintNone: 'Already on track',
     menu: 'Menu', sound: 'Sound', on: 'on', off: 'off', level: 'Level {n}', dailyTag: 'Daily · {d}',
     quakeNext: 'Next quake: row {r} {a}', calm: 'The ground is calm', loading: 'Drawing the map…', solvedT: 'Connected!',
     resLine: '{m} moves · par {p}', share: 'Share result', next: 'Next level', toEndless: 'Play endless', back: 'Menu',
@@ -552,12 +555,13 @@ const STR = {
     h2: 'Villages, mountains, the spring and the caravanserai never move: tiles slide past them.',
     h3: 'Lead the river from the spring and the road from the caravanserai to every village that asks for them.',
     h4: 'After each move a small quake shifts one row by itself. The red band shows which row is next.',
-    h5: 'Solve within par for 3 stars. Keys: WASD picks a tile, arrow keys shift, Z undo, R restart.',
+    h5: 'Solve within par for 3 stars. Keys: WASD picks a tile, arrow keys shift, H hint, Z undo, R restart.',
     lRiver: 'river', lRoad: 'road', lVillage: 'village', lMount: 'mountain', lSpring: 'spring', lHan: 'caravanserai',
   },
   tr: {
     sub: 'Anadolu toprağını kaydır. Her köye su ve yol götür.',
     daily: 'Günün bulmacası', endless: 'Sonsuz mod', how: 'Nasıl oynanır', moves: 'Hamle', par: 'Hedef', undo: 'Geri al', restart: 'Baştan',
+    hint: 'İpucu', hintRow: 'İpucu: {n}. satır parıldıyor', hintCol: 'İpucu: {n}. sütun parıldıyor', hintNone: 'Doğru yoldasın',
     menu: 'Menü', sound: 'Ses', on: 'açık', off: 'kapalı', level: 'Bölüm {n}', dailyTag: 'Günlük · {d}',
     quakeNext: 'Sıradaki deprem: {r}. satır {a}', calm: 'Yer sakin', loading: 'Harita çiziliyor…', solvedT: 'Bağlandı!',
     resLine: '{m} hamle · hedef {p}', share: 'Sonucu paylaş', next: 'Sonraki bölüm', toEndless: 'Sonsuz moda geç', back: 'Menü',
@@ -567,7 +571,7 @@ const STR = {
     h2: 'Köyler, dağlar, pınar ve kervansaray yerinden oynamaz: taşlar onların yanından kayar.',
     h3: 'Nehri pınardan, yolu kervansaraydan, onları isteyen her köye ulaştır.',
     h4: 'Her hamleden sonra küçük bir deprem bir satırı kendiliğinden kaydırır. Kırmızı bant sıradaki satırı gösterir.',
-    h5: 'Hedef hamlede çöz, 3 yıldız al. Tuşlar: WASD taş seçer, ok tuşları kaydırır, Z geri alır, R baştan.',
+    h5: 'Hedef hamlede çöz, 3 yıldız al. Tuşlar: WASD taş seçer, ok tuşları kaydırır, H ipucu, Z geri alır, R baştan.',
     lRiver: 'nehir', lRoad: 'yol', lVillage: 'köy', lMount: 'dağ', lSpring: 'pınar', lHan: 'kervansaray',
   },
 };
@@ -629,17 +633,71 @@ const sfx = {
   win() { if (!audio()) return; const t0 = AC.currentTime; [293.7, 311.1, 370, 392, 440, 587.3].forEach((f, i) => pluck(t0 + i * 0.09, f, 0.16)); tone(t0 + 0.55, 587.3, 1.2, 'sine', 0.12); tone(t0 + 0.55, 880, 1.2, 'sine', 0.07); },
   click() { if (!audio()) return; tone(AC.currentTime, 900, 0.04, 'square', 0.04); },
   undo() { if (!audio()) return; noise(AC.currentTime, 0.1, 'bandpass', 500, 1300, 0.16, 1.2); },
+  hint() { if (!audio()) return; const t0 = AC.currentTime; tone(t0, 587.3, 0.35, 'sine', 0.18); tone(t0 + 0.07, 880, 0.45, 'sine', 0.14); tone(t0 + 0.07, 1760, 0.2, 'triangle', 0.05); },
 };
 
 // ---------------------------------------------------------------- game state
 const G = { mode: 'daily', seed: '', level: 1, pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], bot: null, celebrateAt: 0, place: '' };
 let anims = [], shake = 0, particles = [], botTimer = 0, disp = null;
+let hint = null;
+function clearHint() { if (hint) { hint = null; updateHud(); } }
+// Hint calculation: finds recommended next move without revealing full multi-step solution
+function computeHint() {
+  const pz = G.pz;
+  if (!pz || G.won || G.state !== 'play') return null;
+  const v0 = toVals(pz, G.ids);
+  if (isSolved(pz, v0, 0)) return null;
+  if (G.moves === 0 && pz.solution && pz.solution.length > 0) {
+    const m = pz.solution[0];
+    return { move: m, line: m >> 1, dir: moveDir(m) };
+  }
+  const maxD = Math.min(8, Math.max(pz.par + 2, 6));
+  const sol = solveOptimal(pz, v0, G.moves, maxD, 150000);
+  if (sol && sol.path.length > 0) {
+    const m = sol.path[0];
+    return { move: m, line: m >> 1, dir: moveDir(m) };
+  }
+  const b = solveBeam(pz, v0, G.moves, 11);
+  if (b && b.path.length > 0) {
+    const m = b.path[0];
+    return { move: m, line: m >> 1, dir: moveDir(m) };
+  }
+  let bestM = -1, bestScore = -1e9;
+  for (const m of pz.moveList) {
+    const t = applyPerm(v0, pz.perms[m]);
+    const sc = scoreBoard(pz, t);
+    if (sc > bestScore) { bestScore = sc; bestM = m; }
+  }
+  if (bestM >= 0) return { move: bestM, line: bestM >> 1, dir: moveDir(bestM) };
+  return null;
+}
+function triggerHint() {
+  if (!G.pz || G.won || G.state !== 'play' || G.bot) return null;
+  if (hint && performance.now() < hint.until) {
+    clearHint();
+    return null;
+  }
+  const res = computeHint();
+  if (!res) {
+    toast(t('hintNone'));
+    return null;
+  }
+  const now = performance.now();
+  hint = { line: res.line, dir: res.dir, move: res.move, until: now + 4200 };
+  sfx.hint();
+  const isRow = res.line < N, num = isRow ? res.line + 1 : res.line - N + 1;
+  const msg = t(isRow ? 'hintRow' : 'hintCol', { n: num });
+  toast(msg);
+  $('live').textContent = msg;
+  updateHud();
+  return hint;
+}
 
 function starsFor(moves, par) { return moves <= par ? 3 : moves <= par + 2 ? 2 : 1; }
 function nextQuake() { return G.pz && !G.won ? G.pz.quakes[G.moves % G.pz.quakes.length] : -1; }
 
 function startPuzzle(mode, arg, firstHelp = true) {
-  clearTimeout(botTimer); G.bot = null;
+  clearTimeout(botTimer); G.bot = null; clearHint();
   G.mode = mode; G.state = 'loading'; G.pz = null; disp = null; anims = []; particles = []; closeAll();
   if (mode === 'daily') G.seed = String(arg); else { G.level = arg; G.seed = 'L' + arg; }
   updateHud();
@@ -663,6 +721,7 @@ function startPuzzle(mode, arg, firstHelp = true) {
 function doMove(m) {
   const pz = G.pz;
   if (!pz || G.state !== 'play' || G.won) return false;
+  clearHint();
   const line = m >> 1;
   if (pz.lens[line] < 2) return false;
   if (pz.lens[line] === 2) m = line * 2; // a 2-tile line swaps either way
@@ -686,17 +745,20 @@ function doMove(m) {
 }
 function undo() {
   if (!G.pz || G.won || G.state !== 'play' || !G.undo.length || G.bot) return;
+  clearHint();
   flushAnims();
   const u = G.undo.pop(); G.ids = u.ids; G.moves = u.moves;
   sfx.undo(); settle(true); updateHud();
 }
 function restart() {
   if (!G.pz || G.bot) return;
+  clearHint();
   flushAnims(); closeAll();
   G.ids = G.pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.state = 'play'; particles = [];
   sfx.undo(); settle(true); updateHud();
 }
 function win() {
+  clearHint();
   const pz = G.pz;
   G.state = 'won';
   if (G.mode === 'daily') { if (!store.get('daily.' + G.seed, null)) store.set('daily.' + G.seed, { m: G.moves, s: G.stars }); }
@@ -962,6 +1024,7 @@ function frame(now) {
   const dt = Math.min(64, now - (lastNow || now)); lastNow = now;
   fpsTick(now);
   stepAnims(dt);
+  if (hint && now >= hint.until) { hint = null; updateHud(); }
   shake *= Math.exp(-dt / 70); if (shake < 0.2) shake = 0;
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.clearRect(0, 0, W, H);
@@ -986,6 +1049,14 @@ function frame(now) {
   if (nq >= 0 && G.state === 'play') {
     const r = nq >> 1, a = A && A.kind === 'quake' ? 0.28 : 0.1 + 0.06 * Math.sin(now / 200);
     ctx.fillStyle = `rgba(214,70,40,${a})`; ctx.fillRect(ox, oy + r * cs, BW, cs);
+  }
+  // hint-glow band: warm golden aura on the recommended row or column
+  if (hint && now < hint.until && G.state === 'play') {
+    const hl = hint.line, isRow = hl < N;
+    const ha = RM ? 0.22 : 0.2 + 0.08 * Math.sin(now / 150);
+    ctx.fillStyle = `rgba(242,179,61,${ha})`;
+    if (isRow) ctx.fillRect(ox, oy + hl * cs, BW, cs);
+    else ctx.fillRect(ox + (hl - N) * cs, oy, cs, BW);
   }
   if (hover >= 0 && !anims.length && G.state === 'play' && !G.bot) {
     ctx.fillStyle = 'rgba(255,255,255,.1)';
@@ -1053,10 +1124,26 @@ function frame(now) {
   const gx = (cs * GUT + pad) / 2, chs = cs * 0.13;
   for (let l = 0; l < 2 * N; l++) {
     if (pz.lens[l] < 2) continue;
+    const isHintLine = hint && now < hint.until && l === hint.line;
     const hot = hover >= 0 && (l < N ? ((hover / N) | 0) === l : hover % N === l - N);
-    const col = l === qRow ? 'rgba(255,140,110,.95)' : hot ? 'rgba(243,234,216,.95)' : 'rgba(243,234,216,.42)';
-    if (l < N) { const cy = oy + l * cs + cs / 2; chevron(ox - gx, cy, -1, false, chs, col); chevron(ox + BW + gx, cy, 1, false, chs, col); }
-    else { const cx = ox + (l - N) * cs + cs / 2; chevron(cx, oy - gx, -1, true, chs, col); chevron(cx, oy + BW + gx, 1, true, chs, col); }
+    let col = l === qRow ? 'rgba(255,140,110,.95)' : hot ? 'rgba(243,234,216,.95)' : 'rgba(243,234,216,.42)';
+    let lchs = chs;
+    if (isHintLine) {
+      col = 'rgba(242,179,61,.98)';
+      lchs = chs * (RM ? 1.25 : 1.15 + 0.18 * Math.sin(now / 150));
+    }
+    if (l < N) { const cy = oy + l * cs + cs / 2; chevron(ox - gx, cy, -1, false, lchs, col); chevron(ox + BW + gx, cy, 1, false, lchs, col); }
+    else { const cx = ox + (l - N) * cs + cs / 2; chevron(cx, oy - gx, -1, true, lchs, col); chevron(cx, oy + BW + gx, 1, true, lchs, col); }
+  }
+  if (hint && now < hint.until && G.state === 'play') {
+    const hl = hint.line, isRow = hl < N;
+    ctx.save();
+    ctx.setLineDash([cs * 0.1, cs * 0.07]);
+    ctx.strokeStyle = `rgba(242,179,61,${RM ? 0.85 : 0.65 + 0.25 * Math.sin(now / 150)})`;
+    ctx.lineWidth = 2;
+    if (isRow) ctx.strokeRect(ox + 1, oy + hl * cs + 1, BW - 2, cs - 2);
+    else ctx.strokeRect(ox + (hl - N) * cs + 1, oy + 1, cs - 2, BW - 2);
+    ctx.restore();
   }
   if (qRow >= 0) {
     const cy = oy + qRow * cs + cs / 2, tx = qDir > 0 ? ox + BW + pad * 0.5 : ox - pad * 0.5, sz = Math.max(6, pad * 0.75);
@@ -1140,6 +1227,7 @@ addEventListener('keydown', (e) => {
   const am = { arrowright: r * 2, arrowleft: r * 2 + 1, arrowdown: (N + c) * 2, arrowup: (N + c) * 2 + 1 }[k];
   if (am != null) { doMove(am); e.preventDefault(); return; }
   if (k === 'z' || k === 'backspace') { undo(); e.preventDefault(); }
+  else if (k === 'h') { triggerHint(); e.preventDefault(); }
   else if (k === 'r') restart();
   else if (k === 'm') toggleMute();
   else if (k === 'escape') openMenu();
@@ -1157,9 +1245,13 @@ function updateHud() {
   else if (nq < 0) { q.className = 'calm'; $('tQuake').textContent = t('calm'); }
   else { q.className = ''; $('tQuake').textContent = t('quakeNext', { r: (nq >> 1) + 1, a: moveDir(nq) > 0 ? '→' : '←' }); }
   const b = $('bot'); b.style.display = G.bot ? 'inline-block' : 'none'; b.textContent = G.bot ? 'BOT ' + G.bot.strategy.toUpperCase() : '';
-  ['Undo', 'Restart', 'Menu'].forEach((k) => ($('l' + k).textContent = t(k.toLowerCase())));
+  ['Undo', 'Restart', 'Hint', 'Menu'].forEach((k) => ($('l' + k).textContent = t(k.toLowerCase())));
   $('bUndo').disabled = !G.undo.length || G.won || !!G.bot;
   $('bRestart').disabled = !G.pz || !!G.bot;
+  $('bHint').disabled = !G.pz || G.won || !!G.bot;
+  const isHinting = !!(hint && performance.now() < hint.until);
+  $('bHint').classList.toggle('active', isHinting);
+  $('bHint').setAttribute('aria-pressed', String(isHinting));
   $('lSound').textContent = t('sound'); $('iSound').innerHTML = muted ? ICON_OFF : ICON_ON;
   $('bSound').setAttribute('aria-pressed', String(!muted));
   $('vLang').textContent = lang === 'tr' ? 'EN' : 'TR'; $('lLang').textContent = lang === 'tr' ? 'English' : 'Türkçe';
@@ -1216,7 +1308,7 @@ async function share() {
 function toggleMute() { muted = !muted; store.set('mute', muted); if (AC) master.gain.value = muted ? 0 : 0.55; updateHud(); fillMenu(); if (!muted) sfx.click(); }
 function toggleLang() { lang = lang === 'tr' ? 'en' : 'tr'; store.set('lang', lang); updateHud(); fillMenu(); if ($('result').classList.contains('on')) showResult(); if ($('help').classList.contains('on')) { const r = helpReturn; openHelp(); helpReturn = r; } }
 
-$('bUndo').onclick = undo; $('bRestart').onclick = restart; $('bMenu').onclick = () => { sfx.click(); openMenu(); };
+$('bUndo').onclick = undo; $('bRestart').onclick = restart; $('bHint').onclick = triggerHint; $('bMenu').onclick = () => { sfx.click(); openMenu(); };
 $('bSound').onclick = toggleMute; $('mSound').onclick = toggleMute; $('bLang').onclick = toggleLang; $('mLang').onclick = toggleLang;
 $('bDaily').onclick = () => {
   sfx.click();
@@ -1249,6 +1341,8 @@ window.fayHatti = {
   get genMs() { return G.genMs; }, get fps() { return fps; }, get plan() { return G.pz ? G.pz.solution.slice() : null; },
   get board() { if (!G.pz) return null; const v = toVals(G.pz, G.ids), out = []; for (let r = 0; r < N; r++) { const row = []; for (let c = 0; c < N; c++) { const x = v[r * N + c], k = x >> 4; row.push(k === KR ? 'r' + (x & 15).toString(16) : k === KD ? 'd' + (x & 15).toString(16) : GLYPH[k]); } out.push(row.join(' ')); } return out; },
   move: (m) => doMove(m), undo, restart, start: (mode, arg) => startPuzzle(mode, arg, false),
+  hint: () => { const h = triggerHint(); return h ? { line: h.line, isRow: h.line < N, index: h.line < N ? h.line : h.line - N, dir: h.dir } : null; },
+  get currentHint() { return hint && performance.now() < hint.until ? { line: hint.line, isRow: hint.line < N, index: hint.line < N ? hint.line : hint.line - N, dir: hint.dir } : null; },
 };
 addEventListener('resize', layout);
 layout();
