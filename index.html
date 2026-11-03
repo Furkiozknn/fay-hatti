@@ -27,6 +27,8 @@ button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 #quake{grid-area:quake;display:flex;align-items:center;justify-content:center;gap:8px;min-height:30px;padding:2px 16px;font-size:15px;color:#ffd9cf}
 #quake .dot{width:10px;height:10px;flex:none;border-radius:50%;background:var(--quake);box-shadow:0 0 0 0 rgba(224,85,58,.6);animation:pulse 1.4s infinite}
 #quake.calm{color:var(--ink2)}#quake.calm .dot{background:#6f8f6a;animation:none}
+#quake.quaking{color:#fff;background:rgba(224,85,58,.28);border-radius:8px}
+#quake.quaking .dot{background:#ff7a59;box-shadow:0 0 10px #ff7a59}
 #bot{display:none;margin-left:8px;padding:2px 8px;border-radius:999px;background:#33505c;color:#e7f4fb;font-size:13px;font-weight:700;letter-spacing:.05em}
 @keyframes pulse{70%{box-shadow:0 0 0 8px rgba(224,85,58,0)}100%{box-shadow:0 0 0 0 rgba(224,85,58,0)}}
 #stage{grid-area:stage;position:relative;min-height:0;min-width:0}
@@ -74,7 +76,7 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
   #bar{flex-direction:column;padding:8px 10px 8px 4px;overflow:auto}
   .tb{min-height:44px;flex-direction:row;gap:6px}
 }
-@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on{animation:none}}
+@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on{animation:none}#quake.quaking{transition:background .2s}}
 </style>
 </head>
 <body>
@@ -544,7 +546,7 @@ const STR = {
     sub: 'Shift the land of Anatolia. Bring water and roads to every village.',
     daily: 'Daily puzzle', endless: 'Endless', how: 'How to play', moves: 'Moves', par: 'Par', undo: 'Undo', restart: 'Restart',
     menu: 'Menu', sound: 'Sound', on: 'on', off: 'off', level: 'Level {n}', dailyTag: 'Daily · {d}',
-    quakeNext: 'Next quake: row {r} {a}', calm: 'The ground is calm', loading: 'Drawing the map…', solvedT: 'Connected!',
+    quakeNext: 'Next quake: row {r} {a}', quakeActive: 'Earthquake!', calm: 'The ground is calm', loading: 'Drawing the map…', solvedT: 'Connected!',
     resLine: '{m} moves · par {p}', share: 'Share result', next: 'Next level', toEndless: 'Play endless', back: 'Menu',
     copied: 'Copied to clipboard', tomorrow: 'A new map tomorrow.', endlessNote: 'Level {n} done.', movesWord: 'moves',
     gotIt: 'Got it', solvedOn: 'Solved', playTag: 'same map for everyone', board: 'Puzzle board',
@@ -559,7 +561,7 @@ const STR = {
     sub: 'Anadolu toprağını kaydır. Her köye su ve yol götür.',
     daily: 'Günün bulmacası', endless: 'Sonsuz mod', how: 'Nasıl oynanır', moves: 'Hamle', par: 'Hedef', undo: 'Geri al', restart: 'Baştan',
     menu: 'Menü', sound: 'Ses', on: 'açık', off: 'kapalı', level: 'Bölüm {n}', dailyTag: 'Günlük · {d}',
-    quakeNext: 'Sıradaki deprem: {r}. satır {a}', calm: 'Yer sakin', loading: 'Harita çiziliyor…', solvedT: 'Bağlandı!',
+    quakeNext: 'Sıradaki deprem: {r}. satır {a}', quakeActive: 'Deprem!', calm: 'Yer sakin', loading: 'Harita çiziliyor…', solvedT: 'Bağlandı!',
     resLine: '{m} hamle · hedef {p}', share: 'Sonucu paylaş', next: 'Sonraki bölüm', toEndless: 'Sonsuz moda geç', back: 'Menü',
     copied: 'Panoya kopyalandı', tomorrow: 'Yarın yeni bir harita.', endlessNote: '{n}. bölüm tamam.', movesWord: 'hamle',
     gotIt: 'Anladım', solvedOn: 'Çözüldü', playTag: 'herkes için aynı harita', board: 'Bulmaca tahtası',
@@ -624,6 +626,8 @@ function pluck(t0, freq, peak) {
 const sfx = {
   slide() { if (!audio()) return; const t0 = AC.currentTime; noise(t0, 0.13, 'bandpass', 1400, 500, 0.22, 1.2); tone(t0 + 0.1, 180, 0.06, 'triangle', 0.12); },
   quake() { if (!audio()) return; const t0 = AC.currentTime; noise(t0, 0.7, 'lowpass', 220, 60, 0.75, 0.8); tone(t0, 52, 0.6, 'sine', 0.45, 34); noise(t0 + 0.12, 0.25, 'bandpass', 600, 300, 0.12, 2); },
+  // Subterranean tectonic thump and rock friction on quake hit
+  quakeHit() { if (!audio()) return; const t0 = AC.currentTime; tone(t0, 88, 0.36, 'sine', 0.5, 28); noise(t0, 0.22, 'lowpass', 380, 80, 0.65, 1.1); noise(t0 + 0.02, 0.18, 'bandpass', 850, 220, 0.22, 2.0); },
   ping(i) { if (!audio()) return; const t0 = AC.currentTime, f = [587.3, 740, 880, 1174.7][i % 4]; tone(t0, f, 0.5, 'sine', 0.2); tone(t0, f * 2.01, 0.25, 'sine', 0.06); },
   // Hicaz-flavoured run on D: D Eb F# G A D
   win() { if (!audio()) return; const t0 = AC.currentTime; [293.7, 311.1, 370, 392, 440, 587.3].forEach((f, i) => pluck(t0 + i * 0.09, f, 0.16)); tone(t0 + 0.55, 587.3, 1.2, 'sine', 0.12); tone(t0 + 0.55, 880, 1.2, 'sine', 0.07); },
@@ -633,7 +637,7 @@ const sfx = {
 
 // ---------------------------------------------------------------- game state
 const G = { mode: 'daily', seed: '', level: 1, pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], bot: null, celebrateAt: 0, place: '' };
-let anims = [], shake = 0, particles = [], botTimer = 0, disp = null;
+let anims = [], shake = 0, quakeTrauma = 0, quakeDir = 1, quakeRow = 0, particles = [], botTimer = 0, disp = null;
 
 function starsFor(moves, par) { return moves <= par ? 3 : moves <= par + 2 ? 2 : 1; }
 function nextQuake() { return G.pz && !G.won ? G.pz.quakes[G.moves % G.pz.quakes.length] : -1; }
@@ -716,13 +720,45 @@ function pushAnim(kind, from, to, m) {
   for (let i = 0; i < NN; i++) toPos[to[i]] = i;
   anims.push({ kind, from, toPos, m, t: 0, delay: kind === 'quake' ? DUR.qDelay : 0, dur: kind === 'quake' ? DUR.quake : DUR.slide, started: false, hit: false });
 }
-function flushAnims() { if (anims.length) { anims = []; shake = 0; settle(false); } }
+// Screen shake & fault dust juice on quake hit
+function quakePuff(row, dir) {
+  const yCenter = oy + row * cs + cs / 2, cols = ['#d6bb83', '#c79a5e', '#8c7660', '#a63f27'];
+  for (let i = 0; i < 12; i++) {
+    const px = ox + Math.random() * (N * cs);
+    const py = yCenter + (Math.random() - 0.5) * cs * 0.85;
+    const sp = cs * (0.8 + Math.random() * 1.4);
+    particles.push({
+      x: px, y: py,
+      vx: dir * sp + (Math.random() - 0.5) * cs * 0.4,
+      vy: (Math.random() - 0.5) * cs * 0.6 - cs * 0.25,
+      life: 0.35 + Math.random() * 0.22, t: 0, rot: Math.random() * 6,
+      vr: (Math.random() - 0.5) * 8, col: cols[i % cols.length], delay: 0,
+    });
+  }
+}
+function triggerQuakeHit(m) {
+  quakeRow = m >> 1; quakeDir = moveDir(m);
+  quakeTrauma = 1.0; shake = cs * 0.12;
+  sfx.quakeHit();
+  if (!RM) quakePuff(quakeRow, quakeDir);
+  const qEl = $('quake');
+  if (qEl) { qEl.classList.add('quaking'); $('tQuake').textContent = t('quakeActive'); }
+}
+function flushAnims() {
+  if (anims.length) {
+    anims = []; shake = 0; quakeTrauma = 0;
+    const app = $('app'), qEl = $('quake');
+    if (app && app.style.transform) { app.style.transform = ''; app.style.willChange = ''; }
+    if (qEl) qEl.classList.remove('quaking');
+    settle(false);
+  }
+}
 function stepAnims(dt) {
   while (anims.length) {
     const A = anims[0];
     if (!A.started) { A.started = true; setDisp(A.from); if (A.kind === 'quake') sfx.quake(); }
     A.t += dt;
-    if (A.kind === 'quake' && !A.hit && A.t >= A.delay) { A.hit = true; if (!RM) shake = cs * 0.07; }
+    if (A.kind === 'quake' && !A.hit && A.t >= A.delay) { A.hit = true; triggerQuakeHit(A.m); }
     if (A.t < A.delay + A.dur) return;
     anims.shift();
     if (!anims.length) settle(false);
@@ -962,6 +998,31 @@ function frame(now) {
   const dt = Math.min(64, now - (lastNow || now)); lastNow = now;
   fpsTick(now);
   stepAnims(dt);
+  // Directional screen shake decay and transform
+  if (quakeTrauma > 0) {
+    quakeTrauma *= Math.exp(-dt / 130);
+    if (quakeTrauma < 0.02) {
+      quakeTrauma = 0;
+      const qEl = $('quake');
+      if (qEl) qEl.classList.remove('quaking');
+      updateHud();
+    }
+  }
+  const app = $('app');
+  if (quakeTrauma > 0 && !RM) {
+    const intensity = quakeTrauma * quakeTrauma;
+    const maxPix = Math.min(10, cs * 0.15);
+    const sx = (quakeDir * 0.65 + (Math.random() * 2 - 1) * 0.35) * intensity * maxPix;
+    const sy = (Math.random() * 2 - 1) * intensity * maxPix * 0.55;
+    const srot = (Math.random() * 2 - 1) * intensity * 0.012;
+    if (app) {
+      app.style.willChange = 'transform';
+      app.style.transform = `translate3d(${sx.toFixed(1)}px,${sy.toFixed(1)}px,0) rotate(${srot.toFixed(4)}rad)`;
+    }
+  } else if (app && app.style.transform) {
+    app.style.transform = '';
+    app.style.willChange = '';
+  }
   shake *= Math.exp(-dt / 70); if (shake < 0.2) shake = 0;
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.clearRect(0, 0, W, H);
@@ -986,6 +1047,11 @@ function frame(now) {
   if (nq >= 0 && G.state === 'play') {
     const r = nq >> 1, a = A && A.kind === 'quake' ? 0.28 : 0.1 + 0.06 * Math.sin(now / 200);
     ctx.fillStyle = `rgba(214,70,40,${a})`; ctx.fillRect(ox, oy + r * cs, BW, cs);
+    if (quakeTrauma > 0) {
+      // Visceral seismic fissure flash along the fault row
+      ctx.fillStyle = `rgba(255,235,210,${(quakeTrauma * 0.4).toFixed(3)})`;
+      ctx.fillRect(ox, oy + r * cs, BW, cs);
+    }
   }
   if (hover >= 0 && !anims.length && G.state === 'play' && !G.bot) {
     ctx.fillStyle = 'rgba(255,255,255,.1)';
@@ -1060,9 +1126,9 @@ function frame(now) {
   }
   if (qRow >= 0) {
     const cy = oy + qRow * cs + cs / 2, tx = qDir > 0 ? ox + BW + pad * 0.5 : ox - pad * 0.5, sz = Math.max(6, pad * 0.75);
-    ctx.fillStyle = '#e0553a'; ctx.strokeStyle = '#fff3e6'; ctx.lineWidth = 1.5;
+    ctx.fillStyle = quakeTrauma > 0 ? '#ff7a59' : '#e0553a'; ctx.strokeStyle = '#fff3e6'; ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.moveTo(tx + qDir * sz * 0.7, cy); ctx.lineTo(tx - qDir * sz * 0.5, cy - sz); ctx.lineTo(tx - qDir * sz * 0.5, cy + sz); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.setLineDash([cs * 0.08, cs * 0.06]); ctx.strokeStyle = 'rgba(224,85,58,.85)'; ctx.lineWidth = 2;
+    ctx.setLineDash([cs * 0.08, cs * 0.06]); ctx.strokeStyle = quakeTrauma > 0 ? 'rgba(255,160,130,.95)' : 'rgba(224,85,58,.85)'; ctx.lineWidth = quakeTrauma > 0 ? 3 : 2;
     ctx.strokeRect(ox + 1, oy + qRow * cs + 1, BW - 2, cs - 2); ctx.setLineDash([]);
   }
   if (cursor >= 0 && G.state === 'play' && !G.bot) { ctx.strokeStyle = '#7cc4f0'; ctx.lineWidth = 3; rr(ctx, ox + (cursor % N) * cs + 3, oy + ((cursor / N) | 0) * cs + 3, cs - 6, cs - 6, cs * 0.14); ctx.stroke(); }
@@ -1155,6 +1221,7 @@ function updateHud() {
   const q = $('quake'), nq = nextQuake();
   if (G.state === 'loading') { q.className = 'calm'; $('tQuake').textContent = t('loading'); }
   else if (nq < 0) { q.className = 'calm'; $('tQuake').textContent = t('calm'); }
+  else if (quakeTrauma > 0) { q.className = 'quaking'; $('tQuake').textContent = t('quakeActive'); }
   else { q.className = ''; $('tQuake').textContent = t('quakeNext', { r: (nq >> 1) + 1, a: moveDir(nq) > 0 ? '→' : '←' }); }
   const b = $('bot'); b.style.display = G.bot ? 'inline-block' : 'none'; b.textContent = G.bot ? 'BOT ' + G.bot.strategy.toUpperCase() : '';
   ['Undo', 'Restart', 'Menu'].forEach((k) => ($('l' + k).textContent = t(k.toLowerCase())));
@@ -1247,6 +1314,7 @@ window.fayHatti = {
   get nextQuake() { const q = nextQuake(); return q < 0 ? null : { row: q >> 1, dir: moveDir(q) }; },
   get bot() { return G.bot ? { strategy: G.bot.strategy, planned: G.bot.plan.length, played: G.bot.i } : null; },
   get genMs() { return G.genMs; }, get fps() { return fps; }, get plan() { return G.pz ? G.pz.solution.slice() : null; },
+  get trauma() { return quakeTrauma; },
   get board() { if (!G.pz) return null; const v = toVals(G.pz, G.ids), out = []; for (let r = 0; r < N; r++) { const row = []; for (let c = 0; c < N; c++) { const x = v[r * N + c], k = x >> 4; row.push(k === KR ? 'r' + (x & 15).toString(16) : k === KD ? 'd' + (x & 15).toString(16) : GLYPH[k]); } out.push(row.join(' ')); } return out; },
   move: (m) => doMove(m), undo, restart, start: (mode, arg) => startPuzzle(mode, arg, false),
 };
