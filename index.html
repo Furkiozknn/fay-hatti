@@ -1,3 +1,1266 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fay Hattı — Fault Line</title>
-<style>body{margin:0;display:grid;place-items:center;height:100vh;background:#1d2733;color:#f3e9d2;font:18px system-ui;text-align:center}</style></head>
-<body><div><h1>Fay Hattı — Fault Line</h1><p>Game Off 2026 · coming soon · yakında</p></div></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Fay Hattı — Fault Line</title>
+<meta name="description" content="Shift rows and columns of an Anatolian map to bring rivers and caravan roads to every village. A small quake moves one row after each of your moves. Daily puzzle and endless mode.">
+<meta name="theme-color" content="#1b2830">
+<style>
+:root{--bg:#1b2830;--bg2:#23343d;--ink:#f3ead8;--ink2:#c9bda4;--paper:#f3e7cc;--paper-ink:#2b2118;--terra:#a63f27;--gold:#f2b33d;--quake:#e0553a;--focus:#7cc4f0}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.4 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent}
+body{background:radial-gradient(120% 80% at 50% 0%,#2a3f49 0%,var(--bg) 60%)}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+#app{position:fixed;inset:0;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto 1fr auto;grid-template-areas:"hud" "quake" "stage" "bar";padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left)}
+#hud{grid-area:hud;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px 4px;max-width:620px;width:100%;margin:0 auto}
+.brand{min-width:0}
+.brand b{display:block;font:700 22px/1.1 "Palatino Linotype",Palatino,Georgia,serif;letter-spacing:.02em}
+.brand span{display:block;font-size:14px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stats{display:flex;align-items:center;gap:14px}
+.stat{text-align:center;min-width:44px}
+.stat span{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2)}
+.stat b{display:block;font-size:22px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stars{display:flex;gap:2px}
+.stars svg{width:18px;height:18px}
+#quake{grid-area:quake;display:flex;align-items:center;justify-content:center;gap:8px;min-height:30px;padding:2px 16px;font-size:15px;color:#ffd9cf}
+#quake .dot{width:10px;height:10px;flex:none;border-radius:50%;background:var(--quake);box-shadow:0 0 0 0 rgba(224,85,58,.6);animation:pulse 1.4s infinite}
+#quake.calm{color:var(--ink2)}#quake.calm .dot{background:#6f8f6a;animation:none}
+#bot{display:none;margin-left:8px;padding:2px 8px;border-radius:999px;background:#33505c;color:#e7f4fb;font-size:13px;font-weight:700;letter-spacing:.05em}
+@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(224,85,58,0)}100%{box-shadow:0 0 0 0 rgba(224,85,58,0)}}
+#stage{grid-area:stage;position:relative;min-height:0;min-width:0}
+#cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
+#bar{grid-area:bar;display:flex;justify-content:center;gap:8px;padding:6px 12px calc(10px + env(safe-area-inset-bottom))}
+.tb{min-width:58px;min-height:48px;padding:4px 8px;border:1px solid #3d5561;border-radius:12px;background:var(--bg2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:12px;color:var(--ink)}
+.tb svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tb:hover{background:#2c434e}.tb:disabled{opacity:.4;cursor:default}
+.tb b{font-size:15px;line-height:22px}
+.ov{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(14,22,27,.74);z-index:10}
+.ov.on{display:flex}
+.panel{width:100%;max-width:380px;max-height:100%;overflow:auto;background:var(--paper);color:var(--paper-ink);border-radius:18px;padding:22px 20px;box-shadow:0 18px 50px rgba(0,0,0,.45),inset 0 0 0 2px #d9c596;animation:pop .22s ease-out}
+@keyframes pop{from{transform:scale(.94);opacity:0}to{transform:none;opacity:1}}
+.panel h1{margin:0;font:700 34px/1.05 "Palatino Linotype",Palatino,Georgia,serif;color:#5a2a18}
+.panel h1 small{display:block;font-size:17px;font-weight:400;color:#7a5638;margin-top:2px}
+.panel h2{margin:0 0 6px;font:700 26px/1.1 "Palatino Linotype",Palatino,Georgia,serif;color:#5a2a18;text-align:center}
+.panel .sub{margin:8px 0 14px;color:#5b4a36;font-size:15px}
+.btn{display:block;width:100%;min-height:52px;margin:8px 0;padding:10px 14px;border:0;border-radius:12px;background:var(--terra);color:#fff8ec;font-size:17px;font-weight:700;text-align:left}
+.btn small{display:block;font-weight:400;font-size:14px;opacity:.92}
+.btn:hover{background:#b9472c}
+.btn.alt{background:#e6d3a8;color:var(--paper-ink);box-shadow:inset 0 0 0 1px #b8935a}
+.btn.alt:hover{background:#ecdcb6}
+.row{display:flex;gap:8px}.row .btn{text-align:center}
+.mini{display:flex;gap:8px;margin-top:10px}
+.mini button{flex:1;min-height:44px;border-radius:10px;border:1px solid #b8935a;background:transparent;color:var(--paper-ink);font-size:15px}
+.big-stars{display:flex;justify-content:center;gap:6px;margin:6px 0 4px}
+.big-stars svg{width:46px;height:46px}
+.big-stars svg.on{animation:starpop .45s cubic-bezier(.3,1.6,.5,1) both}
+.big-stars svg:nth-child(2){animation-delay:.12s}.big-stars svg:nth-child(3){animation-delay:.24s}
+@keyframes starpop{from{transform:scale(0) rotate(-30deg)}to{transform:none}}
+.res-line{text-align:center;font-size:17px;margin:2px 0 10px}
+.share-prev{font:15px/1.3 ui-monospace,Consolas,monospace;background:#e9dab6;border-radius:10px;padding:10px 12px;text-align:center;margin:8px 0;white-space:pre-wrap;word-break:break-word}
+.note{text-align:center;font-size:14px;color:#5b4a36;margin:4px 0 0}
+ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:14px;margin-bottom:8px}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:5px}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#0e171c;color:var(--ink);padding:10px 16px;border-radius:10px;font-size:15px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
+#toast.on{opacity:1}
+#debug{position:fixed;left:6px;top:6px;z-index:30;font:12px/1.3 ui-monospace,Consolas,monospace;background:rgba(0,0,0,.6);color:#9f9;padding:4px 6px;border-radius:6px;display:none;white-space:pre;pointer-events:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (orientation:landscape) and (max-height:540px){
+  #app{grid-template-columns:minmax(170px,230px) 1fr auto;grid-template-rows:auto 1fr;grid-template-areas:"hud stage bar" "quake stage bar"}
+  #hud{flex-direction:column;align-items:flex-start;padding:10px 6px 4px 12px}
+  #quake{align-items:flex-start;justify-content:flex-start;padding:4px 6px 4px 12px;flex-wrap:wrap}
+  #bar{flex-direction:column;padding:8px 10px 8px 4px;overflow:auto}
+  .tb{min-height:44px;flex-direction:row;gap:6px}
+}
+@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on{animation:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="hud">
+    <div class="brand"><b id="tTitle">Fay Hattı</b><span id="tMode">&nbsp;</span></div>
+    <div class="stats">
+      <div class="stat"><span id="lMoves">Moves</span><b id="vMoves">0</b></div>
+      <div class="stat"><span id="lPar">Par</span><b id="vPar">–</b></div>
+      <div class="stars" id="vStars" aria-hidden="true"></div>
+    </div>
+  </header>
+  <div id="quake" class="calm" aria-live="polite"><span class="dot"></span><span id="tQuake">…</span><span id="bot"></span></div>
+  <main id="stage"><canvas id="cv" role="img" aria-label="Puzzle board"></canvas></main>
+  <footer id="bar">
+    <button class="tb" id="bUndo"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span id="lUndo">Undo</span></button>
+    <button class="tb" id="bRestart"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/></svg><span id="lRestart">Restart</span></button>
+    <button class="tb" id="bMenu"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span id="lMenu">Menu</span></button>
+    <button class="tb" id="bSound" aria-label="Sound"><svg viewBox="0 0 24 24" id="iSound"></svg><span id="lSound">Sound</span></button>
+    <button class="tb" id="bLang" aria-label="Language"><b id="vLang">TR</b><span id="lLang">Türkçe</span></button>
+  </footer>
+</div>
+
+<div class="ov" id="menu" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+  <div class="panel">
+    <h1 id="mTitle">Fay Hattı<small>Fault Line</small></h1>
+    <p class="sub" id="mSub"></p>
+    <button class="btn" id="bDaily"></button>
+    <button class="btn" id="bEndless"></button>
+    <button class="btn alt" id="bHow"></button>
+    <div class="mini"><button id="mLang"></button><button id="mSound"></button></div>
+  </div>
+</div>
+<div class="ov" id="help" role="dialog" aria-modal="true" aria-labelledby="hTitle">
+  <div class="panel">
+    <h2 id="hTitle"></h2>
+    <ol class="help" id="hList"></ol>
+    <div class="legend" id="hLegend"></div>
+    <button class="btn" id="bHelpOk" style="text-align:center"></button>
+  </div>
+</div>
+<div class="ov" id="result" role="dialog" aria-modal="true" aria-labelledby="rTitle">
+  <div class="panel">
+    <h2 id="rTitle"></h2>
+    <div class="big-stars" id="rStars"></div>
+    <p class="res-line" id="rLine"></p>
+    <div class="share-prev" id="rShare"></div>
+    <button class="btn" id="bShare" style="text-align:center"></button>
+    <div class="row"><button class="btn alt" id="bNext"></button><button class="btn alt" id="bRMenu"></button></div>
+    <p class="note" id="rNote"></p>
+  </div>
+</div>
+<div id="toast" role="status"></div>
+<div id="debug"></div>
+<div class="sr" id="live" aria-live="assertive"></div>
+
+<script>
+'use strict';
+// ENGINE START
+// Pure puzzle engine: no DOM. tools/sim.mjs extracts this block to test it in Node.
+const N = 5, NN = 25;
+// tile value = kind << 4 | low nibble (edge mask N=1 E=2 S=4 W=8 for paths, need bits for villages)
+const KE = 0, KR = 1, KD = 2, KV = 3, KS = 4, KH = 5, KM = 6; // empty, river, road, village, spring, han, mountain
+const NEED_RIVER = 1, NEED_ROAD = 2;
+const DR = [-1, 0, 1, 0], DC = [0, 1, 0, -1], OPP = [2, 3, 0, 1];
+const NB = new Int8Array(NN * 4);
+for (let i = 0; i < NN; i++) {
+  const r = (i / N) | 0, c = i % N;
+  for (let e = 0; e < 4; e++) {
+    const rr = r + DR[e], cc = c + DC[e];
+    NB[i * 4 + e] = rr < 0 || rr >= N || cc < 0 || cc >= N ? -1 : rr * N + cc;
+  }
+}
+const tv = (k, m) => (k << 4) | m;
+const isFixedV = (v) => v >> 4 >= KV;
+
+function rng32(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function hashStr(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+
+// Connector masks per tile value for each network type.
+const RIV = new Uint8Array(256), ROD = new Uint8Array(256);
+for (let v = 0; v < 256; v++) {
+  const k = v >> 4;
+  RIV[v] = k === KR ? v & 15 : k === KS ? 15 : k === KV && v & NEED_RIVER ? 15 : 0;
+  ROD[v] = k === KD ? v & 15 : k === KH ? 15 : k === KV && v & NEED_ROAD ? 15 : 0;
+}
+
+const STK = new Int8Array(32);
+// Flood fill from src over tiles whose touching edges both carry type T. Returns a 25-bit cell mask.
+function flood(vals, off, T, src) {
+  if (src < 0) return 0;
+  let seen = 1 << src, sp = 0;
+  STK[sp++] = src;
+  while (sp) {
+    const i = STK[--sp], m = T[vals[off + i]];
+    for (let e = 0; e < 4; e++) {
+      if (!((m >> e) & 1)) continue;
+      const j = NB[i * 4 + e];
+      if (j < 0 || (seen >> j) & 1) continue;
+      if ((T[vals[off + j]] >> OPP[e]) & 1) { seen |= 1 << j; STK[sp++] = j; }
+    }
+  }
+  return seen;
+}
+// BFS distances (for the water-flow direction in the renderer).
+function floodDist(vals, T, src) {
+  const d = new Int8Array(NN).fill(-1);
+  if (src < 0) return d;
+  const q = [src]; d[src] = 0;
+  for (let h = 0; h < q.length; h++) {
+    const i = q[h], m = T[vals[i]];
+    for (let e = 0; e < 4; e++) {
+      if (!((m >> e) & 1)) continue;
+      const j = NB[i * 4 + e];
+      if (j < 0 || d[j] >= 0) continue;
+      if ((T[vals[j]] >> OPP[e]) & 1) { d[j] = d[i] + 1; q.push(j); }
+    }
+  }
+  return d;
+}
+
+function boardStatus(pz, vals, off = 0) {
+  const rr = flood(vals, off, RIV, pz.spring), rd = flood(vals, off, ROD, pz.han);
+  const sat = [];
+  for (const v of pz.villages) {
+    const ok = (!(v.need & NEED_RIVER) || (rr >> v.cell) & 1) && (!(v.need & NEED_ROAD) || (rd >> v.cell) & 1);
+    sat.push(!!ok);
+  }
+  return { rr, rd, sat, solved: sat.every(Boolean) };
+}
+function isSolved(pz, vals, off) {
+  const rr = pz.needRiver ? flood(vals, off, RIV, pz.spring) : 0;
+  const rd = pz.needRoad ? flood(vals, off, ROD, pz.han) : 0;
+  for (const v of pz.villages) {
+    if (v.need & NEED_RIVER && !((rr >> v.cell) & 1)) return false;
+    if (v.need & NEED_ROAD && !((rd >> v.cell) & 1)) return false;
+  }
+  return true;
+}
+
+// Moves: code = line * 2 + dirBit. Lines 0-4 are rows, 5-9 columns. dirBit 0 = right/down, 1 = left/up.
+// Fixed tiles (village, spring, han, mountain) never move: a shift cycles only the movable cells of the line.
+const moveLine = (m) => m >> 1;
+const moveDir = (m) => (m & 1 ? -1 : 1);
+function lineCells(fixed, line) {
+  const out = [];
+  for (let j = 0; j < N; j++) {
+    const i = line < N ? line * N + j : j * N + (line - N);
+    if (!fixed[i]) out.push(i);
+  }
+  return out;
+}
+function buildPerms(fixed) {
+  const perms = [], lens = [];
+  for (let line = 0; line < 2 * N; line++) {
+    const cells = lineCells(fixed, line), L = cells.length;
+    lens[line] = L;
+    for (let db = 0; db < 2; db++) {
+      const p = new Uint8Array(NN);
+      for (let i = 0; i < NN; i++) p[i] = i;
+      if (L >= 2) for (let j = 0; j < L; j++) p[cells[(j + (db ? -1 : 1) + L) % L]] = cells[j];
+      perms.push(p);
+    }
+  }
+  return { perms, lens };
+}
+function permOff(src, so, dst, d0, p) { for (let i = 0; i < NN; i++) dst[d0 + i] = src[so + p[i]]; }
+function applyPerm(src, p) { const o = new Uint8Array(NN); for (let i = 0; i < NN; i++) o[i] = src[p[i]]; return o; }
+const toVals = (pz, ids) => { const o = new Uint8Array(NN); for (let i = 0; i < NN; i++) o[i] = pz.tiles[ids[i]]; return o; };
+
+// Zobrist hashing (two 32-bit halves) over tile values, so identical-looking boards merge.
+const ZA = new Int32Array(NN * 256), ZB = new Int32Array(NN * 256);
+{ const r = rng32(0x5eed); for (let i = 0; i < ZA.length; i++) { ZA[i] = (r() * 4294967296) | 0; ZB[i] = (r() * 4294967296) | 0; } }
+let HA = 0, HB = 0;
+function hashOff(vals, off) {
+  let a = 0, b = 0;
+  for (let i = 0; i < NN; i++) { const o = i * 256 + vals[off + i]; a ^= ZA[o]; b ^= ZB[o]; }
+  HA = a; HB = b;
+}
+const TT_BITS = 19, TT_MASK = (1 << TT_BITS) - 1;
+const TTA = new Int32Array(1 << TT_BITS), TTB = new Int32Array(1 << TT_BITS), TTG = new Int32Array(1 << TT_BITS);
+const TTD = new Int8Array(1 << TT_BITS);
+let ttGen = 0;
+
+// Strategy A: iterative-deepening DFS with a transposition table. Optimal (fewest player moves).
+// State = board + quake phase (moves made mod quake-cycle length). After a move: solved -> stop, else the quake hits.
+function solveOptimal(pz, vals0, k0, maxDepth, nodeCap = 6e6) {
+  const P = pz.quakes.length, ml = pz.moveList, perms = pz.perms;
+  if (isSolved(pz, vals0, 0)) return { path: [], nodes: 0 };
+  const buf = new Uint8Array((maxDepth + 2) * NN * 2);
+  buf.set(vals0, 0);
+  const path = [];
+  let nodes = 0, limit = 0, foundLen = -1;
+  function dfs(g, k) {
+    const base = g * 2 * NN, tmp = base + NN, nxt = base + 2 * NN;
+    const qp = perms[pz.quakes[k % P]];
+    for (let mi = 0; mi < ml.length; mi++) {
+      const m = ml[mi];
+      permOff(buf, base, buf, tmp, perms[m]);
+      nodes++;
+      if (isSolved(pz, buf, tmp)) { path[g] = m; foundLen = g + 1; return true; }
+      permOff(buf, tmp, buf, nxt, qp);
+      if (isSolved(pz, buf, nxt)) { path[g] = m; foundLen = g + 1; return true; }
+      if (g + 1 >= limit) continue;
+      hashOff(buf, nxt);
+      const kk = (k + 1) % P, a = HA ^ Math.imul(kk + 1, 0x9e3779b1), b = HB, slot = (a ^ (b >>> 7)) & TT_MASK;
+      const rem = limit - g - 1;
+      if (TTG[slot] === ttGen && TTA[slot] === a && TTB[slot] === b && TTD[slot] >= rem) continue;
+      TTG[slot] = ttGen; TTA[slot] = a; TTB[slot] = b; TTD[slot] = rem;
+      if (nodes > nodeCap) return false;
+      if (dfs(g + 1, k + 1)) { path[g] = m; return true; }
+    }
+    return false;
+  }
+  for (limit = 1; limit <= maxDepth; limit++) {
+    ttGen++;
+    if (dfs(0, k0)) return { path: path.slice(0, foundLen), nodes };
+    if (nodes > nodeCap) break;
+  }
+  return null;
+}
+
+function popcount(x) { x -= (x >>> 1) & 0x55555555; x = (x & 0x33333333) + ((x >>> 2) & 0x33333333); return (((x + (x >>> 4)) & 0xf0f0f0f) * 0x1010101) >>> 24; }
+function minDist(mask, cell) {
+  const r0 = (cell / N) | 0, c0 = cell % N;
+  let best = 99;
+  for (let i = 0; i < NN; i++) if ((mask >> i) & 1) { const d = Math.abs(((i / N) | 0) - r0) + Math.abs((i % N) - c0); if (d < best) best = d; }
+  return best;
+}
+// Greedy evaluation used by strategy B.
+function scoreBoard(pz, vals) {
+  const rr = flood(vals, 0, RIV, pz.spring), rd = flood(vals, 0, ROD, pz.han);
+  let s = (popcount(rr) + popcount(rd)) * 12;
+  for (const v of pz.villages) {
+    let ok = true;
+    if (v.need & NEED_RIVER && !((rr >> v.cell) & 1)) { ok = false; s -= 60 * minDist(rr, v.cell); }
+    if (v.need & NEED_ROAD && !((rd >> v.cell) & 1)) { ok = false; s -= 60 * minDist(rd, v.cell); }
+    if (ok) s += 1000;
+  }
+  for (let i = 0; i < NN; i++) {
+    const a = RIV[vals[i]], b = ROD[vals[i]];
+    const jr = NB[i * 4 + 1], js = NB[i * 4 + 2];
+    if (jr >= 0) { if (a & 2 && RIV[vals[jr]] & 8) s += 3; if (b & 2 && ROD[vals[jr]] & 8) s += 3; }
+    if (js >= 0) { if (a & 4 && RIV[vals[js]] & 1) s += 3; if (b & 4 && ROD[vals[js]] & 1) s += 3; }
+  }
+  return s;
+}
+// Strategy B: narrow beam search on the greedy score. Not optimal; plays more "by feel".
+function solveBeam(pz, vals0, k0, seed = 7) {
+  for (const w of [24, 120, 600]) { const r = beamPass(pz, vals0, k0, w, 30, seed); if (r) return r; }
+  return null;
+}
+function beamPass(pz, vals0, k0, width, maxDepth, seed) {
+  const P = pz.quakes.length, rnd = rng32(seed);
+  if (isSolved(pz, vals0, 0)) return { path: [] };
+  let beam = [{ v: vals0, k: k0, path: [] }];
+  const seen = new Set();
+  for (let d = 0; d < maxDepth; d++) {
+    const cand = [];
+    for (const node of beam) {
+      const qp = pz.perms[pz.quakes[node.k % P]];
+      for (const m of pz.moveList) {
+        const t = applyPerm(node.v, pz.perms[m]);
+        if (isSolved(pz, t, 0)) return { path: node.path.concat(m) };
+        const q = applyPerm(t, qp);
+        if (isSolved(pz, q, 0)) return { path: node.path.concat(m) };
+        hashOff(q, 0);
+        const key = HA + ':' + HB + ':' + ((node.k + 1) % P);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        cand.push({ v: q, k: node.k + 1, path: node.path.concat(m), s: scoreBoard(pz, q) + rnd() * 4 });
+      }
+    }
+    if (!cand.length) return null;
+    cand.sort((x, y) => y.s - x.s);
+    beam = cand.slice(0, width);
+  }
+  return null;
+}
+
+// ---- generator: build a solved board, then scramble it with reverse moves and reverse quakes ----
+function layoutSolved(R, cfg) {
+  const fixed = new Uint8Array(NN), vals = new Uint8Array(NN);
+  const rowF = [0, 0, 0, 0, 0], colF = [0, 0, 0, 0, 0];
+  const canPlace = (i) => {
+    if (fixed[i]) return false;
+    const r = (i / N) | 0, c = i % N;
+    if (rowF[r] >= 2 || colF[c] >= 2) return false;
+    for (let e = 0; e < 4; e++) { const j = NB[i * 4 + e]; if (j >= 0 && fixed[j]) return false; }
+    return true;
+  };
+  const place = (v) => {
+    for (let t = 0; t < 60; t++) {
+      const i = (R() * NN) | 0;
+      if (!canPlace(i)) continue;
+      fixed[i] = 1; vals[i] = v; rowF[(i / N) | 0]++; colF[i % N]++;
+      return i;
+    }
+    return -1;
+  };
+  const needs = cfg.nv === 2 ? [NEED_RIVER, NEED_ROAD] : [NEED_RIVER, NEED_ROAD, R() < 0.5 ? 3 : R() < 0.5 ? 1 : 2];
+  const spring = place(tv(KS, 0)), han = place(tv(KH, 0));
+  if (spring < 0 || han < 0) return null;
+  const villages = [];
+  for (const need of needs) {
+    const c = place(tv(KV, need));
+    if (c < 0) return null;
+    villages.push({ cell: c, need });
+  }
+  // villages must not be trivially close to their source
+  const md = (a, b) => Math.abs(((a / N) | 0) - ((b / N) | 0)) + Math.abs((a % N) - (b % N));
+  for (const v of villages) {
+    if (v.need & NEED_RIVER && md(v.cell, spring) < 3) return null;
+    if (v.need & NEED_ROAD && md(v.cell, han) < 3) return null;
+  }
+  for (let k = 0; k < cfg.nm; k++) if (place(tv(KM, 0)) < 0) return null;
+
+  // route each need from its village to the growing network of that type
+  const type = new Uint8Array(NN), mask = new Uint8Array(NN);
+  const net = [0, 1 << spring, 1 << han];
+  const order = [];
+  for (const v of villages) { if (v.need & NEED_RIVER) order.push([v, 1]); if (v.need & NEED_ROAD) order.push([v, 2]); }
+  for (let i = order.length - 1; i > 0; i--) { const j = (R() * (i + 1)) | 0; [order[i], order[j]] = [order[j], order[i]]; }
+  for (const [v, T] of order) {
+    const cost = new Float32Array(NN);
+    for (let i = 0; i < NN; i++) cost[i] = 1 + R() * 1.6;
+    const dist = new Float32Array(NN).fill(1e9), prev = new Int8Array(NN).fill(-1), done = new Uint8Array(NN);
+    dist[v.cell] = 0;
+    let hit = -1;
+    for (;;) {
+      let u = -1, bd = 1e9;
+      for (let i = 0; i < NN; i++) if (!done[i] && dist[i] < bd) { bd = dist[i]; u = i; }
+      if (u < 0) break;
+      done[u] = 1;
+      if (u !== v.cell && (net[T] >> u) & 1) { hit = u; break; }
+      if (u !== v.cell && fixed[u]) continue; // fixed cells are only endpoints
+      for (let e = 0; e < 4; e++) {
+        const j = NB[u * 4 + e];
+        if (j < 0 || done[j]) continue;
+        const isTarget = (net[T] >> j) & 1;
+        if (!isTarget && (fixed[j] || (type[j] && type[j] !== T))) continue;
+        if (isTarget && fixed[j] && u === v.cell) continue; // need at least one path tile
+        const nd = dist[u] + cost[j];
+        if (nd < dist[j]) { dist[j] = nd; prev[j] = u; }
+      }
+    }
+    if (hit < 0) return null;
+    const cells = [];
+    for (let x = hit; x >= 0; x = prev[x]) cells.push(x);
+    for (let a = 0; a + 1 < cells.length; a++) {
+      const p = cells[a], q = cells[a + 1];
+      let e = 0;
+      while (NB[p * 4 + e] !== q) e++;
+      if (!fixed[p]) { mask[p] |= 1 << e; type[p] = T; }
+      if (!fixed[q]) { mask[q] |= 1 << OPP[e]; type[q] = T; }
+    }
+    for (const c of cells) net[T] |= 1 << c;
+  }
+  let pathTiles = 0;
+  for (let i = 0; i < NN; i++) {
+    if (fixed[i]) continue;
+    if (type[i]) { vals[i] = tv(type[i] === 1 ? KR : KD, mask[i]); pathTiles++; continue; }
+    if (R() < cfg.decoy) {
+      const shapes = [5, 10, 5, 10, 3, 6, 12, 9];
+      vals[i] = tv(R() < 0.5 ? KR : KD, shapes[(R() * shapes.length) | 0]);
+    } else vals[i] = tv(KE, 0);
+  }
+  if (pathTiles < cfg.minPath) return null;
+  return { fixed, vals, spring, han, villages };
+}
+
+function makePuzzle(seed, cfg) {
+  const R = rng32(seed);
+  for (let att = 0; att < 400; att++) {
+    const L = layoutSolved(R, cfg);
+    if (!L) continue;
+    const { perms, lens } = buildPerms(L.fixed);
+    const moveList = [];
+    for (let line = 0; line < 2 * N; line++) { if (lens[line] >= 2) moveList.push(line * 2); if (lens[line] >= 3) moveList.push(line * 2 + 1); }
+    const qRows = [];
+    for (let r = 0; r < N; r++) if (lens[r] >= 3) qRows.push(r);
+    if (qRows.length < 2) continue;
+    const quakes = [];
+    for (let k = 0; k < cfg.P; k++) {
+      let r;
+      do r = qRows[(R() * qRows.length) | 0]; while (k > 0 && r === moveLine(quakes[k - 1]) && qRows.length > 1);
+      quakes.push(r * 2 + (R() < 0.5 ? 0 : 1));
+    }
+    const pz = {
+      seed, cfg, tiles: L.vals, fixed: L.fixed, spring: L.spring, han: L.han, villages: L.villages,
+      needRiver: L.villages.some((v) => v.need & NEED_RIVER), needRoad: L.villages.some((v) => v.need & NEED_ROAD),
+      perms, lens, moveList, quakes, K: cfg.K,
+    };
+    let best = null;
+    for (let s = 0; s < 8; s++) {
+      // reverse play: last player move (no quake after it), then for each earlier move: undo its quake, undo the move
+      let ids = new Uint8Array(NN);
+      for (let i = 0; i < NN; i++) ids[i] = i;
+      for (let j = cfg.K - 1; j >= 0; j--) {
+        if (j < cfg.K - 1) ids = applyPerm(ids, perms[quakes[j % cfg.P] ^ 1]);
+        for (let t = 0; t < 20; t++) {
+          const m = moveList[(R() * moveList.length) | 0];
+          const nx = applyPerm(ids, perms[m ^ 1]);
+          const a = toVals(pz, ids), b = toVals(pz, nx);
+          let diff = false;
+          for (let i = 0; i < NN; i++) if (a[i] !== b[i]) { diff = true; break; }
+          if (diff) { ids = nx; break; }
+        }
+      }
+      const v0 = toVals(pz, ids);
+      if (isSolved(pz, v0, 0)) continue;
+      const sol = solveOptimal(pz, v0, 0, cfg.K, 8e5);
+      if (!sol || !sol.path.length) continue;
+      if (!best || sol.path.length > best.sol.path.length) best = { ids, sol };
+      if (sol.path.length >= cfg.minPar) break;
+    }
+    if (!best) continue;
+    pz.start = best.ids;
+    pz.par = best.sol.path.length;
+    pz.solution = best.sol.path;
+    pz.solveNodes = best.sol.nodes;
+    pz.attempts = att + 1;
+    return pz;
+  }
+  return null;
+}
+
+function dailyConfig(seed) {
+  const t = String(seed);
+  let dow = hashStr(t) % 7;
+  if (/^\d{8}$/.test(t)) dow = new Date(+t.slice(0, 4), +t.slice(4, 6) - 1, +t.slice(6, 8)).getDay();
+  const K = [6, 4, 4, 5, 5, 5, 6][dow];
+  return { K, minPar: K - 1, nv: 3, nm: 1 + (hashStr('m' + t) % 2), decoy: 0.55, minPath: 7, P: 5 };
+}
+function endlessConfig(level) {
+  const K = Math.min(6, 2 + Math.ceil(level / 2));
+  return { K, minPar: Math.max(2, K - 1), nv: level < 3 ? 2 : 3, nm: level < 4 ? 0 : level < 8 ? 1 : 2, decoy: level < 3 ? 0.35 : 0.55, minPath: level < 3 ? 5 : 7, P: 5 };
+}
+// ENGINE END
+
+// ---------------------------------------------------------------- settings, i18n, saves
+const QS = new URLSearchParams(location.search);
+const NOSAVE = QS.has('nosave'), DEBUG = QS.has('debug'), AUTO = QS.has('auto');
+const DEMO = QS.get('demo');
+const BOT = AUTO ? (DEMO === 'b' ? 'b' : 'a') : DEMO == null ? null : DEMO === 'b' ? 'b' : 'a';
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const SPEED = AUTO ? 0.4 : 1;
+const CANON = 'https://furkiozknn.github.io/fay-hatti/';
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('fayhatti.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { if (NOSAVE) return; try { localStorage.setItem('fayhatti.' + k, JSON.stringify(v)); } catch (e) {} },
+};
+const STR = {
+  en: {
+    sub: 'Shift the land of Anatolia. Bring water and roads to every village.',
+    daily: 'Daily puzzle', endless: 'Endless', how: 'How to play', moves: 'Moves', par: 'Par', undo: 'Undo', restart: 'Restart',
+    menu: 'Menu', sound: 'Sound', on: 'on', off: 'off', level: 'Level {n}', dailyTag: 'Daily · {d}',
+    quakeNext: 'Next quake: row {r} {a}', calm: 'The ground is calm', loading: 'Drawing the map…', solvedT: 'Connected!',
+    resLine: '{m} moves · par {p}', share: 'Share result', next: 'Next level', toEndless: 'Play endless', back: 'Menu',
+    copied: 'Copied to clipboard', tomorrow: 'A new map tomorrow.', endlessNote: 'Level {n} done.', movesWord: 'moves',
+    gotIt: 'Got it', solvedOn: 'Solved', playTag: 'same map for everyone', board: 'Puzzle board',
+    h1: 'Drag a row sideways or a column up or down (or tap the arrows). Tiles wrap around the edge.',
+    h2: 'Villages, mountains, the spring and the caravanserai never move: tiles slide past them.',
+    h3: 'Lead the river from the spring and the road from the caravanserai to every village that asks for them.',
+    h4: 'After each move a small quake shifts one row by itself. The red band shows which row is next.',
+    h5: 'Solve within par for 3 stars. Keys: WASD picks a tile, arrow keys shift, Z undo, R restart.',
+    lRiver: 'river', lRoad: 'road', lVillage: 'village', lMount: 'mountain', lSpring: 'spring', lHan: 'caravanserai',
+  },
+  tr: {
+    sub: 'Anadolu toprağını kaydır. Her köye su ve yol götür.',
+    daily: 'Günün bulmacası', endless: 'Sonsuz mod', how: 'Nasıl oynanır', moves: 'Hamle', par: 'Hedef', undo: 'Geri al', restart: 'Baştan',
+    menu: 'Menü', sound: 'Ses', on: 'açık', off: 'kapalı', level: 'Bölüm {n}', dailyTag: 'Günlük · {d}',
+    quakeNext: 'Sıradaki deprem: {r}. satır {a}', calm: 'Yer sakin', loading: 'Harita çiziliyor…', solvedT: 'Bağlandı!',
+    resLine: '{m} hamle · hedef {p}', share: 'Sonucu paylaş', next: 'Sonraki bölüm', toEndless: 'Sonsuz moda geç', back: 'Menü',
+    copied: 'Panoya kopyalandı', tomorrow: 'Yarın yeni bir harita.', endlessNote: '{n}. bölüm tamam.', movesWord: 'hamle',
+    gotIt: 'Anladım', solvedOn: 'Çözüldü', playTag: 'herkes için aynı harita', board: 'Bulmaca tahtası',
+    h1: 'Bir satırı yana, bir sütunu yukarı ya da aşağı sürükle (ya da oklara dokun). Taşlar kenardan dolanır.',
+    h2: 'Köyler, dağlar, pınar ve kervansaray yerinden oynamaz: taşlar onların yanından kayar.',
+    h3: 'Nehri pınardan, yolu kervansaraydan, onları isteyen her köye ulaştır.',
+    h4: 'Her hamleden sonra küçük bir deprem bir satırı kendiliğinden kaydırır. Kırmızı bant sıradaki satırı gösterir.',
+    h5: 'Hedef hamlede çöz, 3 yıldız al. Tuşlar: WASD taş seçer, ok tuşları kaydırır, Z geri alır, R baştan.',
+    lRiver: 'nehir', lRoad: 'yol', lVillage: 'köy', lMount: 'dağ', lSpring: 'pınar', lHan: 'kervansaray',
+  },
+};
+let lang = (QS.get('lang') || '').toLowerCase();
+if (!STR[lang]) lang = store.get('lang', '') || (/^tr/i.test(navigator.language || '') ? 'tr' : 'en');
+if (!STR[lang]) lang = 'en';
+const t = (k, o) => { let s = STR[lang][k] ?? STR.en[k] ?? k; if (o) for (const x in o) s = s.split('{' + x + '}').join(o[x]); return s; };
+let muted = !!store.get('mute', false);
+const PLACES = ['Göreme', 'Assos', 'Safranbolu', 'Şirince', 'Uzungöl', 'Mardin', 'Beypazarı', 'Adatepe', 'Kayaköy', 'Taraklı',
+  'Uçhisar', 'Mustafapaşa', 'Harput', 'Zelve', 'Avanos', 'Kemaliye', 'Sille', 'Trilye', 'Birgi', 'Eğirdir', 'Selçuk', 'Ahlat',
+  'Mudurnu', 'Gerze', 'Tire', 'Hasankeyf', 'Ani', 'Midyat', 'Cumalıkızık', 'Ürgüp', 'Datça'];
+
+const $ = (id) => document.getElementById(id);
+const todaySeed = () => { const d = new Date(); return String(d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()); };
+const seedLabel = (s) => { const x = String(s); return /^\d{8}$/.test(x) ? x.slice(0, 4) + '-' + x.slice(4, 6) + '-' + x.slice(6) : x; };
+const starSvg = (on, size) => `<svg viewBox="0 0 24 24" class="${on ? 'on' : ''}" width="${size}" height="${size}"><path d="M12 2.6l2.9 6 6.5.8-4.8 4.5 1.2 6.5L12 17.2l-5.8 3.2 1.2-6.5L2.6 9.4l6.5-.8z" fill="${on ? '#f2b33d' : 'none'}" stroke="${on ? '#9c6a12' : '#8d7f69'}" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
+const ICON_ON = '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18.5 6a8 8 0 0 1 0 12"/>';
+const ICON_OFF = '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M22 9l-6 6M16 9l6 6"/>';
+
+// ---------------------------------------------------------------- audio (Web Audio, synthesized)
+let AC = null, master = null, noiseBuf = null;
+function audio() {
+  if (muted) return null;
+  try {
+    if (!AC) {
+      const C = window.AudioContext || window.webkitAudioContext;
+      if (!C) return null;
+      AC = new C(); master = AC.createGain(); master.gain.value = 0.55; master.connect(AC.destination);
+      noiseBuf = AC.createBuffer(1, AC.sampleRate, AC.sampleRate);
+      const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    if (AC.state === 'suspended') AC.resume().catch(() => {});
+    return AC;
+  } catch (e) { return null; }
+}
+function env(g, t0, a, peak, dec) { g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(peak, t0 + a); g.gain.exponentialRampToValueAtTime(0.0001, t0 + a + dec); }
+function noise(t0, dur, type, f0, f1, peak, q = 1) {
+  const s = AC.createBufferSource(); s.buffer = noiseBuf;
+  const f = AC.createBiquadFilter(); f.type = type; f.Q.value = q; f.frequency.setValueAtTime(f0, t0); f.frequency.exponentialRampToValueAtTime(f1, t0 + dur);
+  const g = AC.createGain(); env(g, t0, 0.01, peak, dur);
+  s.connect(f); f.connect(g); g.connect(master); s.start(t0, Math.random() * 0.5); s.stop(t0 + dur + 0.05);
+}
+function tone(t0, freq, dur, type, peak, f1) {
+  const o = AC.createOscillator(); o.type = type; o.frequency.setValueAtTime(freq, t0); if (f1) o.frequency.exponentialRampToValueAtTime(f1, t0 + dur);
+  const g = AC.createGain(); env(g, t0, 0.005, peak, dur);
+  o.connect(g); g.connect(master); o.start(t0); o.stop(t0 + dur + 0.05);
+}
+function pluck(t0, freq, peak) {
+  const o = AC.createOscillator(); o.type = 'sawtooth'; o.frequency.value = freq;
+  const f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(3200, t0); f.frequency.exponentialRampToValueAtTime(500, t0 + 0.5);
+  const g = AC.createGain(); env(g, t0, 0.004, peak, 0.7);
+  o.connect(f); f.connect(g); g.connect(master); o.start(t0); o.stop(t0 + 0.8);
+}
+const sfx = {
+  slide() { if (!audio()) return; const t0 = AC.currentTime; noise(t0, 0.13, 'bandpass', 1400, 500, 0.22, 1.2); tone(t0 + 0.1, 180, 0.06, 'triangle', 0.12); },
+  quake() { if (!audio()) return; const t0 = AC.currentTime; noise(t0, 0.7, 'lowpass', 220, 60, 0.75, 0.8); tone(t0, 52, 0.6, 'sine', 0.45, 34); noise(t0 + 0.12, 0.25, 'bandpass', 600, 300, 0.12, 2); },
+  ping(i) { if (!audio()) return; const t0 = AC.currentTime, f = [587.3, 740, 880, 1174.7][i % 4]; tone(t0, f, 0.5, 'sine', 0.2); tone(t0, f * 2.01, 0.25, 'sine', 0.06); },
+  // Hicaz-flavoured run on D: D Eb F# G A D
+  win() { if (!audio()) return; const t0 = AC.currentTime; [293.7, 311.1, 370, 392, 440, 587.3].forEach((f, i) => pluck(t0 + i * 0.09, f, 0.16)); tone(t0 + 0.55, 587.3, 1.2, 'sine', 0.12); tone(t0 + 0.55, 880, 1.2, 'sine', 0.07); },
+  click() { if (!audio()) return; tone(AC.currentTime, 900, 0.04, 'square', 0.04); },
+  undo() { if (!audio()) return; noise(AC.currentTime, 0.1, 'bandpass', 500, 1300, 0.16, 1.2); },
+};
+
+// ---------------------------------------------------------------- game state
+const G = { mode: 'daily', seed: '', level: 1, pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], bot: null, celebrateAt: 0, place: '' };
+let anims = [], shake = 0, particles = [], botTimer = 0, disp = null;
+
+function starsFor(moves, par) { return moves <= par ? 3 : moves <= par + 2 ? 2 : 1; }
+function nextQuake() { return G.pz && !G.won ? G.pz.quakes[G.moves % G.pz.quakes.length] : -1; }
+
+function startPuzzle(mode, arg, firstHelp = true) {
+  clearTimeout(botTimer); G.bot = null;
+  G.mode = mode; G.state = 'loading'; G.pz = null; disp = null; anims = []; particles = []; closeAll();
+  if (mode === 'daily') G.seed = String(arg); else { G.level = arg; G.seed = 'L' + arg; }
+  updateHud();
+  setTimeout(() => {
+    const t0 = performance.now();
+    let seed, cfg;
+    if (mode === 'daily') { seed = /^\d+$/.test(G.seed) ? +G.seed : hashStr(G.seed); cfg = dailyConfig(G.seed); }
+    else { seed = hashStr('endless' + arg); cfg = endlessConfig(arg); }
+    let pz = null;
+    for (let k = 0; !pz && k < 5; k++) pz = makePuzzle(seed + k * 7919, cfg);
+    G.genMs = Math.round(performance.now() - t0);
+    G.pz = pz; G.ids = pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.sat = [];
+    G.place = PLACES[hashStr('p' + G.seed) % PLACES.length];
+    G.state = 'play';
+    buildCaches(); settle(true); updateHud();
+    if (BOT) startBot();
+    else if (firstHelp && !NOSAVE && !store.get('help', false)) { store.set('help', true); openHelp(); }
+  }, 30);
+}
+
+function doMove(m) {
+  const pz = G.pz;
+  if (!pz || G.state !== 'play' || G.won) return false;
+  const line = m >> 1;
+  if (pz.lens[line] < 2) return false;
+  if (pz.lens[line] === 2) m = line * 2; // a 2-tile line swaps either way
+  flushAnims();
+  G.undo.push({ ids: G.ids, moves: G.moves });
+  const before = G.ids, a = applyPerm(before, pz.perms[m]);
+  G.moves++;
+  pushAnim('slide', before, a, m);
+  let cur = a;
+  if (isSolved(pz, toVals(pz, a), 0)) G.won = true; // solved by the move itself: the ground stays calm
+  else {
+    const q = pz.quakes[(G.moves - 1) % pz.quakes.length];
+    cur = applyPerm(a, pz.perms[q]);
+    pushAnim('quake', a, cur, q);
+    if (isSolved(pz, toVals(pz, cur), 0)) G.won = true;
+  }
+  G.ids = cur;
+  if (G.won) G.stars = starsFor(G.moves, pz.par);
+  sfx.slide(); updateHud();
+  return true;
+}
+function undo() {
+  if (!G.pz || G.won || G.state !== 'play' || !G.undo.length || G.bot) return;
+  flushAnims();
+  const u = G.undo.pop(); G.ids = u.ids; G.moves = u.moves;
+  sfx.undo(); settle(true); updateHud();
+}
+function restart() {
+  if (!G.pz || G.bot) return;
+  flushAnims(); closeAll();
+  G.ids = G.pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.state = 'play'; particles = [];
+  sfx.undo(); settle(true); updateHud();
+}
+function win() {
+  const pz = G.pz;
+  G.state = 'won';
+  if (G.mode === 'daily') { if (!store.get('daily.' + G.seed, null)) store.set('daily.' + G.seed, { m: G.moves, s: G.stars }); }
+  else store.set('endless', Math.max(store.get('endless', 1), G.level + 1));
+  G.celebrateAt = performance.now();
+  sfx.win();
+  if (!RM) for (const v of pz.villages) burst(v.cell);
+  setTimeout(showResult, AUTO || RM ? 500 : 1400);
+  $('live').textContent = t('solvedT') + ' ' + t('resLine', { m: G.moves, p: pz.par });
+  updateHud();
+}
+
+// ---------------------------------------------------------------- animation queue
+const DUR = { slide: (RM ? 110 : 190) * SPEED, qDelay: (RM ? 60 : 160) * SPEED, quake: (RM ? 140 : 340) * SPEED };
+function pushAnim(kind, from, to, m) {
+  const toPos = new Int8Array(NN);
+  for (let i = 0; i < NN; i++) toPos[to[i]] = i;
+  anims.push({ kind, from, toPos, m, t: 0, delay: kind === 'quake' ? DUR.qDelay : 0, dur: kind === 'quake' ? DUR.quake : DUR.slide, started: false, hit: false });
+}
+function flushAnims() { if (anims.length) { anims = []; shake = 0; settle(false); } }
+function stepAnims(dt) {
+  while (anims.length) {
+    const A = anims[0];
+    if (!A.started) { A.started = true; setDisp(A.from); if (A.kind === 'quake') sfx.quake(); }
+    A.t += dt;
+    if (A.kind === 'quake' && !A.hit && A.t >= A.delay) { A.hit = true; if (!RM) shake = cs * 0.07; }
+    if (A.t < A.delay + A.dur) return;
+    anims.shift();
+    if (!anims.length) settle(false);
+    dt = 0;
+  }
+}
+// the board came to rest: recompute connections, ping newly happy villages, start the celebration
+function settle(silent) {
+  setDisp(G.ids);
+  const st = disp.st, prev = G.sat;
+  if (!silent) st.sat.forEach((ok, i) => { if (ok && !prev[i]) sfx.ping(i); });
+  G.sat = st.sat.slice();
+  if (G.won && G.state === 'play') win();
+}
+function setDisp(ids) {
+  const pz = G.pz, vals = toVals(pz, ids);
+  disp = { ids, vals, st: boardStatus(pz, vals), dR: floodDist(vals, RIV, pz.spring), dD: floodDist(vals, ROD, pz.han) };
+}
+
+// ---------------------------------------------------------------- bot (?demo=1|a|b, ?auto)
+function startBot() {
+  const pz = G.pz, t0 = performance.now();
+  let plan = pz.solution.slice(); // strategy A: the optimal plan found while generating
+  if (BOT === 'b') { const r = solveBeam(pz, toVals(pz, G.ids), G.moves, 11); if (r) plan = r.path; }
+  G.bot = { strategy: BOT, plan, i: 0, ms: Math.round(performance.now() - t0) };
+  const gap = AUTO ? 260 : 800;
+  const step = () => {
+    if (!G.bot || G.won || G.state !== 'play') return;
+    if (anims.length && !AUTO) { botTimer = setTimeout(step, 50); return; }
+    let m = G.bot.plan[G.bot.i];
+    if (m == null) { // plan ran out without a solve: replan from here (not expected)
+      const r = solveOptimal(pz, toVals(pz, G.ids), G.moves, 8);
+      if (!r || !r.path.length) return;
+      G.bot.plan = G.bot.plan.concat(r.path); m = G.bot.plan[G.bot.i];
+    }
+    G.bot.i++;
+    doMove(m);
+    botTimer = setTimeout(step, gap);
+  };
+  botTimer = setTimeout(step, AUTO ? 300 : 1200);
+  updateHud();
+}
+
+// ---------------------------------------------------------------- rendering
+const cv = $('cv'), ctx = cv.getContext('2d');
+let W = 0, H = 0, DPR = 1, cs = 60, ox = 0, oy = 0, pad = 12;
+const GUT = 0.62;
+let baseC = null, plates = [], hover = -1, cursor = -1, lastNow = 0;
+function mkCanvas(w, h) {
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.ceil(w * DPR)); c.height = Math.max(1, Math.ceil(h * DPR));
+  const x = c.getContext('2d'); x.setTransform(DPR, 0, 0, DPR, 0, 0);
+  return [c, x];
+}
+function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+function layout() {
+  const r = $('stage').getBoundingClientRect();
+  W = Math.max(1, r.width); H = Math.max(1, r.height); DPR = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  const units = N + 2 * GUT;
+  cs = Math.max(24, Math.floor(Math.min(W / units, H / units, 112)));
+  ox = Math.round((W - N * cs) / 2); oy = Math.round((H - N * cs) / 2); pad = Math.round(cs * 0.2);
+  buildCaches();
+}
+const edgePt = (e, s) => [s / 2 + DC[e] * s / 2, s / 2 + DR[e] * s / 2];
+const isCorner = (m) => m === 3 || m === 6 || m === 12 || m === 9;
+function tracePath(c, m, s, X = 0, Y = 0) {
+  c.beginPath();
+  if (isCorner(m)) {
+    const a = [0, 1, 2, 3].filter((e) => (m >> e) & 1), p = edgePt(a[0], s), q = edgePt(a[1], s);
+    c.moveTo(X + p[0], Y + p[1]); c.quadraticCurveTo(X + s / 2, Y + s / 2, X + q[0], Y + q[1]);
+  } else for (let e = 0; e < 4; e++) if ((m >> e) & 1) { const p = edgePt(e, s); c.moveTo(X + s / 2, Y + s / 2); c.lineTo(X + p[0], Y + p[1]); }
+}
+function strokePath(c, m, s, w, col) {
+  c.lineWidth = w; c.strokeStyle = col; c.lineCap = 'butt'; c.lineJoin = 'round';
+  tracePath(c, m, s); c.stroke();
+  if (!isCorner(m) && popcount(m) >= 3) { c.beginPath(); c.arc(s / 2, s / 2, w / 2, 0, 7); c.fillStyle = col; c.fill(); }
+}
+function drawPlate(c, v, id) {
+  const s = cs, k = v >> 4, m = v & 15, ins = Math.max(1.5, s * 0.04), r = s * 0.14, R = rng32(id * 977 + 13);
+  c.fillStyle = 'rgba(70,42,18,.38)'; rr(c, ins, ins + s * 0.035, s - 2 * ins, s - 2 * ins, r); c.fill();
+  const g = c.createLinearGradient(0, 0, 0, s);
+  g.addColorStop(0, '#f1e0b3'); g.addColorStop(1, '#d6bb83');
+  c.fillStyle = g; rr(c, ins, ins, s - 2 * ins, s - 2 * ins - s * 0.02, r); c.fill();
+  c.strokeStyle = 'rgba(255,251,236,.7)'; c.lineWidth = 1.2; rr(c, ins + 1, ins + 1, s - 2 * ins - 2, s - 2 * ins - s * 0.02 - 2, r * 0.9); c.stroke();
+  // steppe tufts and pebbles travel with the tile
+  for (let i = 0; i < 6; i++) {
+    const x = s * (0.16 + R() * 0.68), y = s * (0.16 + R() * 0.64);
+    if (R() < 0.6) { c.strokeStyle = `rgba(${(110 + R() * 30) | 0},${(125 + R() * 25) | 0},60,.55)`; c.lineWidth = 1.2; c.beginPath(); c.moveTo(x - 2, y); c.lineTo(x, y - s * 0.05); c.lineTo(x + 2, y); c.stroke(); }
+    else { c.fillStyle = 'rgba(140,110,75,.35)'; c.beginPath(); c.ellipse(x, y, s * 0.02, s * 0.014, 0, 0, 7); c.fill(); }
+  }
+  if (k === KR) {
+    strokePath(c, m, s, s * 0.44, 'rgba(105,140,62,.40)');
+    strokePath(c, m, s, s * 0.3, '#2a6c99');
+    strokePath(c, m, s, s * 0.22, '#3d95cf');
+    c.save(); c.translate(-s * 0.03, -s * 0.03); strokePath(c, m, s, s * 0.05, 'rgba(255,255,255,.22)'); c.restore();
+  } else if (k === KD) {
+    strokePath(c, m, s, s * 0.3, 'rgba(122,82,48,.32)');
+    strokePath(c, m, s, s * 0.21, '#c79a5e');
+    c.setLineDash([s * 0.07, s * 0.07]); strokePath(c, m, s, s * 0.03, 'rgba(248,234,200,.9)'); c.setLineDash([]);
+  }
+}
+function drawMountain(x, X, Y, s) {
+  x.fillStyle = 'rgba(70,45,25,.25)'; x.beginPath(); x.ellipse(X + s / 2, Y + s * 0.8, s * 0.42, s * 0.1, 0, 0, 7); x.fill();
+  const base = Y + s * 0.82;
+  const peak = (cx, w, h, c1, c2) => {
+    x.fillStyle = c1; x.beginPath(); x.moveTo(cx - w, base); x.lineTo(cx, base - h); x.lineTo(cx + w, base); x.closePath(); x.fill();
+    x.fillStyle = c2; x.beginPath(); x.moveTo(cx, base - h); x.lineTo(cx + w, base); x.lineTo(cx + w * 0.15, base); x.closePath(); x.fill();
+    x.fillStyle = '#f6f2ea'; x.beginPath(); x.moveTo(cx, base - h); x.lineTo(cx - w * 0.3, base - h * 0.7); x.lineTo(cx - w * 0.1, base - h * 0.74); x.lineTo(cx + w * 0.05, base - h * 0.66); x.lineTo(cx + w * 0.3, base - h * 0.7); x.closePath(); x.fill();
+  };
+  peak(X + s * 0.66, s * 0.26, s * 0.46, '#7a6551', '#5e4c3c');
+  peak(X + s * 0.4, s * 0.32, s * 0.64, '#8c7660', '#6a5644');
+}
+function drawSpring(x, X, Y, s) {
+  const cx = X + s / 2, cy = Y + s / 2;
+  x.fillStyle = 'rgba(105,140,62,.45)'; x.beginPath(); x.arc(cx, cy, s * 0.36, 0, 7); x.fill();
+  x.fillStyle = '#1d6f7e'; x.beginPath(); x.arc(cx, cy, s * 0.27, 0, 7); x.fill();
+  const g = x.createRadialGradient(cx - s * 0.06, cy - s * 0.06, 2, cx, cy, s * 0.25);
+  g.addColorStop(0, '#9fe3ea'); g.addColorStop(1, '#2fa3b6');
+  x.fillStyle = g; x.beginPath(); x.arc(cx, cy, s * 0.235, 0, 7); x.fill();
+  x.strokeStyle = 'rgba(255,255,255,.55)'; x.lineWidth = 1.3; x.beginPath(); x.arc(cx, cy, s * 0.12, 0.4, 2.6); x.stroke();
+  const R = rng32(77);
+  for (let i = 0; i < 7; i++) { const a = i * 0.9 + R(); x.fillStyle = i % 2 ? '#a3937d' : '#8b7b66'; x.beginPath(); x.ellipse(cx + Math.cos(a) * s * 0.3, cy + Math.sin(a) * s * 0.3, s * 0.045, s * 0.032, a, 0, 7); x.fill(); }
+}
+function drawHan(x, X, Y, s) {
+  const w = s * 0.62, h = s * 0.56, x0 = X + (s - w) / 2, y0 = Y + s * 0.24;
+  x.fillStyle = 'rgba(60,40,20,.3)'; x.fillRect(x0 + 3, y0 + 4, w, h);
+  x.fillStyle = '#b8a07a'; x.fillRect(x0, y0, w, h);
+  x.fillStyle = '#9a835f'; for (let i = 0; i < 5; i++) x.fillRect(x0 + (i * w) / 4.5, y0 - s * 0.06, w / 9, s * 0.07);
+  x.strokeStyle = 'rgba(80,60,40,.45)'; x.lineWidth = 1;
+  for (let r = 1; r < 4; r++) { x.beginPath(); x.moveTo(x0, y0 + (r * h) / 4); x.lineTo(x0 + w, y0 + (r * h) / 4); x.stroke(); }
+  x.fillStyle = '#e1cfa6'; x.fillRect(x0 + w * 0.22, y0 + h * 0.16, w * 0.56, h * 0.3);
+  x.fillStyle = '#3e2f22'; const gw = w * 0.3, gx = X + s / 2 - gw / 2, gy = y0 + h * 0.5;
+  x.beginPath(); x.moveTo(gx, y0 + h); x.lineTo(gx, gy + gw / 2); x.arc(X + s / 2, gy + gw / 2, gw / 2, Math.PI, 0); x.lineTo(gx + gw, y0 + h); x.closePath(); x.fill();
+  x.strokeStyle = '#6f5a40'; x.lineWidth = 1.5; x.strokeRect(x0, y0, w, h);
+  x.fillStyle = '#a63f27'; x.beginPath(); x.moveTo(x0 + w * 0.85, y0 - s * 0.06); x.lineTo(x0 + w * 0.85, y0 - s * 0.2); x.lineTo(x0 + w * 1.02, y0 - s * 0.16); x.lineTo(x0 + w * 0.85, y0 - s * 0.12); x.fill();
+}
+function drawVillage(x, X, Y, s, seed) {
+  const R = rng32(seed);
+  x.fillStyle = 'rgba(105,140,62,.32)'; x.beginPath(); x.ellipse(X + s / 2, Y + s * 0.62, s * 0.4, s * 0.26, 0, 0, 7); x.fill();
+  const house = (cx, by, w, h) => {
+    x.fillStyle = 'rgba(60,40,20,.28)'; x.fillRect(cx - w / 2 + 2, by - h + 3, w, h);
+    x.fillStyle = '#f5ede0'; x.fillRect(cx - w / 2, by - h, w, h);
+    x.fillStyle = '#c25b35'; x.beginPath(); x.moveTo(cx - w / 2 - s * 0.03, by - h); x.lineTo(cx, by - h - w * 0.5); x.lineTo(cx + w / 2 + s * 0.03, by - h); x.closePath(); x.fill();
+    x.fillStyle = '#8f3d22'; x.beginPath(); x.moveTo(cx, by - h - w * 0.5); x.lineTo(cx + w / 2 + s * 0.03, by - h); x.lineTo(cx, by - h); x.closePath(); x.fill();
+    x.fillStyle = '#6b4a2e'; x.fillRect(cx - w * 0.12, by - h * 0.5, w * 0.24, h * 0.5);
+  };
+  x.fillStyle = '#6f8f43'; x.beginPath(); x.arc(X + s * (0.72 + R() * 0.06), Y + s * 0.5, s * 0.1, 0, 7); x.fill();
+  x.fillStyle = '#5c4630'; x.fillRect(X + s * 0.74, Y + s * 0.56, s * 0.025, s * 0.12);
+  house(X + s * 0.34, Y + s * 0.62, s * 0.24, s * 0.18);
+  house(X + s * 0.6, Y + s * 0.8, s * 0.26, s * 0.2);
+  house(X + s * 0.28, Y + s * 0.86, s * 0.2, s * 0.15);
+}
+function buildCaches() {
+  if (!G.pz || !cs) return;
+  const pz = G.pz, S = N * cs + 2 * pad;
+  const [c, x] = mkCanvas(S, S);
+  baseC = { c, S };
+  const R = rng32(pz.seed ^ 0x9137);
+  const g = x.createLinearGradient(0, 0, S, S);
+  g.addColorStop(0, '#f0dfb3'); g.addColorStop(1, '#d8bf8b');
+  rr(x, 0, 0, S, S, pad * 0.9); x.fillStyle = g; x.fill();
+  x.save(); rr(x, 0, 0, S, S, pad * 0.9); x.clip();
+  for (let i = 0; i < (S * S) / 70; i++) { x.fillStyle = R() < 0.5 ? `rgba(120,84,40,${0.04 + R() * 0.07})` : `rgba(255,250,232,${0.06 + R() * 0.1})`; x.fillRect(R() * S, R() * S, 1 + R() * 1.6, 1 + R() * 1.6); }
+  x.strokeStyle = 'rgba(150,108,58,.2)'; x.lineWidth = 1;
+  for (let k = 0; k < 9; k++) { // faint contour lines, like an old survey map
+    x.beginPath(); const y0 = R() * S, f1 = 3 + R() * 4, f2 = 9 + R() * 6, p1 = R() * 6, p2 = R() * 6;
+    for (let px = 0; px <= S; px += 6) { const y = y0 + Math.sin((px / S) * f1 + p1) * cs * 0.3 + Math.sin((px / S) * f2 + p2) * cs * 0.07; px ? x.lineTo(px, y) : x.moveTo(px, y); }
+    x.stroke();
+  }
+  x.restore();
+  x.lineWidth = 2; x.strokeStyle = '#9f7742'; rr(x, 1, 1, S - 2, S - 2, pad * 0.9); x.stroke();
+  x.lineWidth = 1; x.strokeStyle = 'rgba(120,85,45,.5)'; rr(x, pad * 0.42, pad * 0.42, S - pad * 0.84, S - pad * 0.84, pad * 0.5); x.stroke();
+  for (let i = 0; i < NN; i++) {
+    const X = pad + (i % N) * cs, Y = pad + ((i / N) | 0) * cs;
+    x.fillStyle = 'rgba(105,72,34,.13)'; rr(x, X + 2, Y + 2, cs - 4, cs - 4, cs * 0.14); x.fill();
+    if (!pz.fixed[i]) continue;
+    const k = pz.tiles[i] >> 4;
+    if (k === KM) drawMountain(x, X, Y, cs); else if (k === KS) drawSpring(x, X, Y, cs); else if (k === KH) drawHan(x, X, Y, cs); else if (k === KV) drawVillage(x, X, Y, cs, i * 31 + 5);
+  }
+  plates = [];
+  for (let id = 0; id < NN; id++) {
+    if (pz.fixed[id]) { plates.push(null); continue; }
+    const [pc, px] = mkCanvas(cs, cs); drawPlate(px, pz.tiles[id], id); plates.push(pc);
+  }
+}
+const easeBack = (x) => { const s = 1.25; x -= 1; return x * x * ((s + 1) * x + s) + 1; };
+const easeQuake = (x) => 1 - Math.exp(-6 * x) * Math.cos(2.5 * Math.PI * x);
+const easeCubic = (x) => 1 - Math.pow(1 - x, 3);
+
+// moving dashes along the network, phased by BFS distance so the flow is continuous from tile to tile
+function drawFlow(X, Y, v, i, dist, river, time, glow) {
+  const s = cs, m = v & 15, d = dist[i], L = s / 2;
+  const ph = RM ? 0 : time * (river ? s * 0.9 : s * 0.32);
+  ctx.lineCap = 'round';
+  if (glow > 0) { ctx.setLineDash([]); ctx.lineWidth = s * 0.3; ctx.strokeStyle = `rgba(255,248,215,${glow * 0.75})`; tracePath(ctx, m, s, X, Y); ctx.stroke(); }
+  ctx.lineWidth = river ? s * 0.075 : s * 0.065;
+  ctx.strokeStyle = river ? 'rgba(226,247,255,.9)' : 'rgba(255,243,206,.95)';
+  ctx.setLineDash(river ? [s * 0.1, s * 0.14] : [0.1, s * 0.24]);
+  const up = (e) => { const j = NB[i * 4 + e]; return j >= 0 && dist[j] >= 0 && dist[j] < d; };
+  if (isCorner(m)) {
+    let a = [0, 1, 2, 3].filter((e) => (m >> e) & 1);
+    if (!up(a[0]) && up(a[1])) a = [a[1], a[0]];
+    const p = edgePt(a[0], s), q = edgePt(a[1], s);
+    ctx.lineDashOffset = d * s - L - ph;
+    ctx.beginPath(); ctx.moveTo(X + p[0], Y + p[1]); ctx.quadraticCurveTo(X + L, Y + L, X + q[0], Y + q[1]); ctx.stroke();
+  } else {
+    for (let e = 0; e < 4; e++) {
+      if (!((m >> e) & 1)) continue;
+      const p = edgePt(e, s);
+      ctx.beginPath();
+      if (up(e)) { ctx.lineDashOffset = d * s - L - ph; ctx.moveTo(X + p[0], Y + p[1]); ctx.lineTo(X + L, Y + L); }
+      else { ctx.lineDashOffset = d * s - ph; ctx.moveTo(X + L, Y + L); ctx.lineTo(X + p[0], Y + p[1]); }
+      ctx.stroke();
+    }
+  }
+  ctx.setLineDash([]);
+}
+function drawBadge(cx, cy, r, river, ok, pulse) {
+  ctx.save(); ctx.translate(cx, cy); if (pulse) ctx.scale(1 + pulse * 0.35, 1 + pulse * 0.35);
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, 7);
+  ctx.fillStyle = ok ? (river ? '#2f86c4' : '#b9843f') : 'rgba(250,244,230,.92)'; ctx.fill();
+  ctx.lineWidth = 1.5; ctx.strokeStyle = ok ? '#fff6e2' : river ? '#2f86c4' : '#9a6a2c'; ctx.stroke();
+  ctx.fillStyle = ok ? '#fff' : river ? '#2f86c4' : '#9a6a2c'; ctx.strokeStyle = ctx.fillStyle;
+  if (river) { ctx.beginPath(); ctx.moveTo(0, -r * 0.62); ctx.bezierCurveTo(r * 0.55, -r * 0.05, r * 0.5, r * 0.55, 0, r * 0.55); ctx.bezierCurveTo(-r * 0.5, r * 0.55, -r * 0.55, -r * 0.05, 0, -r * 0.62); ctx.fill(); }
+  else { ctx.lineWidth = r * 0.22; ctx.beginPath(); ctx.moveTo(-r * 0.32, r * 0.55); ctx.lineTo(-r * 0.12, -r * 0.55); ctx.moveTo(r * 0.32, r * 0.55); ctx.lineTo(r * 0.12, -r * 0.55); ctx.stroke(); }
+  ctx.restore();
+}
+function chevron(cx, cy, dir, vertical, size, col) {
+  ctx.save(); ctx.translate(cx, cy); if (vertical) ctx.rotate(Math.PI / 2); if (dir < 0) ctx.scale(-1, 1);
+  ctx.strokeStyle = col; ctx.lineWidth = Math.max(2, size * 0.32); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(-size * 0.35, -size * 0.6); ctx.lineTo(size * 0.35, 0); ctx.lineTo(-size * 0.35, size * 0.6); ctx.stroke(); ctx.restore();
+}
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(64, now - (lastNow || now)); lastNow = now;
+  fpsTick(now);
+  stepAnims(dt);
+  shake *= Math.exp(-dt / 70); if (shake < 0.2) shake = 0;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  if (!G.pz || !baseC || !disp) { drawLoading(now); return; }
+  const pz = G.pz, time = now / 1000, S = baseC.S, BW = N * cs;
+  ctx.save();
+  if (shake) ctx.translate((Math.random() * 2 - 1) * shake, (Math.random() * 2 - 1) * shake);
+  ctx.fillStyle = 'rgba(0,0,0,.3)'; rr(ctx, ox - pad + 3, oy - pad + 9, S, S, pad * 0.9); ctx.fill();
+  ctx.drawImage(baseC.c, ox - pad, oy - pad, S, S);
+
+  const A = anims[0];
+  let e = 1, line = -1, jitter = 0;
+  if (A) {
+    line = A.m >> 1;
+    const u = Math.min(1, Math.max(0, A.t - A.delay) / A.dur);
+    e = RM ? easeCubic(u) : A.kind === 'quake' ? easeQuake(u) : easeBack(u);
+    if (A.kind === 'quake' && A.t < A.delay && !RM) jitter = Math.sin(A.t * 0.25) * cs * 0.025;
+  }
+  const ids = A ? A.from : G.ids;
+  // next-quake band
+  const nq = A && A.kind === 'quake' ? A.m : anims.length ? -1 : nextQuake();
+  if (nq >= 0 && G.state === 'play') {
+    const r = nq >> 1, a = A && A.kind === 'quake' ? 0.28 : 0.1 + 0.06 * Math.sin(now / 200);
+    ctx.fillStyle = `rgba(214,70,40,${a})`; ctx.fillRect(ox, oy + r * cs, BW, cs);
+  }
+  if (hover >= 0 && !anims.length && G.state === 'play' && !G.bot) {
+    ctx.fillStyle = 'rgba(255,255,255,.1)';
+    ctx.fillRect(ox, oy + ((hover / N) | 0) * cs, BW, cs); ctx.fillRect(ox + (hover % N) * cs, oy, cs, BW);
+  }
+  // movable tiles
+  ctx.save(); ctx.beginPath(); ctx.rect(ox, oy, BW, BW); ctx.clip();
+  const moving = new Uint8Array(NN);
+  for (let i = 0; i < NN; i++) {
+    if (pz.fixed[i]) continue;
+    const id = ids[i];
+    let x = i % N, y = (i / N) | 0;
+    if (A) {
+      const tc = A.toPos[id];
+      if (tc !== i) {
+        moving[i] = 1;
+        const d = moveDir(A.m);
+        if (line < N) { let x1 = tc % N; if (d > 0 && x1 < x) x1 += N; if (d < 0 && x1 > x) x1 -= N; x += (x1 - x) * e; }
+        else { let y1 = (tc / N) | 0; if (d > 0 && y1 < y) y1 += N; if (d < 0 && y1 > y) y1 -= N; y += (y1 - y) * e; }
+      } else if (jitter && line === y) x += jitter / cs;
+    }
+    const X = ox + x * cs, Y = oy + y * cs;
+    ctx.drawImage(plates[id], X, Y, cs, cs);
+    if (moving[i]) {
+      if (x > N - 1) ctx.drawImage(plates[id], X - BW, Y, cs, cs);
+      if (x < 0) ctx.drawImage(plates[id], X + BW, Y, cs, cs);
+      if (y > N - 1) ctx.drawImage(plates[id], X, Y - BW, cs, cs);
+      if (y < 0) ctx.drawImage(plates[id], X, Y + BW, cs, cs);
+    }
+  }
+  // fixed tiles stay on top while a line slides under them
+  if (A) for (let i = 0; i < NN; i++) if (pz.fixed[i] && (line < N ? ((i / N) | 0) === line : i % N === line - N))
+    ctx.drawImage(baseC.c, (pad + (i % N) * cs) * DPR, (pad + ((i / N) | 0) * cs) * DPR, cs * DPR, cs * DPR, ox + (i % N) * cs, oy + ((i / N) | 0) * cs, cs, cs);
+  ctx.restore();
+
+  // water and caravans flow along the connected network; connector stubs; village badges
+  const vals = disp.vals, wave = G.celebrateAt ? (now - G.celebrateAt) / 110 : -9;
+  for (let i = 0; i < NN; i++) {
+    if (moving[i] || (jitter && line === ((i / N) | 0))) continue;
+    const v = vals[i], k = v >> 4, X = ox + (i % N) * cs, Y = oy + ((i / N) | 0) * cs;
+    if (k === KR && disp.dR[i] >= 0) drawFlow(X, Y, v, i, disp.dR, true, time, wave > -9 ? Math.max(0, 1 - Math.abs(disp.dR[i] - wave) / 1.6) : 0);
+    else if (k === KD && disp.dD[i] >= 0) drawFlow(X, Y, v, i, disp.dD, false, time, wave > -9 ? Math.max(0, 1 - Math.abs(disp.dD[i] - wave) / 1.6) : 0);
+    if (k === KV || k === KS || k === KH) {
+      for (let e2 = 0; e2 < 4; e2++) {
+        const j = NB[i * 4 + e2];
+        if (j < 0 || moving[j]) continue;
+        const p = edgePt(e2, cs), inR = RIV[v] && (RIV[vals[j]] >> OPP[e2]) & 1, inD = ROD[v] && (ROD[vals[j]] >> OPP[e2]) & 1;
+        if (!inR && !inD) continue;
+        const ix = X + cs / 2 + DC[e2] * cs * 0.3, iy = Y + cs / 2 + DR[e2] * cs * 0.3;
+        ctx.lineCap = 'round'; ctx.lineWidth = cs * (inR ? 0.2 : 0.18); ctx.strokeStyle = inR ? '#3d95cf' : '#c79a5e';
+        ctx.beginPath(); ctx.moveTo(X + p[0], Y + p[1]); ctx.lineTo(ix, iy); ctx.stroke();
+      }
+    }
+  }
+  pz.villages.forEach((vg, n) => {
+    const X = ox + (vg.cell % N) * cs, Y = oy + ((vg.cell / N) | 0) * cs, r = cs * 0.13;
+    const ok = disp.st.sat[n];
+    const pulse = G.celebrateAt ? Math.max(0, 1 - Math.abs((now - G.celebrateAt) / 1000 - 0.35 - n * 0.12) * 4) : 0;
+    if (ok) { const gl = ctx.createRadialGradient(X + cs / 2, Y + cs * 0.65, 2, X + cs / 2, Y + cs * 0.65, cs * 0.5); gl.addColorStop(0, 'rgba(255,214,120,.55)'); gl.addColorStop(1, 'rgba(255,214,120,0)'); ctx.fillStyle = gl; ctx.fillRect(X, Y, cs, cs); }
+    if (vg.need & NEED_RIVER) drawBadge(X + cs * 0.2, Y + cs * 0.2, r, true, (disp.st.rr >> vg.cell) & 1, pulse);
+    if (vg.need & NEED_ROAD) drawBadge(X + cs * 0.8, Y + cs * 0.2, r, false, (disp.st.rd >> vg.cell) & 1, pulse);
+  });
+  // gutter arrows (tap targets) and the quake marker
+  const qRow = nq >= 0 && G.state === 'play' ? nq >> 1 : -1, qDir = nq >= 0 ? moveDir(nq) : 0;
+  const gx = (cs * GUT + pad) / 2, chs = cs * 0.13;
+  for (let l = 0; l < 2 * N; l++) {
+    if (pz.lens[l] < 2) continue;
+    const hot = hover >= 0 && (l < N ? ((hover / N) | 0) === l : hover % N === l - N);
+    const col = l === qRow ? 'rgba(255,140,110,.95)' : hot ? 'rgba(243,234,216,.95)' : 'rgba(243,234,216,.42)';
+    if (l < N) { const cy = oy + l * cs + cs / 2; chevron(ox - gx, cy, -1, false, chs, col); chevron(ox + BW + gx, cy, 1, false, chs, col); }
+    else { const cx = ox + (l - N) * cs + cs / 2; chevron(cx, oy - gx, -1, true, chs, col); chevron(cx, oy + BW + gx, 1, true, chs, col); }
+  }
+  if (qRow >= 0) {
+    const cy = oy + qRow * cs + cs / 2, tx = qDir > 0 ? ox + BW + pad * 0.5 : ox - pad * 0.5, sz = Math.max(6, pad * 0.75);
+    ctx.fillStyle = '#e0553a'; ctx.strokeStyle = '#fff3e6'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(tx + qDir * sz * 0.7, cy); ctx.lineTo(tx - qDir * sz * 0.5, cy - sz); ctx.lineTo(tx - qDir * sz * 0.5, cy + sz); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.setLineDash([cs * 0.08, cs * 0.06]); ctx.strokeStyle = 'rgba(224,85,58,.85)'; ctx.lineWidth = 2;
+    ctx.strokeRect(ox + 1, oy + qRow * cs + 1, BW - 2, cs - 2); ctx.setLineDash([]);
+  }
+  if (cursor >= 0 && G.state === 'play' && !G.bot) { ctx.strokeStyle = '#7cc4f0'; ctx.lineWidth = 3; rr(ctx, ox + (cursor % N) * cs + 3, oy + ((cursor / N) | 0) * cs + 3, cs - 6, cs - 6, cs * 0.14); ctx.stroke(); }
+  drawParticles(dt);
+  ctx.restore();
+}
+function drawLoading(now) {
+  ctx.fillStyle = 'rgba(243,234,216,.5)';
+  for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(W / 2 + (i - 1) * 18, H / 2, 4 + 2 * Math.sin(now / 200 + i), 0, 7); ctx.fill(); }
+}
+function burst(cell) {
+  const cx = ox + (cell % N) * cs + cs / 2, cy = oy + ((cell / N) | 0) * cs + cs / 2;
+  const cols = ['#d6453d', '#f6efe1', '#f2b33d', '#c4573a', '#3d95cf'];
+  for (let i = 0; i < 22; i++) {
+    const a = Math.random() * Math.PI * 2, sp = cs * (1.2 + Math.random() * 2.2);
+    particles.push({ x: cx, y: cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - cs * 2.2, life: 1.1 + Math.random() * 0.6, t: 0, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 12, col: cols[i % cols.length], delay: 0.25 + Math.random() * 0.25 });
+  }
+}
+function drawParticles(dt) {
+  const s = dt / 1000;
+  particles = particles.filter((p) => p.t < p.life + p.delay);
+  for (const p of particles) {
+    p.t += s; if (p.t < p.delay) continue;
+    p.vy += cs * 5 * s; p.vx *= 0.985; p.x += p.vx * s; p.y += p.vy * s; p.rot += p.vr * s;
+    ctx.save(); ctx.globalAlpha = Math.max(0, 1 - (p.t - p.delay) / p.life); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillStyle = p.col;
+    ctx.beginPath(); ctx.ellipse(0, 0, cs * 0.06, cs * 0.03, 0, 0, 7); ctx.fill(); ctx.restore();
+  }
+}
+
+// ---------------------------------------------------------------- input
+function hitTest(px, py) {
+  const bx = (px - ox) / cs, by = (py - oy) / cs;
+  if (bx >= 0 && bx < N && by >= 0 && by < N) return { cell: (by | 0) * N + (bx | 0) };
+  if (by >= 0 && by < N) { if (bx < 0 && bx >= -GUT) return { m: (by | 0) * 2 + 1 }; if (bx >= N && bx < N + GUT) return { m: (by | 0) * 2 }; }
+  if (bx >= 0 && bx < N) { if (by < 0 && by >= -GUT) return { m: (N + (bx | 0)) * 2 + 1 }; if (by >= N && by < N + GUT) return { m: (N + (bx | 0)) * 2 }; }
+  return null;
+}
+const ptr = (e) => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+let drag = null;
+cv.addEventListener('pointerdown', (e) => {
+  audio();
+  if (G.bot || G.state !== 'play') return;
+  const p = ptr(e), h = hitTest(p.x, p.y);
+  if (!h) return;
+  drag = { x: p.x, y: p.y, h, done: false };
+  try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+});
+cv.addEventListener('pointermove', (e) => {
+  const p = ptr(e);
+  if (e.pointerType === 'mouse') { const h = hitTest(p.x, p.y); hover = h && h.cell != null ? h.cell : -1; }
+  if (!drag || drag.done || drag.h.cell == null) return;
+  const dx = p.x - drag.x, dy = p.y - drag.y;
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < cs * 0.25) return;
+  const c = drag.h.cell;
+  const m = Math.abs(dx) > Math.abs(dy) ? ((c / N) | 0) * 2 + (dx > 0 ? 0 : 1) : (N + (c % N)) * 2 + (dy > 0 ? 0 : 1);
+  drag.done = true; doMove(m);
+});
+const endDrag = (e) => {
+  if (drag && !drag.done && drag.h.m != null) { const p = ptr(e); if (Math.hypot(p.x - drag.x, p.y - drag.y) < cs * 0.4) doMove(drag.h.m); }
+  drag = null;
+};
+cv.addEventListener('pointerup', endDrag);
+cv.addEventListener('pointercancel', () => { drag = null; });
+cv.addEventListener('pointerleave', () => { hover = -1; });
+addEventListener('keydown', (e) => {
+  audio();
+  if ($('help').classList.contains('on') && (e.key === 'Escape' || e.key === 'Enter')) { closeHelp(); e.preventDefault(); return; }
+  if (document.querySelector('.ov.on')) return;
+  if (G.state !== 'play' || G.bot) return;
+  const k = e.key.toLowerCase();
+  if (cursor < 0 && /^(w|a|s|d|arrow)/.test(k)) cursor = 12;
+  const r = (cursor / N) | 0, c = cursor % N;
+  if (k === 'a' || k === 'd') { cursor = r * N + ((c + (k === 'd' ? 1 : -1) + N) % N); e.preventDefault(); return; }
+  if (k === 'w' || k === 's') { cursor = ((r + (k === 's' ? 1 : -1) + N) % N) * N + c; e.preventDefault(); return; }
+  const am = { arrowright: r * 2, arrowleft: r * 2 + 1, arrowdown: (N + c) * 2, arrowup: (N + c) * 2 + 1 }[k];
+  if (am != null) { doMove(am); e.preventDefault(); return; }
+  if (k === 'z' || k === 'backspace') { undo(); e.preventDefault(); }
+  else if (k === 'r') restart();
+  else if (k === 'm') toggleMute();
+  else if (k === 'escape') openMenu();
+});
+
+// ---------------------------------------------------------------- UI
+function updateHud() {
+  $('tMode').textContent = G.mode === 'daily' ? t('dailyTag', { d: seedLabel(G.seed) }) + (G.place && G.pz ? ' · ' + G.place : '') : t('endless') + ' · ' + t('level', { n: G.level });
+  $('lMoves').textContent = t('moves'); $('lPar').textContent = t('par');
+  $('vMoves').textContent = G.moves; $('vPar').textContent = G.pz ? G.pz.par : '–';
+  const st = G.pz ? (G.won ? G.stars : starsFor(G.moves, G.pz.par)) : 0;
+  $('vStars').innerHTML = [0, 1, 2].map((i) => starSvg(i < st, 18)).join('');
+  const q = $('quake'), nq = nextQuake();
+  if (G.state === 'loading') { q.className = 'calm'; $('tQuake').textContent = t('loading'); }
+  else if (nq < 0) { q.className = 'calm'; $('tQuake').textContent = t('calm'); }
+  else { q.className = ''; $('tQuake').textContent = t('quakeNext', { r: (nq >> 1) + 1, a: moveDir(nq) > 0 ? '→' : '←' }); }
+  const b = $('bot'); b.style.display = G.bot ? 'inline-block' : 'none'; b.textContent = G.bot ? 'BOT ' + G.bot.strategy.toUpperCase() : '';
+  ['Undo', 'Restart', 'Menu'].forEach((k) => ($('l' + k).textContent = t(k.toLowerCase())));
+  $('bUndo').disabled = !G.undo.length || G.won || !!G.bot;
+  $('bRestart').disabled = !G.pz || !!G.bot;
+  $('lSound').textContent = t('sound'); $('iSound').innerHTML = muted ? ICON_OFF : ICON_ON;
+  $('bSound').setAttribute('aria-pressed', String(!muted));
+  $('vLang').textContent = lang === 'tr' ? 'EN' : 'TR'; $('lLang').textContent = lang === 'tr' ? 'English' : 'Türkçe';
+  cv.setAttribute('aria-label', t('board'));
+  document.documentElement.lang = lang;
+  dbg();
+}
+function fillMenu() {
+  $('mSub').textContent = t('sub');
+  const ds = todaySeed(), done = store.get('daily.' + ds, null);
+  $('bDaily').innerHTML = `${t('daily')}<small>${seedLabel(ds)} · ${done ? t('solvedOn') + ' ' + '★'.repeat(done.s) + ' ' + done.m + ' ' + t('movesWord') : t('playTag')}</small>`;
+  $('bEndless').innerHTML = `${t('endless')}<small>${t('level', { n: store.get('endless', 1) })}</small>`;
+  $('bHow').textContent = t('how');
+  $('mLang').textContent = lang === 'tr' ? 'English' : 'Türkçe';
+  $('mSound').textContent = t('sound') + ': ' + (muted ? t('off') : t('on'));
+}
+function closeAll() { document.querySelectorAll('.ov').forEach((o) => o.classList.remove('on')); }
+const COARSE = matchMedia('(pointer:coarse)').matches;
+function openMenu() { fillMenu(); closeAll(); $('menu').classList.add('on'); if (!COARSE) setTimeout(() => $('bDaily').focus(), 30); }
+let helpReturn = null;
+function openHelp() {
+  helpReturn = $('menu').classList.contains('on') ? 'menu' : null; closeAll();
+  $('hTitle').textContent = t('how');
+  $('hList').innerHTML = ['h1', 'h2', 'h3', 'h4', 'h5'].map((k) => `<li>${t(k)}</li>`).join('');
+  $('hLegend').innerHTML = [['#3d95cf', 'lRiver'], ['#c79a5e', 'lRoad'], ['#c25b35', 'lVillage'], ['#2fa3b6', 'lSpring'], ['#b8a07a', 'lHan'], ['#7a6551', 'lMount']].map(([c, k]) => `<span><i style="background:${c}"></i>${t(k)}</span>`).join('');
+  $('bHelpOk').textContent = t('gotIt');
+  $('help').classList.add('on'); if (!COARSE) setTimeout(() => $('bHelpOk').focus(), 30);
+}
+function closeHelp() { $('help').classList.remove('on'); if (helpReturn === 'menu') openMenu(); }
+function shareText() { return `Fay Hattı ${G.mode === 'daily' ? seedLabel(G.seed) : '#' + G.level} ${'⭐'.repeat(G.stars)} ${G.moves} ${t('movesWord')}`; }
+function shareUrl() { return CANON + (G.mode === 'daily' ? '?seed=' + G.seed : '?level=' + G.level); }
+function showResult() {
+  if (!G.won) return;
+  closeAll();
+  $('rTitle').textContent = t('solvedT');
+  $('rStars').innerHTML = [0, 1, 2].map((i) => starSvg(i < G.stars, 46)).join('');
+  $('rLine').textContent = t('resLine', { m: G.moves, p: G.pz.par });
+  $('rShare').textContent = shareText() + '\n' + shareUrl();
+  $('bShare').textContent = t('share');
+  $('bNext').textContent = G.mode === 'daily' ? t('toEndless') : t('next');
+  $('bRMenu').textContent = t('back');
+  $('rNote').textContent = G.mode === 'daily' ? t('tomorrow') : t('endlessNote', { n: G.level });
+  $('result').classList.add('on');
+  if (!BOT && !COARSE) setTimeout(() => $('bShare').focus(), 30);
+}
+let toastT = 0;
+function toast(msg) { const el = $('toast'); el.textContent = msg; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 1800); }
+async function share() {
+  const text = shareText() + '\n' + shareUrl();
+  if (navigator.share && matchMedia('(pointer:coarse)').matches) { try { await navigator.share({ text }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+  try { await navigator.clipboard.writeText(text); toast(t('copied')); }
+  catch (e) { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); toast(t('copied')); } catch (e2) {} ta.remove(); }
+}
+function toggleMute() { muted = !muted; store.set('mute', muted); if (AC) master.gain.value = muted ? 0 : 0.55; updateHud(); fillMenu(); if (!muted) sfx.click(); }
+function toggleLang() { lang = lang === 'tr' ? 'en' : 'tr'; store.set('lang', lang); updateHud(); fillMenu(); if ($('result').classList.contains('on')) showResult(); if ($('help').classList.contains('on')) { const r = helpReturn; openHelp(); helpReturn = r; } }
+
+$('bUndo').onclick = undo; $('bRestart').onclick = restart; $('bMenu').onclick = () => { sfx.click(); openMenu(); };
+$('bSound').onclick = toggleMute; $('mSound').onclick = toggleMute; $('bLang').onclick = toggleLang; $('mLang').onclick = toggleLang;
+$('bDaily').onclick = () => {
+  sfx.click();
+  if (G.mode === 'daily' && G.seed === todaySeed() && G.pz && !G.won) { closeAll(); if (!NOSAVE && !store.get('help', false)) { store.set('help', true); openHelp(); } }
+  else startPuzzle('daily', todaySeed());
+};
+$('bEndless').onclick = () => { sfx.click(); startPuzzle('endless', store.get('endless', 1)); };
+$('bHow').onclick = () => { sfx.click(); openHelp(); };
+$('bHelpOk').onclick = closeHelp;
+$('bShare').onclick = share;
+$('bNext').onclick = () => { sfx.click(); startPuzzle('endless', G.mode === 'daily' ? store.get('endless', 1) : G.level + 1); };
+$('bRMenu').onclick = () => { sfx.click(); openMenu(); };
+document.querySelectorAll('.ov').forEach((o) => o.addEventListener('click', (e) => { if (e.target === o && o.id !== 'menu') { if (o.id === 'help') closeHelp(); else o.classList.remove('on'); } }));
+
+// ---------------------------------------------------------------- debug overlay, API, boot
+let fpsN = 0, fpsT = 0, fps = 0;
+function fpsTick(now) { fpsN++; if (now - fpsT >= 500) { fps = Math.round((fpsN * 1000) / (now - fpsT)); fpsN = 0; fpsT = now; if (DEBUG) dbg(); } }
+function dbg() {
+  if (!DEBUG) return;
+  const el = $('debug'), pz = G.pz;
+  el.style.display = 'block';
+  el.textContent = `fps ${fps}  dpr ${DPR}  cell ${cs}px\nseed ${G.seed}  K ${pz ? pz.K : '-'}  par ${pz ? pz.par : '-'}\ngen ${G.genMs} ms  nodes ${pz ? pz.solveNodes : '-'}\nmoves ${G.moves}  quake ${G.moves % 5}` + (G.bot ? `\nbot ${G.bot.strategy} plan ${G.bot.plan.length} (${G.bot.ms} ms)` : '');
+}
+const GLYPH = { 0: '..', 3: 'VV', 4: 'SS', 5: 'HH', 6: 'MM' };
+window.fayHatti = {
+  get seed() { return G.seed; }, get moves() { return G.moves; }, get solved() { return G.won; }, get state() { return G.state; },
+  get mode() { return G.mode; }, get level() { return G.level; }, get par() { return G.pz ? G.pz.par : null; }, get stars() { return G.stars; },
+  get nextQuake() { const q = nextQuake(); return q < 0 ? null : { row: q >> 1, dir: moveDir(q) }; },
+  get bot() { return G.bot ? { strategy: G.bot.strategy, planned: G.bot.plan.length, played: G.bot.i } : null; },
+  get genMs() { return G.genMs; }, get fps() { return fps; }, get plan() { return G.pz ? G.pz.solution.slice() : null; },
+  get board() { if (!G.pz) return null; const v = toVals(G.pz, G.ids), out = []; for (let r = 0; r < N; r++) { const row = []; for (let c = 0; c < N; c++) { const x = v[r * N + c], k = x >> 4; row.push(k === KR ? 'r' + (x & 15).toString(16) : k === KD ? 'd' + (x & 15).toString(16) : GLYPH[k]); } out.push(row.join(' ')); } return out; },
+  move: (m) => doMove(m), undo, restart, start: (mode, arg) => startPuzzle(mode, arg, false),
+};
+addEventListener('resize', layout);
+layout();
+updateHud();
+requestAnimationFrame(frame);
+{
+  const seedQ = (QS.get('seed') || '').replace(/-/g, ''), levelQ = parseInt(QS.get('level'), 10);
+  if (levelQ > 0) startPuzzle('endless', levelQ);
+  else if (seedQ && /^\w{1,24}$/.test(seedQ)) startPuzzle('daily', seedQ);
+  else if (BOT) startPuzzle('daily', todaySeed());
+  else { startPuzzle('daily', todaySeed(), false); setTimeout(openMenu, 0); }
+}
+</script>
+</body>
+</html>
