@@ -13,8 +13,7 @@
   "primary_language": "JavaScript",
   "technologies": [
     "Canvas 2D",
-    "Web Audio API",
-    "Vanilla JavaScript"
+    "Web Audio API"
   ],
   "version": "0.1.0",
   "license": "MIT",
