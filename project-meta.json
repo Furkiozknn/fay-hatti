@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.0.0",
+  "id": "fay-hatti",
+  "owner": "Furkiozknn",
+  "repository": "https://github.com/Furkiozknn/fay-hatti",
+  "homepage": "https://furkiozknn.github.io/fay-hatti/",
+  "releases": null,
+  "status": "active",
+  "category": "game",
+  "platform": [
+    "web"
+  ],
+  "primary_language": "JavaScript",
+  "technologies": [
+    "Canvas 2D",
+    "Web Audio API",
+    "Vanilla JavaScript"
+  ],
+  "version": "0.1.0",
+  "license": "MIT",
+  "topics": [
+    "browser-game",
+    "puzzle-game",
+    "daily-puzzle",
+    "game-off-2026",
+    "anatolia",
+    "claude-code",
+    "claude-game-arena"
+  ],
+  "summary": "Daily sliding-tile puzzle on a map of Anatolia for GitHub Game Off 2026 (SHIFT): shift rows and columns to bring rivers and roads to villages while a quake moves one row after every move · Anadolu haritasında günlük kaydırma bulmacası: satır ve sütunları kaydırıp köylere nehir ve yol götür, her hamleden sonra bir deprem bir satırı kaydırır",
+  "key_features": [
+    "Rows and columns wrap around and slide past fixed villages, mountains, the spring and the caravanserai; after each move a seeded quake shifts one row, telegraphed one move ahead",
+    "Daily puzzle with the same map for everyone (date seed), endless levels, par and 3 stars, undo, restart, spoiler-free share text, English and Turkish",
+    "Generator scrambles a solved board with reverse moves and reverse quakes, so a short solution always exists; an optimal solver (bot A) sets par, a greedy beam search (bot B) plays by feel",
+    "Measured: both bots solved 12/12 seeds in Chrome (?auto) and 40/40 puzzles in Node; bot A averages 4.25 moves (= par), bot B 6.5; 60 fps desktop and phone in headless Chrome",
+    "One index.html, no assets or external requests; URL flags ?seed, ?demo=1|a|b, ?auto, ?debug for video capture"
+  ],
+  "media": {
+    "hero": "docs/screenshot.png",
+    "screenshots": [
+      "docs/screenshot.png"
+    ],
+    "gifs": [],
+    "videos": []
+  },
+  "tests": null,
+  "ci": {
+    "workflows": [],
+    "badge": null
+  },
+  "docs": {
+    "readme": "README.md",
+    "changelog": "CHANGELOG.md",
+    "version_history": null,
+    "roadmap": null,
+    "security": null,
+    "contributing": null,
+    "license_file": "LICENSE"
+  },
+  "social": {
+    "headline": "Shift the land of Anatolia: bring water and roads to every village before the next quake · Anadolu toprağını kaydır: bir sonraki depremden önce her köye su ve yol götür",
+    "hashtags": [
+      "claudecode",
+      "indiegame",
+      "gameoff"
+    ],
+    "primary_link": "https://furkiozknn.github.io/fay-hatti/"
+  },
+  "provenance": {
+    "generated_at": "2026-11-03",
+    "generator": "hand-written",
+    "rule": "mechanical fields read from the repository; editorial fields hand-written from the README and index.html; no field is generated from a guess",
+    "note": "v0.1 first playable 2026-11-03"
+  }
+}
