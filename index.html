@@ -11,6 +11,7 @@
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.4 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent}
 body{background:radial-gradient(120% 80% at 50% 0%,#2a3f49 0%,var(--bg) 60%)}
+body.biome-kapadokya{background:radial-gradient(120% 80% at 50% 0%,#35262c 0%,#1f161a 60%);--bg:#1f161a;--bg2:#2a1e24;--ink:#f6ede2;--ink2:#cdbdae;--paper:#f5ebd8;--paper-ink:#2d1e16;--terra:#b54c30;--gold:#e8a436;--quake:#e45838}
 button{font:inherit;color:inherit;cursor:pointer}
 button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 #app{position:fixed;inset:0;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto 1fr auto;grid-template-areas:"hud" "quake" "stage" "bar";padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left)}
@@ -548,6 +549,7 @@ const STR = {
     resLine: '{m} moves · par {p}', share: 'Share result', next: 'Next level', toEndless: 'Play endless', back: 'Menu',
     copied: 'Copied to clipboard', tomorrow: 'A new map tomorrow.', endlessNote: 'Level {n} done.', movesWord: 'moves',
     gotIt: 'Got it', solvedOn: 'Solved', playTag: 'same map for everyone', board: 'Puzzle board',
+    biomeKapadokya: 'Cappadocia', biomeBozkir: 'Steppe',
     h1: 'Drag a row sideways or a column up or down (or tap the arrows). Tiles wrap around the edge.',
     h2: 'Villages, mountains, the spring and the caravanserai never move: tiles slide past them.',
     h3: 'Lead the river from the spring and the road from the caravanserai to every village that asks for them.',
@@ -563,6 +565,7 @@ const STR = {
     resLine: '{m} hamle · hedef {p}', share: 'Sonucu paylaş', next: 'Sonraki bölüm', toEndless: 'Sonsuz moda geç', back: 'Menü',
     copied: 'Panoya kopyalandı', tomorrow: 'Yarın yeni bir harita.', endlessNote: '{n}. bölüm tamam.', movesWord: 'hamle',
     gotIt: 'Anladım', solvedOn: 'Çözüldü', playTag: 'herkes için aynı harita', board: 'Bulmaca tahtası',
+    biomeKapadokya: 'Kapadokya', biomeBozkir: 'Bozkır',
     h1: 'Bir satırı yana, bir sütunu yukarı ya da aşağı sürükle (ya da oklara dokun). Taşlar kenardan dolanır.',
     h2: 'Köyler, dağlar, pınar ve kervansaray yerinden oynamaz: taşlar onların yanından kayar.',
     h3: 'Nehri pınardan, yolu kervansaraydan, onları isteyen her köye ulaştır.',
@@ -579,6 +582,27 @@ let muted = !!store.get('mute', false);
 const PLACES = ['Göreme', 'Assos', 'Safranbolu', 'Şirince', 'Uzungöl', 'Mardin', 'Beypazarı', 'Adatepe', 'Kayaköy', 'Taraklı',
   'Uçhisar', 'Mustafapaşa', 'Harput', 'Zelve', 'Avanos', 'Kemaliye', 'Sille', 'Trilye', 'Birgi', 'Eğirdir', 'Selçuk', 'Ahlat',
   'Mudurnu', 'Gerze', 'Tire', 'Hasankeyf', 'Ani', 'Midyat', 'Cumalıkızık', 'Ürgüp', 'Datça'];
+const CAPPADOCIA_PLACES = ['Göreme', 'Uçhisar', 'Avanos', 'Ürgüp', 'Zelve', 'Ortahisar', 'Mustafapaşa', 'Çavuşin', 'Ihlara', 'Derinkuyu'];
+
+// Regional biome rotation: Kapadokya debuts week of Nov 9-15 2026 (Nov 12). Alternates weekly.
+function getBiome(mode, seed, level) {
+  const q = (QS.get('theme') || QS.get('biome') || '').toLowerCase();
+  if (q === 'kapadokya' || q === 'cappadocia') return 'kapadokya';
+  if (q === 'bozkir' || q === 'steppe') return 'bozkir';
+  if (mode === 'daily') {
+    const s = String(seed);
+    if (/^\d{8}$/.test(s)) {
+      const d = new Date(+s.slice(0, 4), +s.slice(4, 6) - 1, +s.slice(6, 8));
+      const t0 = new Date(2026, 10, 2).getTime(); // Launch week base (Nov 2, 2026)
+      const w = Math.floor((d.getTime() - t0) / (7 * 864e5));
+      return ((w % 2) + 2) % 2 === 1 ? 'kapadokya' : 'bozkir';
+    }
+    const sl = s.toLowerCase();
+    if (sl.includes('kapadokya') || sl.includes('cappadocia') || sl.includes('goreme') || sl.includes('urgup') || sl.includes('avanos')) return 'kapadokya';
+    return (hashStr('b' + s) % 2) === 1 ? 'kapadokya' : 'bozkir';
+  }
+  return Math.floor((level - 1) / 3) % 2 === 1 ? 'kapadokya' : 'bozkir';
+}
 
 const $ = (id) => document.getElementById(id);
 const todaySeed = () => { const d = new Date(); return String(d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()); };
@@ -622,17 +646,66 @@ function pluck(t0, freq, peak) {
   o.connect(f); f.connect(g); g.connect(master); o.start(t0); o.stop(t0 + 0.8);
 }
 const sfx = {
-  slide() { if (!audio()) return; const t0 = AC.currentTime; noise(t0, 0.13, 'bandpass', 1400, 500, 0.22, 1.2); tone(t0 + 0.1, 180, 0.06, 'triangle', 0.12); },
-  quake() { if (!audio()) return; const t0 = AC.currentTime; noise(t0, 0.7, 'lowpass', 220, 60, 0.75, 0.8); tone(t0, 52, 0.6, 'sine', 0.45, 34); noise(t0 + 0.12, 0.25, 'bandpass', 600, 300, 0.12, 2); },
-  ping(i) { if (!audio()) return; const t0 = AC.currentTime, f = [587.3, 740, 880, 1174.7][i % 4]; tone(t0, f, 0.5, 'sine', 0.2); tone(t0, f * 2.01, 0.25, 'sine', 0.06); },
-  // Hicaz-flavoured run on D: D Eb F# G A D
-  win() { if (!audio()) return; const t0 = AC.currentTime; [293.7, 311.1, 370, 392, 440, 587.3].forEach((f, i) => pluck(t0 + i * 0.09, f, 0.16)); tone(t0 + 0.55, 587.3, 1.2, 'sine', 0.12); tone(t0 + 0.55, 880, 1.2, 'sine', 0.07); },
+  slide() {
+    if (!audio()) return; const t0 = AC.currentTime;
+    if (G.biome === 'kapadokya') {
+      noise(t0, 0.14, 'bandpass', 1100, 380, 0.24, 1.4);
+      tone(t0 + 0.09, 155, 0.07, 'triangle', 0.13);
+    } else {
+      noise(t0, 0.13, 'bandpass', 1400, 500, 0.22, 1.2);
+      tone(t0 + 0.1, 180, 0.06, 'triangle', 0.12);
+    }
+  },
+  quake() {
+    if (!audio()) return; const t0 = AC.currentTime;
+    if (G.biome === 'kapadokya') {
+      noise(t0, 0.75, 'lowpass', 190, 50, 0.8, 0.9);
+      tone(t0, 46, 0.65, 'sine', 0.5, 30);
+      noise(t0 + 0.1, 0.3, 'bandpass', 520, 240, 0.15, 2.2);
+    } else {
+      noise(t0, 0.7, 'lowpass', 220, 60, 0.75, 0.8);
+      tone(t0, 52, 0.6, 'sine', 0.45, 34);
+      noise(t0 + 0.12, 0.25, 'bandpass', 600, 300, 0.12, 2);
+    }
+  },
+  ping(i) {
+    if (!audio()) return; const t0 = AC.currentTime;
+    if (G.biome === 'kapadokya') {
+      // Avanos terracotta ceramic chime
+      const f = [587.3, 698.5, 880, 1046.5][i % 4];
+      tone(t0, f, 0.45, 'triangle', 0.18);
+      tone(t0, f * 2.76, 0.18, 'sine', 0.06);
+      noise(t0, 0.03, 'highpass', 2400, 3600, 0.04, 2);
+    } else {
+      const f = [587.3, 740, 880, 1174.7][i % 4];
+      tone(t0, f, 0.5, 'sine', 0.2);
+      tone(t0, f * 2.01, 0.25, 'sine', 0.06);
+    }
+  },
+  win() {
+    if (!audio()) return; const t0 = AC.currentTime;
+    if (G.biome === 'kapadokya') {
+      // Cappadocia victory: Central Anatolian cadence on D with airy Ney breath
+      [293.7, 349.2, 392, 440, 523.3, 587.3].forEach((f, i) => {
+        pluck(t0 + i * 0.095, f, 0.16);
+        tone(t0 + i * 0.095 + 0.02, f, 0.2, 'sine', 0.05);
+      });
+      noise(t0, 0.7, 'bandpass', 850, 1150, 0.04, 3.5);
+      tone(t0 + 0.6, 587.3, 1.3, 'sine', 0.14);
+      tone(t0 + 0.6, 880, 1.1, 'sine', 0.07);
+    } else {
+      // Hicaz-flavoured run on D: D Eb F# G A D
+      [293.7, 311.1, 370, 392, 440, 587.3].forEach((f, i) => pluck(t0 + i * 0.09, f, 0.16));
+      tone(t0 + 0.55, 587.3, 1.2, 'sine', 0.12);
+      tone(t0 + 0.55, 880, 1.2, 'sine', 0.07);
+    }
+  },
   click() { if (!audio()) return; tone(AC.currentTime, 900, 0.04, 'square', 0.04); },
   undo() { if (!audio()) return; noise(AC.currentTime, 0.1, 'bandpass', 500, 1300, 0.16, 1.2); },
 };
 
 // ---------------------------------------------------------------- game state
-const G = { mode: 'daily', seed: '', level: 1, pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], bot: null, celebrateAt: 0, place: '' };
+const G = { mode: 'daily', seed: '', level: 1, pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], bot: null, celebrateAt: 0, place: '', biome: 'bozkir' };
 let anims = [], shake = 0, particles = [], botTimer = 0, disp = null;
 
 function starsFor(moves, par) { return moves <= par ? 3 : moves <= par + 2 ? 2 : 1; }
@@ -652,7 +725,9 @@ function startPuzzle(mode, arg, firstHelp = true) {
     for (let k = 0; !pz && k < 5; k++) pz = makePuzzle(seed + k * 7919, cfg);
     G.genMs = Math.round(performance.now() - t0);
     G.pz = pz; G.ids = pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.sat = [];
-    G.place = PLACES[hashStr('p' + G.seed) % PLACES.length];
+    G.biome = getBiome(mode, G.seed, G.level);
+    document.body.classList.toggle('biome-kapadokya', G.biome === 'kapadokya');
+    G.place = G.biome === 'kapadokya' ? CAPPADOCIA_PLACES[hashStr('p' + G.seed) % CAPPADOCIA_PLACES.length] : PLACES[hashStr('p' + G.seed) % PLACES.length];
     G.state = 'play';
     buildCaches(); settle(true); updateHud();
     if (BOT) startBot();
@@ -803,29 +878,54 @@ function strokePath(c, m, s, w, col) {
 }
 function drawPlate(c, v, id) {
   const s = cs, k = v >> 4, m = v & 15, ins = Math.max(1.5, s * 0.04), r = s * 0.14, R = rng32(id * 977 + 13);
-  c.fillStyle = 'rgba(70,42,18,.38)'; rr(c, ins, ins + s * 0.035, s - 2 * ins, s - 2 * ins, r); c.fill();
+  const isK = G.biome === 'kapadokya';
+  c.fillStyle = isK ? 'rgba(75,32,18,.36)' : 'rgba(70,42,18,.38)'; rr(c, ins, ins + s * 0.035, s - 2 * ins, s - 2 * ins, r); c.fill();
   const g = c.createLinearGradient(0, 0, 0, s);
-  g.addColorStop(0, '#f1e0b3'); g.addColorStop(1, '#d6bb83');
+  if (isK) { g.addColorStop(0, '#f6e4d4'); g.addColorStop(1, '#dcba9e'); }
+  else { g.addColorStop(0, '#f1e0b3'); g.addColorStop(1, '#d6bb83'); }
   c.fillStyle = g; rr(c, ins, ins, s - 2 * ins, s - 2 * ins - s * 0.02, r); c.fill();
-  c.strokeStyle = 'rgba(255,251,236,.7)'; c.lineWidth = 1.2; rr(c, ins + 1, ins + 1, s - 2 * ins - 2, s - 2 * ins - s * 0.02 - 2, r * 0.9); c.stroke();
-  // steppe tufts and pebbles travel with the tile
+  c.strokeStyle = isK ? 'rgba(255,250,245,.75)' : 'rgba(255,251,236,.7)'; c.lineWidth = 1.2; rr(c, ins + 1, ins + 1, s - 2 * ins - 2, s - 2 * ins - s * 0.02 - 2, r * 0.9); c.stroke();
+  // terrain details travel with the tile
   for (let i = 0; i < 6; i++) {
     const x = s * (0.16 + R() * 0.68), y = s * (0.16 + R() * 0.64);
-    if (R() < 0.6) { c.strokeStyle = `rgba(${(110 + R() * 30) | 0},${(125 + R() * 25) | 0},60,.55)`; c.lineWidth = 1.2; c.beginPath(); c.moveTo(x - 2, y); c.lineTo(x, y - s * 0.05); c.lineTo(x + 2, y); c.stroke(); }
-    else { c.fillStyle = 'rgba(140,110,75,.35)'; c.beginPath(); c.ellipse(x, y, s * 0.02, s * 0.014, 0, 0, 7); c.fill(); }
+    if (isK) {
+      if (R() < 0.5) { c.strokeStyle = `rgba(${(140 + R() * 25) | 0},${(120 + R() * 20) | 0},75,.5)`; c.lineWidth = 1.2; c.beginPath(); c.moveTo(x - 2, y); c.lineTo(x, y - s * 0.04); c.lineTo(x + 2, y); c.stroke(); }
+      else { c.fillStyle = 'rgba(165,95,65,.35)'; c.beginPath(); c.ellipse(x, y, s * 0.022, s * 0.015, 0, 0, 7); c.fill(); }
+    } else {
+      if (R() < 0.6) { c.strokeStyle = `rgba(${(110 + R() * 30) | 0},${(125 + R() * 25) | 0},60,.55)`; c.lineWidth = 1.2; c.beginPath(); c.moveTo(x - 2, y); c.lineTo(x, y - s * 0.05); c.lineTo(x + 2, y); c.stroke(); }
+      else { c.fillStyle = 'rgba(140,110,75,.35)'; c.beginPath(); c.ellipse(x, y, s * 0.02, s * 0.014, 0, 0, 7); c.fill(); }
+    }
   }
   if (k === KR) {
-    strokePath(c, m, s, s * 0.44, 'rgba(105,140,62,.40)');
-    strokePath(c, m, s, s * 0.3, '#2a6c99');
-    strokePath(c, m, s, s * 0.22, '#3d95cf');
-    c.save(); c.translate(-s * 0.03, -s * 0.03); strokePath(c, m, s, s * 0.05, 'rgba(255,255,255,.22)'); c.restore();
+    strokePath(c, m, s, s * 0.44, isK ? 'rgba(185,92,62,.36)' : 'rgba(105,140,62,.40)');
+    strokePath(c, m, s, s * 0.3, isK ? '#226b96' : '#2a6c99');
+    strokePath(c, m, s, s * 0.22, isK ? '#3ca6d8' : '#3d95cf');
+    c.save(); c.translate(-s * 0.03, -s * 0.03); strokePath(c, m, s, s * 0.05, 'rgba(255,255,255,.24)'); c.restore();
   } else if (k === KD) {
-    strokePath(c, m, s, s * 0.3, 'rgba(122,82,48,.32)');
-    strokePath(c, m, s, s * 0.21, '#c79a5e');
-    c.setLineDash([s * 0.07, s * 0.07]); strokePath(c, m, s, s * 0.03, 'rgba(248,234,200,.9)'); c.setLineDash([]);
+    strokePath(c, m, s, s * 0.3, isK ? 'rgba(150,85,50,.28)' : 'rgba(122,82,48,.32)');
+    strokePath(c, m, s, s * 0.21, isK ? '#caa16a' : '#c79a5e');
+    c.setLineDash([s * 0.07, s * 0.07]); strokePath(c, m, s, s * 0.03, isK ? 'rgba(255,246,228,.92)' : 'rgba(248,234,200,.9)'); c.setLineDash([]);
   }
 }
 function drawMountain(x, X, Y, s) {
+  if (G.biome === 'kapadokya') {
+    // Kapadokya: Fairy chimneys (peri bacaları) with dark basalt caps & distant volcanic Erciyes
+    x.fillStyle = 'rgba(65,30,15,.22)'; x.beginPath(); x.ellipse(X + s / 2, Y + s * 0.82, s * 0.44, s * 0.1, 0, 0, 7); x.fill();
+    // Distant volcanic peak (Erciyes Dağı)
+    x.fillStyle = 'rgba(195,160,140,.55)'; x.beginPath(); x.moveTo(X + s * 0.1, Y + s * 0.82); x.lineTo(X + s * 0.48, Y + s * 0.38); x.lineTo(X + s * 0.86, Y + s * 0.82); x.closePath(); x.fill();
+    x.fillStyle = 'rgba(255,250,246,.75)'; x.beginPath(); x.moveTo(X + s * 0.48, Y + s * 0.38); x.lineTo(X + s * 0.42, Y + s * 0.48); x.lineTo(X + s * 0.48, Y + s * 0.45); x.lineTo(X + s * 0.54, Y + s * 0.48); x.closePath(); x.fill();
+    const base = Y + s * 0.82;
+    const chimney = (cx, topY, wBase, wNeck, capW, capH) => {
+      x.fillStyle = '#e4c8aa'; x.beginPath(); x.moveTo(cx - wBase, base); x.lineTo(cx - wNeck, topY); x.lineTo(cx, topY); x.lineTo(cx, base); x.closePath(); x.fill();
+      x.fillStyle = '#c49f7e'; x.beginPath(); x.moveTo(cx, topY); x.lineTo(cx + wNeck, topY); x.lineTo(cx + wBase, base); x.lineTo(cx, base); x.closePath(); x.fill();
+      x.fillStyle = '#422a1d'; x.beginPath(); x.arc(cx - wNeck * 0.3, base - (base - topY) * 0.45, s * 0.035, Math.PI, 0); x.lineTo(cx + wNeck * 0.2, base - (base - topY) * 0.35); x.lineTo(cx - wNeck * 0.7, base - (base - topY) * 0.35); x.closePath(); x.fill();
+      x.fillStyle = '#3c2e28'; x.beginPath(); x.ellipse(cx, topY - capH * 0.4, capW, capH, -0.05, 0, 7); x.fill();
+      x.fillStyle = '#5c4840'; x.beginPath(); x.ellipse(cx - capW * 0.2, topY - capH * 0.65, capW * 0.75, capH * 0.5, -0.05, 0, 7); x.fill();
+    };
+    chimney(X + s * 0.38, Y + s * 0.24, s * 0.19, s * 0.08, s * 0.12, s * 0.055);
+    chimney(X + s * 0.72, Y + s * 0.38, s * 0.15, s * 0.065, s * 0.095, s * 0.045);
+    return;
+  }
   x.fillStyle = 'rgba(70,45,25,.25)'; x.beginPath(); x.ellipse(X + s / 2, Y + s * 0.8, s * 0.42, s * 0.1, 0, 0, 7); x.fill();
   const base = Y + s * 0.82;
   const peak = (cx, w, h, c1, c2) => {
@@ -838,6 +938,19 @@ function drawMountain(x, X, Y, s) {
 }
 function drawSpring(x, X, Y, s) {
   const cx = X + s / 2, cy = Y + s / 2;
+  if (G.biome === 'kapadokya') {
+    // Kapadokya: Rock-hewn cistern & tuff fountain basin (Kaya Sarnıcı) with clay jugs
+    x.fillStyle = 'rgba(165,95,65,.32)'; x.beginPath(); x.arc(cx, cy, s * 0.37, 0, 7); x.fill();
+    x.fillStyle = '#d2ad8c'; x.beginPath(); x.arc(cx, cy, s * 0.3, 0, 7); x.fill();
+    x.strokeStyle = '#9c7352'; x.lineWidth = 1.3; x.stroke();
+    const g = x.createRadialGradient(cx - s * 0.05, cy - s * 0.05, 2, cx, cy, s * 0.24);
+    g.addColorStop(0, '#98eaf5'); g.addColorStop(1, '#208596');
+    x.fillStyle = g; x.beginPath(); x.arc(cx, cy, s * 0.23, 0, 7); x.fill();
+    x.strokeStyle = 'rgba(255,255,255,.6)'; x.lineWidth = 1.3; x.beginPath(); x.arc(cx, cy, s * 0.11, 0.4, 2.7); x.stroke();
+    x.fillStyle = '#c65636'; x.beginPath(); x.ellipse(cx - s * 0.25, cy + s * 0.18, s * 0.045, s * 0.06, -0.2, 0, 7); x.fill();
+    x.fillStyle = '#a64225'; x.fillRect(cx - s * 0.27, cy + s * 0.11, s * 0.04, s * 0.02);
+    return;
+  }
   x.fillStyle = 'rgba(105,140,62,.45)'; x.beginPath(); x.arc(cx, cy, s * 0.36, 0, 7); x.fill();
   x.fillStyle = '#1d6f7e'; x.beginPath(); x.arc(cx, cy, s * 0.27, 0, 7); x.fill();
   const g = x.createRadialGradient(cx - s * 0.06, cy - s * 0.06, 2, cx, cy, s * 0.25);
@@ -849,6 +962,25 @@ function drawSpring(x, X, Y, s) {
 }
 function drawHan(x, X, Y, s) {
   const w = s * 0.62, h = s * 0.56, x0 = X + (s - w) / 2, y0 = Y + s * 0.24;
+  if (G.biome === 'kapadokya') {
+    // Kapadokya: Sarıhan style Seljuk caravanserai (two-tone yellow & red volcanic ashlar masonry)
+    x.fillStyle = 'rgba(65,30,15,.28)'; x.fillRect(x0 + 3, y0 + 4, w, h);
+    x.fillStyle = '#dfb877'; x.fillRect(x0, y0, w, h);
+    x.fillStyle = '#b85d43';
+    x.fillRect(x0, y0 + h * 0.25, w, h * 0.2);
+    x.fillRect(x0, y0 + h * 0.65, w, h * 0.2);
+    for (let i = 0; i < 5; i++) {
+      x.fillStyle = i % 2 ? '#b85d43' : '#dfb877';
+      x.fillRect(x0 + (i * w) / 4.5, y0 - s * 0.06, w / 9, s * 0.07);
+    }
+    const gw = w * 0.34, gx = X + s / 2 - gw / 2, gy = y0 + h * 0.44;
+    x.fillStyle = '#e8cca7'; x.fillRect(gx - s * 0.02, gy - s * 0.08, gw + s * 0.04, h - (gy - y0) + s * 0.08);
+    x.fillStyle = '#362118';
+    x.beginPath(); x.moveTo(gx, y0 + h); x.lineTo(gx, gy + gw * 0.3); x.lineTo(X + s / 2, gy - s * 0.04); x.lineTo(gx + gw, gy + gw * 0.3); x.lineTo(gx + gw, y0 + h); x.closePath(); x.fill();
+    x.strokeStyle = '#6f4a32'; x.lineWidth = 1.4; x.strokeRect(x0, y0, w, h);
+    x.fillStyle = '#c63d28'; x.beginPath(); x.moveTo(x0 + w * 0.85, y0 - s * 0.06); x.lineTo(x0 + w * 0.85, y0 - s * 0.2); x.lineTo(x0 + w * 1.03, y0 - s * 0.16); x.lineTo(x0 + w * 0.85, y0 - s * 0.12); x.fill();
+    return;
+  }
   x.fillStyle = 'rgba(60,40,20,.3)'; x.fillRect(x0 + 3, y0 + 4, w, h);
   x.fillStyle = '#b8a07a'; x.fillRect(x0, y0, w, h);
   x.fillStyle = '#9a835f'; for (let i = 0; i < 5; i++) x.fillRect(x0 + (i * w) / 4.5, y0 - s * 0.06, w / 9, s * 0.07);
@@ -862,6 +994,32 @@ function drawHan(x, X, Y, s) {
 }
 function drawVillage(x, X, Y, s, seed) {
   const R = rng32(seed);
+  if (G.biome === 'kapadokya') {
+    // Kapadokya: Troglodyte cave dwellings (Kaya Evleri) with whitewashed niches & Avanos pottery
+    x.fillStyle = 'rgba(65,30,15,.22)'; x.beginPath(); x.ellipse(X + s / 2, Y + s * 0.66, s * 0.42, s * 0.26, 0, 0, 7); x.fill();
+    const caveTier = (cx, by, w, h, isTop) => {
+      x.fillStyle = 'rgba(60,35,20,.25)'; x.fillRect(cx - w / 2 + 2, by - h + 2, w, h);
+      x.fillStyle = isTop ? '#e8cca7' : '#ddba96'; x.fillRect(cx - w / 2, by - h, w, h);
+      x.fillStyle = '#caa17d'; x.fillRect(cx - w / 2 - s * 0.02, by - h - s * 0.025, w + s * 0.04, s * 0.035);
+      const dw = w * 0.32, dh = h * 0.62;
+      x.fillStyle = '#fff9f0';
+      x.beginPath(); x.arc(cx, by - dh + dw / 2, dw / 2 + 1.5, Math.PI, 0); x.lineTo(cx + dw / 2 + 1.5, by); x.lineTo(cx - dw / 2 - 1.5, by); x.closePath(); x.fill();
+      x.fillStyle = '#3c2419';
+      x.beginPath(); x.arc(cx, by - dh + dw / 2, dw / 2, Math.PI, 0); x.lineTo(cx + dw / 2, by); x.lineTo(cx - dw / 2, by); x.closePath(); x.fill();
+    };
+    caveTier(X + s * 0.48, Y + s * 0.54, s * 0.36, s * 0.22, true);
+    caveTier(X + s * 0.36, Y + s * 0.82, s * 0.38, s * 0.26, false);
+    for (let p = 0; p < 3; p++) {
+      const px = X + s * 0.72 + (p % 2) * s * 0.08, py = Y + s * 0.62 + Math.floor(p / 2) * s * 0.08;
+      x.fillStyle = 'rgba(255,250,240,.9)'; x.beginPath(); x.arc(px, py, s * 0.024, 0, 7); x.fill();
+      x.fillStyle = '#3c2419'; x.beginPath(); x.arc(px, py, s * 0.015, 0, 7); x.fill();
+    }
+    x.fillStyle = '#c65636'; x.beginPath(); x.ellipse(X + s * 0.6, Y + s * 0.8, s * 0.03, s * 0.04, 0, 0, 7); x.fill();
+    x.fillStyle = '#e27552'; x.fillRect(X + s * 0.585, Y + s * 0.75, s * 0.03, s * 0.016);
+    x.fillStyle = '#7a9443'; x.beginPath(); x.arc(X + s * (0.18 + R() * 0.05), Y + s * 0.66, s * 0.09, 0, 7); x.fill();
+    x.fillStyle = '#5c4228'; x.fillRect(X + s * 0.19, Y + s * 0.72, s * 0.022, s * 0.1);
+    return;
+  }
   x.fillStyle = 'rgba(105,140,62,.32)'; x.beginPath(); x.ellipse(X + s / 2, Y + s * 0.62, s * 0.4, s * 0.26, 0, 0, 7); x.fill();
   const house = (cx, by, w, h) => {
     x.fillStyle = 'rgba(60,40,20,.28)'; x.fillRect(cx - w / 2 + 2, by - h + 3, w, h);
@@ -878,27 +1036,32 @@ function drawVillage(x, X, Y, s, seed) {
 }
 function buildCaches() {
   if (!G.pz || !cs) return;
-  const pz = G.pz, S = N * cs + 2 * pad;
+  const pz = G.pz, S = N * cs + 2 * pad, isK = G.biome === 'kapadokya';
   const [c, x] = mkCanvas(S, S);
   baseC = { c, S };
   const R = rng32(pz.seed ^ 0x9137);
   const g = x.createLinearGradient(0, 0, S, S);
-  g.addColorStop(0, '#f0dfb3'); g.addColorStop(1, '#d8bf8b');
+  if (isK) { g.addColorStop(0, '#f4e3d0'); g.addColorStop(1, '#dbb598'); }
+  else { g.addColorStop(0, '#f0dfb3'); g.addColorStop(1, '#d8bf8b'); }
   rr(x, 0, 0, S, S, pad * 0.9); x.fillStyle = g; x.fill();
   x.save(); rr(x, 0, 0, S, S, pad * 0.9); x.clip();
-  for (let i = 0; i < (S * S) / 70; i++) { x.fillStyle = R() < 0.5 ? `rgba(120,84,40,${0.04 + R() * 0.07})` : `rgba(255,250,232,${0.06 + R() * 0.1})`; x.fillRect(R() * S, R() * S, 1 + R() * 1.6, 1 + R() * 1.6); }
-  x.strokeStyle = 'rgba(150,108,58,.2)'; x.lineWidth = 1;
-  for (let k = 0; k < 9; k++) { // faint contour lines, like an old survey map
+  for (let i = 0; i < (S * S) / 70; i++) {
+    if (isK) x.fillStyle = R() < 0.5 ? `rgba(155,80,50,${0.04 + R() * 0.07})` : `rgba(255,248,238,${0.06 + R() * 0.1})`;
+    else x.fillStyle = R() < 0.5 ? `rgba(120,84,40,${0.04 + R() * 0.07})` : `rgba(255,250,232,${0.06 + R() * 0.1})`;
+    x.fillRect(R() * S, R() * S, 1 + R() * 1.6, 1 + R() * 1.6);
+  }
+  x.strokeStyle = isK ? 'rgba(165,95,65,.22)' : 'rgba(150,108,58,.2)'; x.lineWidth = 1;
+  for (let k = 0; k < 9; k++) { // faint contour / valley strata lines
     x.beginPath(); const y0 = R() * S, f1 = 3 + R() * 4, f2 = 9 + R() * 6, p1 = R() * 6, p2 = R() * 6;
     for (let px = 0; px <= S; px += 6) { const y = y0 + Math.sin((px / S) * f1 + p1) * cs * 0.3 + Math.sin((px / S) * f2 + p2) * cs * 0.07; px ? x.lineTo(px, y) : x.moveTo(px, y); }
     x.stroke();
   }
   x.restore();
-  x.lineWidth = 2; x.strokeStyle = '#9f7742'; rr(x, 1, 1, S - 2, S - 2, pad * 0.9); x.stroke();
-  x.lineWidth = 1; x.strokeStyle = 'rgba(120,85,45,.5)'; rr(x, pad * 0.42, pad * 0.42, S - pad * 0.84, S - pad * 0.84, pad * 0.5); x.stroke();
+  x.lineWidth = 2; x.strokeStyle = isK ? '#a46342' : '#9f7742'; rr(x, 1, 1, S - 2, S - 2, pad * 0.9); x.stroke();
+  x.lineWidth = 1; x.strokeStyle = isK ? 'rgba(150,75,45,.45)' : 'rgba(120,85,45,.5)'; rr(x, pad * 0.42, pad * 0.42, S - pad * 0.84, S - pad * 0.84, pad * 0.5); x.stroke();
   for (let i = 0; i < NN; i++) {
     const X = pad + (i % N) * cs, Y = pad + ((i / N) | 0) * cs;
-    x.fillStyle = 'rgba(105,72,34,.13)'; rr(x, X + 2, Y + 2, cs - 4, cs - 4, cs * 0.14); x.fill();
+    x.fillStyle = isK ? 'rgba(120,55,30,.13)' : 'rgba(105,72,34,.13)'; rr(x, X + 2, Y + 2, cs - 4, cs - 4, cs * 0.14); x.fill();
     if (!pz.fixed[i]) continue;
     const k = pz.tiles[i] >> 4;
     if (k === KM) drawMountain(x, X, Y, cs); else if (k === KS) drawSpring(x, X, Y, cs); else if (k === KH) drawHan(x, X, Y, cs); else if (k === KV) drawVillage(x, X, Y, cs, i * 31 + 5);
@@ -1147,7 +1310,8 @@ addEventListener('keydown', (e) => {
 
 // ---------------------------------------------------------------- UI
 function updateHud() {
-  $('tMode').textContent = G.mode === 'daily' ? t('dailyTag', { d: seedLabel(G.seed) }) + (G.place && G.pz ? ' · ' + G.place : '') : t('endless') + ' · ' + t('level', { n: G.level });
+  const regionTag = G.biome === 'kapadokya' ? ' (' + t('biomeKapadokya') + ')' : '';
+  $('tMode').textContent = G.mode === 'daily' ? t('dailyTag', { d: seedLabel(G.seed) }) + (G.place && G.pz ? ' · ' + G.place : '') + regionTag : t('endless') + ' · ' + t('level', { n: G.level }) + regionTag;
   $('lMoves').textContent = t('moves'); $('lPar').textContent = t('par');
   $('vMoves').textContent = G.moves; $('vPar').textContent = G.pz ? G.pz.par : '–';
   const st = G.pz ? (G.won ? G.stars : starsFor(G.moves, G.pz.par)) : 0;
@@ -1248,6 +1412,7 @@ window.fayHatti = {
   get bot() { return G.bot ? { strategy: G.bot.strategy, planned: G.bot.plan.length, played: G.bot.i } : null; },
   get genMs() { return G.genMs; }, get fps() { return fps; }, get plan() { return G.pz ? G.pz.solution.slice() : null; },
   get board() { if (!G.pz) return null; const v = toVals(G.pz, G.ids), out = []; for (let r = 0; r < N; r++) { const row = []; for (let c = 0; c < N; c++) { const x = v[r * N + c], k = x >> 4; row.push(k === KR ? 'r' + (x & 15).toString(16) : k === KD ? 'd' + (x & 15).toString(16) : GLYPH[k]); } out.push(row.join(' ')); } return out; },
+  get biome() { return G.biome || 'bozkir'; }, get theme() { return G.biome || 'bozkir'; },
   move: (m) => doMove(m), undo, restart, start: (mode, arg) => startPuzzle(mode, arg, false),
 };
 addEventListener('resize', layout);
