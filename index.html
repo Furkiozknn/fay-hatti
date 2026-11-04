@@ -196,7 +196,29 @@ body.high-contrast .tut-dot.on{background:var(--terra);box-shadow:0 0 0 1px #fff
 body.high-contrast .tut-btn{box-shadow:inset 0 0 0 2px #ffffff}
 body.high-contrast .tut-btn.alt{background:#f3f3f3;color:#111111;box-shadow:inset 0 0 0 2px #111111}
 body.high-contrast .tut-badge{box-shadow:inset 0 0 0 1px #ffffff}
-@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on,.seal-svg,#tutTip{animation:none}.tut-dot{transition:none}#quake.quaking{transition:background .2s}.tb.active{box-shadow:none}.hint-hud{box-shadow:0 2px 6px rgba(0,0,0,.5)}}
+/* Endless Milestone Badges */
+.badges-box{background:#ebd8b0;border:1px solid #c4a46a;border-radius:14px;padding:10px 12px;margin:10px 0 8px}
+.badges-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.badges-title{font:700 12px/1.2 "Segoe UI",system-ui,sans-serif;text-transform:uppercase;letter-spacing:.06em;color:#5a2a18}
+.badges-count{font:700 12px/1.2 "Segoe UI",system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#7a5638}
+.badges-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.badge-btn{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:56px;min-width:44px;padding:6px 2px;border:1.5px solid #c2a875;border-radius:10px;background:#f5ede0;color:var(--paper-ink);cursor:pointer;transition:transform .15s,border-color .15s}
+.badge-btn:hover{background:#fff;border-color:#a63f27}
+.badge-btn:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.badge-btn.sel{border-color:#a63f27;box-shadow:0 0 0 1px #a63f27,0 2px 6px rgba(166,63,39,.25)}
+.badge-btn.unlocked{background:#fdfaf4;border-color:#b8935a}
+.badge-btn.locked{opacity:.65;background:#e5d4b4}
+.badge-svg{width:28px;height:28px;display:block;flex:none}
+.badge-lvl{font:700 11px/1 "Segoe UI",sans-serif;letter-spacing:.02em;color:#5a2a18}
+.badge-btn.locked .badge-lvl{color:#7a6551}
+.badge-detail{margin-top:8px;padding-top:6px;border-top:1px dashed #c4a46a;font-size:12px;line-height:1.3;color:#5b4a36;text-align:center;min-height:32px;display:flex;flex-direction:column;justify-content:center}
+.badge-detail b{color:#5a2a18;font-size:13px}
+.badge-banner{margin:8px 0 10px;padding:10px 12px;border-radius:12px;background:#fff8ec;border:1.5px solid #d6453d;display:flex;align-items:center;gap:10px;box-shadow:0 4px 12px rgba(166,63,39,.18);animation:pop .22s ease-out}
+.badge-banner .bb-icon{flex:none;width:34px;height:34px}
+.badge-banner .bb-info{flex:1;min-width:0;text-align:left}
+.badge-banner .bb-info b{display:block;font-size:14px;color:#5a2a18;line-height:1.2}
+.badge-banner .bb-info span{display:block;font-size:12px;color:#7a5638;line-height:1.2;margin-top:2px}
+@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on,.seal-svg,#tutTip,.badge-banner{animation:none}.badge-btn{transition:none}.tut-dot{transition:none}#quake.quaking{transition:background .2s}.tb.active{box-shadow:none}.hint-hud{box-shadow:0 2px 6px rgba(0,0,0,.5)}}
 /* Themes: Gece (night) and Kâğıt (paper-cut) */
 :root[data-theme="gece"]{--bg:#0b111a;--bg2:#141f2e;--ink:#e5eef8;--ink2:#8ea4be;--paper:#162234;--paper-ink:#e8f0fa;--terra:#2a6ab0;--gold:#f5be47;--quake:#ff6247;--focus:#64b5f6}
 html[data-theme="gece"] body{background:radial-gradient(120% 80% at 50% 0%,#16253c 0%,#0b111a 60%)}
@@ -228,6 +250,21 @@ html[data-theme="gece"] .tut-dot{background:#2e4464}
 html[data-theme="gece"] .tut-dot.on{background:#2a6ab0}
 html[data-theme="gece"] .tut-btn.alt{background:#23344d;color:#e8f0fa;box-shadow:inset 0 0 0 1px #3a547a}
 html[data-theme="gece"] .tut-btn.alt:hover{background:#2c4160}
+html[data-theme="gece"] .badges-box{background:#121c2c;border-color:#2a3e5c}
+html[data-theme="gece"] .badges-title{color:#7cb7ff}
+html[data-theme="gece"] .badges-count{color:#9ec2ea}
+html[data-theme="gece"] .badge-btn{background:#182538;border-color:#2e4464;color:#e8f0fa}
+html[data-theme="gece"] .badge-btn:hover{background:#23344d;border-color:#64b5f6}
+html[data-theme="gece"] .badge-btn.sel{border-color:#64b5f6;box-shadow:0 0 0 1px #64b5f6,0 2px 6px rgba(100,181,246,.3)}
+html[data-theme="gece"] .badge-btn.unlocked{background:#1d2c42;border-color:#3a547a}
+html[data-theme="gece"] .badge-btn.locked{background:#131c2a;opacity:.6}
+html[data-theme="gece"] .badge-lvl{color:#9ec2ea}
+html[data-theme="gece"] .badge-btn.locked .badge-lvl{color:#627b99}
+html[data-theme="gece"] .badge-detail{border-top-color:#2a3e5c;color:#c0d5ec}
+html[data-theme="gece"] .badge-detail b{color:#7cb7ff}
+html[data-theme="gece"] .badge-banner{background:#1a273b;border-color:#ff6247;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+html[data-theme="gece"] .badge-banner .bb-info b{color:#7cb7ff}
+html[data-theme="gece"] .badge-banner .bb-info span{color:#9ec2ea}
 
 :root[data-theme="kagit"]{--bg:#2e2820;--bg2:#3c342b;--ink:#f8f2e4;--ink2:#c8bcab;--paper:#faf5e8;--paper-ink:#2e241c;--terra:#b5442b;--gold:#e09c30;--quake:#d94830;--focus:#60a5fa}
 html[data-theme="kagit"] body{background:radial-gradient(120% 80% at 50% 0%,#3d3428 0%,#241f18 60%)}
@@ -244,6 +281,9 @@ html[data-theme="kagit"] .tut-dot{background:#cbba95}
 html[data-theme="kagit"] .tut-dot.on{background:var(--terra)}
 html[data-theme="kagit"] .tut-btn.alt{background:#ede1c5;color:var(--paper-ink);box-shadow:inset 0 0 0 1px #bdae95}
 html[data-theme="kagit"] .tut-btn.alt:hover{background:#f5ebcf}
+html[data-theme="kagit"] .badges-box{background:#f0e8d6;border-color:#c9bda5}
+html[data-theme="kagit"] .badge-btn{background:#fbf7ef;border-color:#d4c7b2}
+html[data-theme="kagit"] .badge-banner{background:#fffdf7;border-color:#b5442b}
 
 .theme-box{margin-top:12px;padding-top:10px;border-top:1px solid rgba(184,147,90,.35)}
 html[data-theme="gece"] .theme-box{border-top-color:#263852}
@@ -263,6 +303,21 @@ body.high-contrast .theme-box{border-top-color:#111111}
 body.high-contrast .theme-lbl{color:#111111;opacity:1}
 body.high-contrast .th-pill{border:2px solid #111111;color:#111111}
 body.high-contrast .th-pill.active{background:#111111;color:#ffffff;border-color:#111111;box-shadow:none}
+body.high-contrast .badges-box{background:#ffffff;border:2px solid #111111;color:#111111}
+body.high-contrast .badges-title,body.high-contrast .badges-count{color:#111111}
+body.high-contrast .badge-btn{background:#ffffff;border:2px solid #111111;color:#111111}
+body.high-contrast .badge-btn:hover{background:#f0f0f0}
+body.high-contrast .badge-btn:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+body.high-contrast .badge-btn.sel{border-color:#111111;box-shadow:0 0 0 2px #ffb703}
+body.high-contrast .badge-btn.unlocked{background:#ffffff;border-color:#111111}
+body.high-contrast .badge-btn.locked{background:#e0e0e0;opacity:.8;border-color:#555555}
+body.high-contrast .badge-lvl{color:#111111}
+body.high-contrast .badge-btn.locked .badge-lvl{color:#333333}
+body.high-contrast .badge-detail{border-top:1px dashed #111111;color:#111111}
+body.high-contrast .badge-detail b{color:#111111}
+body.high-contrast .badge-banner{background:#ffffff;border:2px solid #ff2a05;box-shadow:none}
+body.high-contrast .badge-banner .bb-info b{color:#111111}
+body.high-contrast .badge-banner .bb-info span{color:#333333}
 </style>
 </head>
 <body>
@@ -324,6 +379,14 @@ body.high-contrast .th-pill.active{background:#111111;color:#ffffff;border-color
     <button class="btn" id="bDaily"></button>
     <button class="btn" id="bEndless"></button>
     <button class="btn marathon" id="bMarathon"></button>
+    <div class="badges-box" id="mBadges" role="region" aria-labelledby="tBadgesTitle">
+      <div class="badges-head">
+        <span class="badges-title" id="tBadgesTitle"></span>
+        <span class="badges-count" id="vBadgesCount"></span>
+      </div>
+      <div class="badges-grid" id="mBadgeList"></div>
+      <div class="badge-detail" id="mBadgeDetail" aria-live="polite"></div>
+    </div>
     <button class="btn alt" id="bHow"></button>
     <button class="btn alt" id="bVerify"></button>
     <button class="btn alt" id="bContrast" aria-pressed="false"></button>
@@ -367,6 +430,7 @@ body.high-contrast .th-pill.active{background:#111111;color:#ffffff;border-color
   <div class="panel">
     <h2 id="rTitle"></h2>
     <div class="big-stars" id="rStars"></div>
+    <div id="rMilestone" class="badge-banner" style="display:none" role="status" aria-live="polite"></div>
     <p class="res-line" id="rLine"></p>
     <div class="share-card-wrap" id="rCardWrap"><canvas id="rCard" class="share-card-cv" width="560" height="420" role="img" tabindex="0" aria-label="Fay Hattı Share Card"></canvas></div>
     <div class="share-prev" id="rShare" role="button" tabindex="0" title="Copy text"></div>
@@ -992,6 +1056,17 @@ const CARDS = [
     },
     apply: () => {},
   },
+  {
+    id: 'milestone-badges',
+    type: 'gameplay',
+    implemented: true,
+    title: { en: 'Milestone Badges', tr: 'Aşama Rozetleri' },
+    desc: {
+      en: 'Anatolian cultural motif milestone badges unlocked at levels 5, 10, 25, and 50 in endless mode (never in daily puzzle).',
+      tr: 'Sonsuz modda 5, 10, 25 ve 50. seviyelerde kazanılan Anadolu kültürel motif aşama rozetleri (asla günün bulmacasında yer almaz).'
+    },
+    apply: () => {},
+  },
 ];
 const STR = {
   en: {
@@ -1010,6 +1085,9 @@ const STR = {
     copied: 'Copied to clipboard', tomorrow: 'A new map tomorrow.', endlessNote: 'Level {n} done.', movesWord: 'moves',
     marathon: 'Endless Marathon', marathonTag: 'Marathon · {d} · Stage {s}', marathonStageDone: 'Stage {s} cleared in today’s marathon!', nextStage: 'Next stage',
     gotIt: 'Got it', solvedOn: 'Solved', playTag: 'same map for everyone', board: 'Puzzle board',
+    badgesTitle: 'Endless Milestones', badgeUnlocked: 'Unlocked', badgeLocked: '{rem} levels left',
+    badgeProgress: '{cur}/{tot}', badgeNew: 'Milestone Unlocked!', nextMilestone: 'Next: {name} ({rem} left)',
+    allMilestonesDone: 'All milestones achieved!',
     biomeKapadokya: 'Cappadocia', biomeKaradeniz: 'Karadeniz', biomeEge: 'Aegean', biomeBozkir: 'Steppe', regEge: 'Aegean',
     contrast: 'High contrast', contrastSub: 'Distinguish rivers from roads',
     theme: 'Theme', thClassic: 'Classic', thGece: 'Gece', thKagit: 'Kâğıt',
@@ -1048,6 +1126,9 @@ const STR = {
     copied: 'Panoya kopyalandı', tomorrow: 'Yarın yeni bir harita.', endlessNote: '{n}. bölüm tamam.', movesWord: 'hamle',
     marathon: 'Sonsuz Maraton', marathonTag: 'Maraton · {d} · {s}. Aşama', marathonStageDone: 'Günün maratonunda {s}. aşama tamamlandı!', nextStage: 'Sonraki aşama',
     gotIt: 'Anladım', solvedOn: 'Çözüldü', playTag: 'herkes için aynı harita', board: 'Bulmaca tahtası',
+    badgesTitle: 'Sonsuz Mod Aşamaları', badgeUnlocked: 'Kazanıldı', badgeLocked: '{rem} seviye kaldı',
+    badgeProgress: '{cur}/{tot}', badgeNew: 'Yeni Aşama Rozeti!', nextMilestone: 'Sıradaki: {name} ({rem} seviye kaldı)',
+    allMilestonesDone: 'Tüm aşamalar tamamlandı!',
     biomeKapadokya: 'Kapadokya', biomeKaradeniz: 'Karadeniz', biomeEge: 'Ege', biomeBozkir: 'Bozkır', regEge: 'Ege',
     contrast: 'Yüksek kontrast', contrastSub: 'Nehir ve yolları belirginleştir',
     theme: 'Tema', thClassic: 'Klasik', thGece: 'Gece', thKagit: 'Kâğıt',
@@ -1303,6 +1384,15 @@ const sfx = {
   },
   // Endless Marathon: Hicaz-flavoured victory run on D
   marathon() { if (!audio()) return; const t0 = AC.currentTime; [293.7, 367, 440, 587.3, 734.2].forEach((f, i) => pluck(t0 + i * 0.08, f, 0.18)); tone(t0 + 0.42, 587.3, 0.8, 'sine', 0.12, 880); },
+  // Milestone fanfare: grounding drone, ascending Anatolian modal cadence and harmonic chime
+  badge() {
+    if (!audio()) return;
+    const t0 = AC.currentTime;
+    pluck(t0, 146.8, 0.22);
+    [293.7, 370, 440, 493.9, 587.3, 659.3, 739.99].forEach((f, i) => pluck(t0 + 0.07 + i * 0.08, f, 0.18));
+    tone(t0 + 0.65, 739.99, 1.4, 'sine', 0.15);
+    tone(t0 + 0.65, 1108.7, 1.2, 'triangle', 0.08);
+  },
   egeChime() {
     if (!audio()) return;
     const t0 = AC.currentTime;
@@ -1423,7 +1513,7 @@ function getDropOffReport() {
 }
 
 // ---------------------------------------------------------------- game state & dynamic tutorial
-const G = { mode: 'daily', seed: '', level: 1, marathonStage: 1, marathonDate: '', pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], riv: [], bot: null, celebrateAt: 0, place: '', biome: 'bozkir', ferryActive: false, hintActive: false, hintUsed: false, hintPlan: null, hintStep: 0 };
+const G = { mode: 'daily', seed: '', level: 1, marathonStage: 1, marathonDate: '', pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], riv: [], bot: null, celebrateAt: 0, place: '', biome: 'bozkir', ferryActive: false, hintActive: false, hintUsed: false, hintPlan: null, hintStep: 0, newMilestone: null };
 const isKervansarayActive = () => G.mode !== 'daily' && (G.mode === 'endless' || !!(G.pz && G.pz.cfg && G.pz.cfg.kervansaray));
 let prevConnectedStops = 0;
 let anims = [], shake = 0, quakeTrauma = 0, quakeDir = 1, quakeRow = 0, particles = [], ripples = [], botTimer = 0, disp = null;
@@ -1662,7 +1752,7 @@ function startPuzzle(mode, arg, opt = true) {
     let pz = null;
     for (let k = 0; !pz && k < 5; k++) pz = makePuzzle(seed + k * 7919, cfg);
     G.genMs = Math.round(performance.now() - t0);
-    G.pz = pz; G.ids = pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.sat = []; G.riv = []; G.ferryActive = false; prevConnectedStops = 0;
+    G.pz = pz; G.ids = pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.sat = []; G.riv = []; G.ferryActive = false; prevConnectedStops = 0; G.newMilestone = null;
     G.biome = biomeOverride || getBiome(mode, G.seed, mode === 'marathon' ? G.marathonStage : G.level);
     const isKrd = G.biome === 'karadeniz' && currentTheme === 'classic';
     const isEge = G.biome === 'ege' && currentTheme === 'classic';
@@ -1754,7 +1844,7 @@ function restart() {
   puzzleRestarts++;
   trackEvent('restart', { movesAtRestart: G.moves, restartsInPuzzle: puzzleRestarts });
   flushAnims(); closeAll();
-  G.ids = G.pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.state = 'play'; particles = []; ripples = []; G.riv = []; G.ferryActive = false; prevConnectedStops = 0;
+  G.ids = G.pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.state = 'play'; particles = []; ripples = []; G.riv = []; G.ferryActive = false; prevConnectedStops = 0; G.newMilestone = null;
   G.hintActive = false; G.hintUsed = false; G.hintPlan = null; G.hintStep = 0;
   updateHintHud();
   puzzleStartTime = performance.now();
@@ -1783,15 +1873,33 @@ function win() {
     elapsedMs: puzzleStartTime ? Math.round(performance.now() - puzzleStartTime) : 0,
     bot: !!G.bot,
   });
+  let newMilestone = null;
   if (G.mode === 'daily') { if (!store.get('daily.' + G.seed, null)) store.set('daily.' + G.seed, { m: G.moves, s: G.stars }); }
   else if (G.mode === 'marathon') store.set('marathon.' + G.marathonDate, Math.max(store.get('marathon.' + G.marathonDate, 1), G.marathonStage + 1));
-  else store.set('endless', Math.max(store.get('endless', 1), G.level + 1));
+  else {
+    const curEndless = store.get('endless', 1);
+    const nextEndless = Math.max(curEndless, G.level + 1);
+    store.set('endless', nextEndless);
+    const ms = MILESTONES.find((m) => m.level === G.level);
+    if (ms && curEndless <= ms.level && nextEndless > ms.level) newMilestone = ms;
+  }
   G.celebrateAt = performance.now();
-  if (G.mode === 'marathon') sfx.marathon(); else sfx.win();
-  vibe([30, 50, 40]);
+  G.newMilestone = newMilestone;
+  if (newMilestone) {
+    sfx.badge();
+    vibe([40, 60, 40, 60, 80]);
+    trackEvent('milestone_unlocked', { id: newMilestone.id, level: newMilestone.level });
+  } else if (G.mode === 'marathon') {
+    sfx.marathon();
+    vibe([30, 50, 40]);
+  } else {
+    sfx.win();
+    vibe([30, 50, 40]);
+  }
   if (!RM) for (const v of pz.villages) burst(v.cell);
   setTimeout(showResult, AUTO || RM ? 500 : 1400);
-  $('live').textContent = t('solvedT') + ' ' + t('resLine', { m: G.moves, p: pz.par });
+  const msAnnounce = newMilestone ? ' · ' + t('badgeNew') + ' ' + (newMilestone[lang] || newMilestone.en).name : '';
+  $('live').textContent = t('solvedT') + ' ' + t('resLine', { m: G.moves, p: pz.par }) + msAnnounce;
   updateHud();
 }
 
@@ -3530,6 +3638,89 @@ function applyTheme(th, save = true) {
   buildCaches();
   fillMenu();
 }
+// Endless mode milestone definitions (Anatolian cultural motifs: Su Yolu, Koçboynuzu, Bereket Sandığı, Selçuklu Yıldızı)
+const MILESTONES = [
+  { id: 'wayfarer', level: 5, tr: { name: 'Yolcu', desc: '5 seviye tamamla (Su Yolu)' }, en: { name: 'Wayfarer', desc: 'Complete 5 levels (Waterway)' } },
+  { id: 'caravaneer', level: 10, tr: { name: 'Kervancı', desc: '10 seviye tamamla (Koçboynuzu)' }, en: { name: 'Caravaneer', desc: 'Complete 10 levels (Ram\'s Horn)' } },
+  { id: 'cartographer', level: 25, tr: { name: 'Haritacı', desc: '25 seviye tamamla (Bereket Sandığı)' }, en: { name: 'Cartographer', desc: 'Complete 25 levels (Bounty Chest)' } },
+  { id: 'sage', level: 50, tr: { name: 'Fay Bilgesi', desc: '50 seviye tamamla (Selçuklu Yıldızı)' }, en: { name: 'Fault Sage', desc: 'Complete 50 levels (Seljuk Star)' } },
+];
+
+function badgeSvg(id, unl) {
+  if (id === 'wayfarer') {
+    return unl
+      ? '<svg viewBox="0 0 32 32" class="badge-svg" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#1d5a7a"/><path d="M4 16 L8 12 L12 16 L16 12 L20 16 L24 12 L28 16 L24 20 L20 16 L16 20 L12 16 L8 20 Z" fill="#5ac4e6" stroke="#e2f7ff" stroke-width="0.8"/><circle cx="10" cy="8" r="1.6" fill="#f2b33d"/><circle cx="22" cy="8" r="1.6" fill="#f2b33d"/><circle cx="10" cy="24" r="1.6" fill="#f2b33d"/><circle cx="22" cy="24" r="1.6" fill="#f2b33d"/></svg>'
+      : '<svg viewBox="0 0 32 32" class="badge-svg" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#dfd0b5"/><path d="M4 16 L8 12 L12 16 L16 12 L20 16 L24 12 L28 16 L24 20 L20 16 L16 20 L12 16 L8 20 Z" fill="none" stroke="#8d7f69" stroke-width="1.2" stroke-dasharray="2 2"/><circle cx="10" cy="8" r="1.6" fill="#8d7f69"/><circle cx="22" cy="8" r="1.6" fill="#8d7f69"/><circle cx="10" cy="24" r="1.6" fill="#8d7f69"/><circle cx="22" cy="24" r="1.6" fill="#8d7f69"/></svg>';
+  }
+  if (id === 'caravaneer') {
+    return unl
+      ? '<svg viewBox="0 0 32 32" class="badge-svg" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#5c2317"/><path d="M16 25 V14 M16 14 C13 14 9 12 9 8 C9 5.2 12.5 4.5 14.5 7 C15.5 8.5 14.8 10.5 13 9.8 M16 14 C19 14 23 12 23 8 C23 5.2 19.5 4.5 17.5 7 C16.5 8.5 17.2 10.5 19 9.8" fill="none" stroke="#f2b33d" stroke-width="2.2" stroke-linecap="round"/><polygon points="16,20 12,25 20,25" fill="#f5ede0"/></svg>'
+      : '<svg viewBox="0 0 32 32" class="badge-svg" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#dfd0b5"/><path d="M16 25 V14 M16 14 C13 14 9 12 9 8 C9 5.2 12.5 4.5 14.5 7 M16 14 C19 14 23 12 23 8 C23 5.2 19.5 4.5 17.5 7" fill="none" stroke="#8d7f69" stroke-width="1.8" stroke-dasharray="2 2" stroke-linecap="round"/><polygon points="16,20 12,25 20,25" fill="#8d7f69"/></svg>';
+  }
+  if (id === 'cartographer') {
+    return unl
+      ? '<svg viewBox="0 0 32 32" class="badge-svg" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#23343d"/><polygon points="16,4 27,16 16,28 5,16" fill="#a63f27"/><polygon points="16,8 23,16 16,24 9,16" fill="#f2b33d"/><circle cx="16" cy="16" r="2.2" fill="#e2f7ff"/><path d="M5 16 H2 M27 16 H30 M16 4 V1 M16 28 V31" stroke="#f2b33d" stroke-width="1.8" stroke-linecap="round"/></svg>'
+      : '<svg viewBox="0 0 32 32" class="badge-svg" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#dfd0b5"/><polygon points="16,4 27,16 16,28 5,16" fill="none" stroke="#8d7f69" stroke-width="1.2" stroke-dasharray="2 2"/><polygon points="16,8 23,16 16,24 9,16" fill="none" stroke="#8d7f69" stroke-width="1"/><circle cx="16" cy="16" r="2.2" fill="#8d7f69"/><path d="M5 16 H2 M27 16 H30 M16 4 V1 M16 28 V31" stroke="#8d7f69" stroke-width="1.4" stroke-linecap="round"/></svg>';
+  }
+  // Seljuk 8-pointed star
+  return unl
+    ? '<svg viewBox="0 0 32 32" class="badge-svg" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#3a140d"/><polygon points="16,3 19.1,8.6 25.2,6.8 23.4,12.9 29,16 23.4,19.1 25.2,25.2 19.1,23.4 16,29 12.9,23.4 6.8,25.2 8.6,19.1 3,16 8.6,12.9 6.8,6.8 12.9,8.6" fill="#f2b33d" stroke="#ffd966" stroke-width="0.8"/><circle cx="16" cy="16" r="3.2" fill="#e0553a"/><circle cx="16" cy="16" r="1.2" fill="#fff"/></svg>'
+    : '<svg viewBox="0 0 32 32" class="badge-svg" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#dfd0b5"/><polygon points="16,3 19.1,8.6 25.2,6.8 23.4,12.9 29,16 23.4,19.1 25.2,25.2 19.1,23.4 16,29 12.9,23.4 6.8,25.2 8.6,19.1 3,16 8.6,12.9 6.8,6.8 12.9,8.6" fill="none" stroke="#8d7f69" stroke-width="1.2" stroke-dasharray="2 2"/><circle cx="16" cy="16" r="2" fill="#8d7f69"/></svg>';
+}
+
+let selectedBadgeId = null;
+function renderMilestones() {
+  const el = $('mBadges');
+  if (!el) return;
+  const highest = store.get('endless', 1);
+  const completed = Math.max(0, highest - 1);
+  const unlockedCount = MILESTONES.filter((m) => completed >= m.level).length;
+  $('tBadgesTitle').textContent = t('badgesTitle');
+  $('vBadgesCount').textContent = `${unlockedCount}/${MILESTONES.length}`;
+
+  const listEl = $('mBadgeList');
+  if (!listEl) return;
+  listEl.innerHTML = MILESTONES.map((m) => {
+    const unl = completed >= m.level;
+    const isSel = selectedBadgeId === m.id;
+    const info = m[lang] || m.en;
+    const statusText = unl ? t('badgeUnlocked') : t('badgeProgress', { cur: Math.min(completed, m.level), tot: m.level });
+    return `<button type="button" class="badge-btn ${unl ? 'unlocked' : 'locked'} ${isSel ? 'sel' : ''}" data-id="${m.id}" aria-label="${info.name} (L${m.level}) — ${statusText}" aria-pressed="${isSel}">
+      ${badgeSvg(m.id, unl)}
+      <span class="badge-lvl">L${m.level}</span>
+    </button>`;
+  }).join('');
+
+  listEl.querySelectorAll('.badge-btn').forEach((btn) => {
+    btn.onclick = () => {
+      sfx.click('soft');
+      vibe(15);
+      selectedBadgeId = selectedBadgeId === btn.dataset.id ? null : btn.dataset.id;
+      renderMilestones();
+    };
+  });
+
+  const detailEl = $('mBadgeDetail');
+  if (!detailEl) return;
+  if (selectedBadgeId) {
+    const selM = MILESTONES.find((m) => m.id === selectedBadgeId);
+    if (selM) {
+      const unl = completed >= selM.level;
+      const info = selM[lang] || selM.en;
+      const statusStr = unl ? `✓ ${t('badgeUnlocked')}` : t('badgeLocked', { rem: selM.level - completed });
+      detailEl.innerHTML = `<b>${info.name} (L${selM.level})</b><span>${info.desc} · ${statusStr}</span>`;
+      return;
+    }
+  }
+  const nextM = MILESTONES.find((m) => completed < m.level);
+  if (nextM) {
+    const nextInfo = nextM[lang] || nextM.en;
+    detailEl.innerHTML = `<span>${t('nextMilestone', { name: nextInfo.name, rem: nextM.level - completed })}</span>`;
+  } else {
+    detailEl.innerHTML = `<span>★ ${t('allMilestonesDone')}</span>`;
+  }
+}
+
 function fillMenu() {
   $('mSub').textContent = t('sub');
   const ds = todaySeed(), done = store.get('daily.' + ds, null);
@@ -3538,6 +3729,7 @@ function fillMenu() {
   const mStage = store.get('marathon.' + ds, 1);
   const bMarathon = $('bMarathon');
   if (bMarathon) bMarathon.innerHTML = `${t('marathon')}<small>${t('marathonTag', { d: seedLabel(ds), s: mStage })}</small>`;
+  renderMilestones();
   $('bHow').textContent = t('how');
   $('bVerify').innerHTML = `${t('integrity')}<small>${t('freezeSub')}</small>`;
   $('bContrast').innerHTML = `${t('contrast')}: <b>${highContrast ? t('on') : t('off')}</b><small>${t('contrastSub')}</small>`;
@@ -4067,6 +4259,17 @@ function showResult() {
   closeAll();
   $('rTitle').textContent = t('solvedT');
   $('rStars').innerHTML = [0, 1, 2].map((i) => starSvg(i < G.stars, 46)).join('');
+  const mb = $('rMilestone');
+  if (mb) {
+    if (G.newMilestone) {
+      const ms = G.newMilestone, info = ms[lang] || ms.en;
+      mb.style.display = 'flex';
+      mb.innerHTML = `<div class="bb-icon">${badgeSvg(ms.id, true)}</div><div class="bb-info"><b>${t('badgeNew')}: ${info.name}</b><span>${info.desc}</span></div>`;
+    } else {
+      mb.style.display = 'none';
+      mb.innerHTML = '';
+    }
+  }
   $('rLine').textContent = t('resLine', { m: G.moves, p: G.pz.par }) + (G.hintUsed && G.mode !== 'daily' ? ' · ' + t('hintUsedTag') : '');
   if (shareCardArtEnabled) renderShareCard($('rCard'));
   $('rShare').textContent = shareText() + '\n' + shareUrl();
@@ -4208,6 +4411,14 @@ window.fayHatti = {
   get biome() { return G.biome || 'bozkir'; }, setBiome: (b) => applyBiome(b),
   get region() { return G.biome === 'ege' || (G.place && EGE_PLACES_SET.has(G.place)) ? 'ege' : (G.biome || 'bozkir'); },
   get cards() { return CARDS; }, get cardRegistry() { return CARDS; },
+  get badges() {
+    const highest = store.get('endless', 1), completed = Math.max(0, highest - 1);
+    return MILESTONES.map((m) => ({
+      id: m.id, level: m.level, name: (m[lang] || m.en).name,
+      unlocked: completed >= m.level, progress: Math.min(completed, m.level), target: m.level,
+    }));
+  },
+  get milestones() { return this.badges; },
   get nextQuake() { const q = nextQuake(); return q < 0 ? null : { row: q >> 1, dir: moveDir(q) }; },
   get trauma() { return quakeTrauma; },
   get shareCard() { return $('rCard'); }, renderShareCard: () => renderShareCard($('rCard')), saveShareCard, share,
