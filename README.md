@@ -8,15 +8,15 @@ Shift rows and columns to bring rivers and caravan roads to the villages. After 
 <img src="docs/screenshot.png" alt="Fay Hattı on a phone: a 5x5 parchment map with rivers, roads, villages, a spring and a caravanserai" width="300">
 
 - **Daily puzzle:** everyone gets the same map each day (seeded by the date).
-- **Endless mode:** numbered levels that grow from 2 villages and short solutions to 3 villages, mountains and longer solutions.
+- **Endless mode:** numbered levels that introduce new board rules: stone bridge tiles (where river and road cross over each other), impassable ancient ruin tiles, mountains, and double-fault earthquakes.
 - One HTML file, no downloads, no external requests. Phone first (portrait), works on desktop. English and Turkish.
 
 ## How to play
 
 1. Drag a row sideways or a column up or down, or tap the arrows around the board. Tiles that leave one edge come back on the other.
 2. Villages, mountains, the spring and the caravanserai never move: the other tiles slide past them.
-3. Each village shows what it needs: a water drop (river from the spring) and/or a road sign (road from the caravanserai). Connect every need to solve the map.
-4. After each of your moves a small quake shifts one row by one tile. The red band and the line above the board show which row is next and which way it will go. If your move solves the map, the ground stays calm.
+3. Each village shows what it needs: a water drop (river from the spring) and/or a road sign (road from the caravanserai). Connect every need to solve the map. Bridges allow river and road paths to cross perpendicularly.
+4. After each of your moves a small quake shifts one row by one tile (or a double quake shifts two rows). The red band and the line above the board show which row is next and which way it will go. If your move solves the map, the ground stays calm.
 5. Solve within par (the fewest possible moves) for 3 stars, par + 2 for 2 stars. Share your result without spoilers.
 
 **Controls:** drag or tap the arrows; keyboard WASD moves the cursor, arrow keys shift its row or column, Z or Backspace undo, R restart, M mute, Esc menu.

@@ -137,7 +137,7 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
 // Pure puzzle engine: no DOM. tools/sim.mjs extracts this block to test it in Node.
 const N = 5, NN = 25;
 // tile value = kind << 4 | low nibble (edge mask N=1 E=2 S=4 W=8 for paths, need bits for villages)
-const KE = 0, KR = 1, KD = 2, KV = 3, KS = 4, KH = 5, KM = 6; // empty, river, road, village, spring, han, mountain
+const KE = 0, KR = 1, KD = 2, KV = 3, KS = 4, KH = 5, KM = 6, KB = 7, KX = 8; // empty, river, road, village, spring, han, mountain, bridge, blocked
 const NEED_RIVER = 1, NEED_ROAD = 2;
 const DR = [-1, 0, 1, 0], DC = [0, 1, 0, -1], OPP = [2, 3, 0, 1];
 const NB = new Int8Array(NN * 4);
@@ -149,7 +149,7 @@ for (let i = 0; i < NN; i++) {
   }
 }
 const tv = (k, m) => (k << 4) | m;
-const isFixedV = (v) => v >> 4 >= KV;
+const isFixedV = (v) => { const k = v >> 4; return k >= KV && k <= KM; };
 
 function rng32(seed) {
   let a = seed >>> 0;
@@ -167,11 +167,13 @@ function hashStr(s) {
 }
 
 // Connector masks per tile value for each network type.
+// Bridge tiles (KB): v&1===0 -> River N-S (5) & Road E-W (10); v&1===1 -> River E-W (10) & Road N-S (5).
+// Blocked tiles (KX): impassable ancient stone ruins with no connections (0).
 const RIV = new Uint8Array(256), ROD = new Uint8Array(256);
 for (let v = 0; v < 256; v++) {
   const k = v >> 4;
-  RIV[v] = k === KR ? v & 15 : k === KS ? 15 : k === KV && v & NEED_RIVER ? 15 : 0;
-  ROD[v] = k === KD ? v & 15 : k === KH ? 15 : k === KV && v & NEED_ROAD ? 15 : 0;
+  RIV[v] = k === KR ? v & 15 : k === KS ? 15 : k === KV && v & NEED_RIVER ? 15 : k === KB ? ((v & 1) ? 10 : 5) : 0;
+  ROD[v] = k === KD ? v & 15 : k === KH ? 15 : k === KV && v & NEED_ROAD ? 15 : k === KB ? ((v & 1) ? 5 : 10) : 0;
 }
 
 const STK = new Int8Array(32);
@@ -410,6 +412,8 @@ function layoutSolved(R, cfg) {
   const order = [];
   for (const v of villages) { if (v.need & NEED_RIVER) order.push([v, 1]); if (v.need & NEED_ROAD) order.push([v, 2]); }
   for (let i = order.length - 1; i > 0; i--) { const j = (R() * (i + 1)) | 0; [order[i], order[j]] = [order[j], order[i]]; }
+  const bridgeCells = new Uint8Array(NN), bridgeOrient = new Uint8Array(NN);
+  let bridgesCount = 0;
   for (const [v, T] of order) {
     const cost = new Float32Array(NN);
     for (let i = 0; i < NN; i++) cost[i] = 1 + R() * 1.6;
@@ -427,7 +431,24 @@ function layoutSolved(R, cfg) {
         const j = NB[u * 4 + e];
         if (j < 0 || done[j]) continue;
         const isTarget = (net[T] >> j) & 1;
-        if (!isTarget && (fixed[j] || (type[j] && type[j] !== T))) continue;
+        if (!isTarget && (fixed[j] || (type[j] && type[j] !== T))) {
+          // If bridges enabled, allow crossing perpendicular to a straight existing path
+          if (cfg.bridges && bridgesCount < cfg.bridges && !fixed[j] && type[j] && type[j] !== T && !bridgeCells[j]) {
+            const om = mask[j];
+            const perp = (om === 5 && (e === 1 || e === 3)) || (om === 10 && (e === 0 || e === 2));
+            if (perp) {
+              const j2 = NB[j * 4 + e];
+              if (j2 >= 0 && !done[j2]) {
+                const isTarget2 = (net[T] >> j2) & 1;
+                if (isTarget2 || (!fixed[j2] && (!type[j2] || type[j2] === T))) {
+                  const nd = dist[u] + cost[j] + cost[j2];
+                  if (nd < dist[j2]) { dist[j2] = nd; prev[j2] = j; prev[j] = u; }
+                }
+              }
+            }
+          }
+          continue;
+        }
         if (isTarget && fixed[j] && u === v.cell) continue; // need at least one path tile
         const nd = dist[u] + cost[j];
         if (nd < dist[j]) { dist[j] = nd; prev[j] = u; }
@@ -440,20 +461,36 @@ function layoutSolved(R, cfg) {
       const p = cells[a], q = cells[a + 1];
       let e = 0;
       while (NB[p * 4 + e] !== q) e++;
-      if (!fixed[p]) { mask[p] |= 1 << e; type[p] = T; }
-      if (!fixed[q]) { mask[q] |= 1 << OPP[e]; type[q] = T; }
+      if (!fixed[p]) {
+        if (type[p] && type[p] !== T) {
+          bridgeCells[p] = 1; bridgesCount++;
+          bridgeOrient[p] = (e === 1 || e === 3) ? (T === 2 ? 0 : 1) : (T === 2 ? 1 : 0);
+        }
+        mask[p] |= 1 << e; type[p] = T;
+      }
+      if (!fixed[q]) {
+        if (type[q] && type[q] !== T) {
+          bridgeCells[q] = 1; bridgesCount++;
+          bridgeOrient[q] = (e === 1 || e === 3) ? (T === 2 ? 0 : 1) : (T === 2 ? 1 : 0);
+        }
+        mask[q] |= 1 << OPP[e]; type[q] = T;
+      }
     }
     for (const c of cells) net[T] |= 1 << c;
   }
-  let pathTiles = 0;
+  let pathTiles = 0, blockedCount = 0;
   for (let i = 0; i < NN; i++) {
     if (fixed[i]) continue;
+    if (bridgeCells[i]) { vals[i] = tv(KB, bridgeOrient[i]); pathTiles++; continue; }
     if (type[i]) { vals[i] = tv(type[i] === 1 ? KR : KD, mask[i]); pathTiles++; continue; }
+    if (cfg.blocked && blockedCount < cfg.blocked) { vals[i] = tv(KX, 0); blockedCount++; continue; }
     if (R() < cfg.decoy) {
       const shapes = [5, 10, 5, 10, 3, 6, 12, 9];
       vals[i] = tv(R() < 0.5 ? KR : KD, shapes[(R() * shapes.length) | 0]);
     } else vals[i] = tv(KE, 0);
   }
+  if (cfg.bridges && bridgesCount < cfg.bridges) return null;
+  if (cfg.blocked && blockedCount < cfg.blocked) return null;
   if (pathTiles < cfg.minPath) return null;
   return { fixed, vals, spring, han, villages };
 }
@@ -469,16 +506,39 @@ function makePuzzle(seed, cfg) {
     const qRows = [];
     for (let r = 0; r < N; r++) if (lens[r] >= 3) qRows.push(r);
     if (qRows.length < 2) continue;
-    const quakes = [];
+    const quakes = [], quakeMeta = {};
     for (let k = 0; k < cfg.P; k++) {
-      let r;
-      do r = qRows[(R() * qRows.length) | 0]; while (k > 0 && r === moveLine(quakes[k - 1]) && qRows.length > 1);
-      quakes.push(r * 2 + (R() < 0.5 ? 0 : 1));
+      if (cfg.doubleQuake && qRows.length >= 2) {
+        // Double quake: shift two fault rows simultaneously
+        const idx1 = (R() * qRows.length) | 0;
+        let idx2 = (R() * (qRows.length - 1)) | 0;
+        if (idx2 >= idx1) idx2++;
+        const r1 = qRows[idx1], r2 = qRows[idx2];
+        const d1 = R() < 0.5 ? 0 : 1, d2 = R() < 0.5 ? 0 : 1;
+        const m1 = r1 * 2 + d1, m2 = r2 * 2 + d2;
+        const p_fwd = new Uint8Array(NN), p_rev = new Uint8Array(NN);
+        for (let i = 0; i < NN; i++) {
+          p_fwd[i] = perms[m1][perms[m2][i]];
+          p_rev[i] = perms[m2 ^ 1][perms[m1 ^ 1][i]];
+        }
+        const qCode = perms.length;
+        perms.push(p_fwd, p_rev);
+        quakes.push(qCode);
+        quakeMeta[qCode] = { lines: [r1, r2], dirs: [d1 ? -1 : 1, d2 ? -1 : 1] };
+        quakeMeta[qCode ^ 1] = { lines: [r1, r2], dirs: [d1 ? 1 : -1, d2 ? 1 : -1] };
+      } else {
+        let r;
+        do r = qRows[(R() * qRows.length) | 0]; while (k > 0 && r === moveLine(quakes[k - 1]) && qRows.length > 1);
+        const code = r * 2 + (R() < 0.5 ? 0 : 1);
+        quakes.push(code);
+        quakeMeta[code] = { lines: [r], dirs: [moveDir(code)] };
+        quakeMeta[code ^ 1] = { lines: [r], dirs: [-moveDir(code)] };
+      }
     }
     const pz = {
       seed, cfg, tiles: L.vals, fixed: L.fixed, spring: L.spring, han: L.han, villages: L.villages,
       needRiver: L.villages.some((v) => v.need & NEED_RIVER), needRoad: L.villages.some((v) => v.need & NEED_ROAD),
-      perms, lens, moveList, quakes, K: cfg.K,
+      perms, lens, moveList, quakes, quakeMeta, K: cfg.K,
     };
     let best = null;
     for (let s = 0; s < 8; s++) {
@@ -519,11 +579,37 @@ function dailyConfig(seed) {
   let dow = hashStr(t) % 7;
   if (/^\d{8}$/.test(t)) dow = new Date(+t.slice(0, 4), +t.slice(4, 6) - 1, +t.slice(6, 8)).getDay();
   const K = [6, 4, 4, 5, 5, 5, 6][dow];
-  return { K, minPar: K - 1, nv: 3, nm: 1 + (hashStr('m' + t) % 2), decoy: 0.55, minPath: 7, P: 5 };
+  // HARD RULE: daily boards for dates up to 2026-11-14 must stay byte-identical
+  if (!(/^\d{8}$/.test(t) && +t >= 20261115)) {
+    return { K, minPar: K - 1, nv: 3, nm: 1 + (hashStr('m' + t) % 2), decoy: 0.55, minPath: 7, P: 5 };
+  }
+  const feat = hashStr('feat' + t) % 4;
+  return {
+    K, minPar: K - 1, nv: 3,
+    nm: 1 + (hashStr('m' + t) % 2),
+    decoy: 0.55, minPath: 7, P: 5,
+    bridges: feat === 1 ? 1 : 0,
+    blocked: feat === 2 ? 1 : 0,
+    doubleQuake: feat === 3,
+  };
 }
 function endlessConfig(level) {
   const K = Math.min(6, 2 + Math.ceil(level / 2));
-  return { K, minPar: Math.max(2, K - 1), nv: level < 3 ? 2 : 3, nm: level < 4 ? 0 : level < 8 ? 1 : 2, decoy: level < 3 ? 0.35 : 0.55, minPath: level < 3 ? 5 : 7, P: 5 };
+  const minPar = Math.max(2, K - 1);
+  if (level < 3) return { K, minPar, nv: 2, nm: 0, decoy: 0.35, minPath: 5, P: 5 };
+  if (level === 3) return { K, minPar, nv: 3, nm: 0, decoy: 0.55, minPath: 7, P: 5 };
+  if (level === 4) return { K, minPar, nv: 3, nm: 1, decoy: 0.55, minPath: 7, P: 5 };
+  if (level === 5) return { K, minPar, nv: 3, nm: 0, bridges: 1, decoy: 0.55, minPath: 7, P: 5 };
+  if (level === 6) return { K, minPar, nv: 3, nm: 1, blocked: 1, decoy: 0.55, minPath: 7, P: 5 };
+  if (level === 7) return { K, minPar, nv: 3, nm: 1, doubleQuake: true, decoy: 0.55, minPath: 7, P: 5 };
+  if (level === 8) return { K, minPar, nv: 3, nm: 1, bridges: 1, decoy: 0.55, minPath: 7, P: 5 };
+  if (level === 9) return { K, minPar, nv: 3, nm: 0, blocked: 1, doubleQuake: true, decoy: 0.55, minPath: 7, P: 5 };
+  const cycle = (level - 10) % 6;
+  const nm = cycle === 3 || cycle === 5 ? 2 : cycle === 0 || cycle === 1 ? 1 : 0;
+  const bridges = cycle === 0 || cycle === 2 || cycle === 4 ? 1 : 0;
+  const blocked = cycle === 1 || cycle === 3 || cycle === 4 ? 1 : 0;
+  const doubleQuake = cycle === 1 || cycle === 2 || cycle === 5;
+  return { K, minPar, nv: 3, nm, bridges, blocked, doubleQuake, decoy: 0.55, minPath: 7, P: 5 };
 }
 // ENGINE END
 
@@ -544,31 +630,31 @@ const STR = {
     sub: 'Shift the land of Anatolia. Bring water and roads to every village.',
     daily: 'Daily puzzle', endless: 'Endless', how: 'How to play', moves: 'Moves', par: 'Par', undo: 'Undo', restart: 'Restart',
     menu: 'Menu', sound: 'Sound', on: 'on', off: 'off', level: 'Level {n}', dailyTag: 'Daily · {d}',
-    quakeNext: 'Next quake: row {r} {a}', calm: 'The ground is calm', loading: 'Drawing the map…', solvedT: 'Connected!',
+    quakeNext: 'Next quake: row {r} {a}', quakeDouble: 'Double quake: rows {s}', calm: 'The ground is calm', loading: 'Drawing the map…', solvedT: 'Connected!',
     resLine: '{m} moves · par {p}', share: 'Share result', next: 'Next level', toEndless: 'Play endless', back: 'Menu',
     copied: 'Copied to clipboard', tomorrow: 'A new map tomorrow.', endlessNote: 'Level {n} done.', movesWord: 'moves',
     gotIt: 'Got it', solvedOn: 'Solved', playTag: 'same map for everyone', board: 'Puzzle board',
     h1: 'Drag a row sideways or a column up or down (or tap the arrows). Tiles wrap around the edge.',
     h2: 'Villages, mountains, the spring and the caravanserai never move: tiles slide past them.',
-    h3: 'Lead the river from the spring and the road from the caravanserai to every village that asks for them.',
-    h4: 'After each move a small quake shifts one row by itself. The red band shows which row is next.',
+    h3: 'Lead the river from the spring and the road from the caravanserai to every village that asks for them. Bridges let both cross.',
+    h4: 'After each move a small quake shifts one row by itself (or a double quake shifts two). The red band shows what is next.',
     h5: 'Solve within par for 3 stars. Keys: WASD picks a tile, arrow keys shift, Z undo, R restart.',
-    lRiver: 'river', lRoad: 'road', lVillage: 'village', lMount: 'mountain', lSpring: 'spring', lHan: 'caravanserai',
+    lRiver: 'river', lRoad: 'road', lVillage: 'village', lMount: 'mountain', lSpring: 'spring', lHan: 'caravanserai', lBridge: 'bridge', lBlocked: 'ruins',
   },
   tr: {
     sub: 'Anadolu toprağını kaydır. Her köye su ve yol götür.',
     daily: 'Günün bulmacası', endless: 'Sonsuz mod', how: 'Nasıl oynanır', moves: 'Hamle', par: 'Hedef', undo: 'Geri al', restart: 'Baştan',
     menu: 'Menü', sound: 'Ses', on: 'açık', off: 'kapalı', level: 'Bölüm {n}', dailyTag: 'Günlük · {d}',
-    quakeNext: 'Sıradaki deprem: {r}. satır {a}', calm: 'Yer sakin', loading: 'Harita çiziliyor…', solvedT: 'Bağlandı!',
+    quakeNext: 'Sıradaki deprem: {r}. satır {a}', quakeDouble: 'Çifte deprem: {s}. satırlar', calm: 'Yer sakin', loading: 'Harita çiziliyor…', solvedT: 'Bağlandı!',
     resLine: '{m} hamle · hedef {p}', share: 'Sonucu paylaş', next: 'Sonraki bölüm', toEndless: 'Sonsuz moda geç', back: 'Menü',
     copied: 'Panoya kopyalandı', tomorrow: 'Yarın yeni bir harita.', endlessNote: '{n}. bölüm tamam.', movesWord: 'hamle',
     gotIt: 'Anladım', solvedOn: 'Çözüldü', playTag: 'herkes için aynı harita', board: 'Bulmaca tahtası',
     h1: 'Bir satırı yana, bir sütunu yukarı ya da aşağı sürükle (ya da oklara dokun). Taşlar kenardan dolanır.',
     h2: 'Köyler, dağlar, pınar ve kervansaray yerinden oynamaz: taşlar onların yanından kayar.',
-    h3: 'Nehri pınardan, yolu kervansaraydan, onları isteyen her köye ulaştır.',
-    h4: 'Her hamleden sonra küçük bir deprem bir satırı kendiliğinden kaydırır. Kırmızı bant sıradaki satırı gösterir.',
+    h3: 'Nehri pınardan, yolu kervansaraydan, onları isteyen her köye ulaştır. Köprüler her ikisinin kesişmesine izin verir.',
+    h4: 'Her hamleden sonra küçük bir deprem bir satırı kendiliğinden kaydırır (çifte deprem iki satırı birden kaydırır). Kırmızı bant sıradaki satırı gösterir.',
     h5: 'Hedef hamlede çöz, 3 yıldız al. Tuşlar: WASD taş seçer, ok tuşları kaydırır, Z geri alır, R baştan.',
-    lRiver: 'nehir', lRoad: 'yol', lVillage: 'köy', lMount: 'dağ', lSpring: 'pınar', lHan: 'kervansaray',
+    lRiver: 'nehir', lRoad: 'yol', lVillage: 'köy', lMount: 'dağ', lSpring: 'pınar', lHan: 'kervansaray', lBridge: 'köprü', lBlocked: 'harabe',
   },
 };
 let lang = (QS.get('lang') || '').toLowerCase();
@@ -823,6 +909,57 @@ function drawPlate(c, v, id) {
     strokePath(c, m, s, s * 0.3, 'rgba(122,82,48,.32)');
     strokePath(c, m, s, s * 0.21, '#c79a5e');
     c.setLineDash([s * 0.07, s * 0.07]); strokePath(c, m, s, s * 0.03, 'rgba(248,234,200,.9)'); c.setLineDash([]);
+  } else if (k === KB) {
+    // Stone bridge plate: river passes in one axis, stone bridge with caravan road crosses over
+    const rMask = (v & 1) ? 10 : 5;
+    const dMask = (v & 1) ? 5 : 10;
+    // Water channel under bridge
+    strokePath(c, rMask, s, s * 0.44, 'rgba(105,140,62,.40)');
+    strokePath(c, rMask, s, s * 0.3, '#2a6c99');
+    strokePath(c, rMask, s, s * 0.22, '#3d95cf');
+    c.save(); c.translate(-s * 0.03, -s * 0.03); strokePath(c, rMask, s, s * 0.05, 'rgba(255,255,255,.22)'); c.restore();
+    // Soft shadow of bridge deck over the water
+    c.fillStyle = 'rgba(20,15,10,.36)';
+    if (v & 1) c.fillRect(s * 0.33, 0, s * 0.34, s);
+    else c.fillRect(0, s * 0.33, s, s * 0.34);
+    // Stone bridge masonry
+    const bg = c.createLinearGradient(0, 0, s, s);
+    bg.addColorStop(0, '#d8c294'); bg.addColorStop(1, '#b89d6e');
+    c.fillStyle = bg;
+    if (v & 1) c.fillRect(s * 0.35, 0, s * 0.3, s);
+    else c.fillRect(0, s * 0.35, s, s * 0.3);
+    // Parapet borders & masonry joints
+    c.strokeStyle = '#5a4228'; c.lineWidth = 1.6;
+    if (v & 1) {
+      c.beginPath(); c.moveTo(s * 0.35, 0); c.lineTo(s * 0.35, s); c.moveTo(s * 0.65, 0); c.lineTo(s * 0.65, s); c.stroke();
+      c.strokeStyle = 'rgba(255,250,235,.55)'; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(s * 0.37, 0); c.lineTo(s * 0.37, s); c.moveTo(s * 0.63, 0); c.lineTo(s * 0.63, s); c.stroke();
+    } else {
+      c.beginPath(); c.moveTo(0, s * 0.35); c.lineTo(s, s * 0.35); c.moveTo(0, s * 0.65); c.lineTo(s, s * 0.65); c.stroke();
+      c.strokeStyle = 'rgba(255,250,235,.55)'; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(0, s * 0.37); c.lineTo(s, s * 0.37); c.moveTo(0, s * 0.63); c.lineTo(s, s * 0.63); c.stroke();
+    }
+    // Caravan track across the bridge
+    strokePath(c, dMask, s, s * 0.18, '#c79a5e');
+    c.setLineDash([s * 0.06, s * 0.06]); strokePath(c, dMask, s, s * 0.025, 'rgba(248,234,200,.95)'); c.setLineDash([]);
+  } else if (k === KX) {
+    // Blocked plate: ancient stone ruins / monolith boulder obstacle
+    c.fillStyle = 'rgba(50,35,20,.32)';
+    c.beginPath(); c.ellipse(s / 2, s * 0.58, s * 0.38, s * 0.3, 0, 0, 7); c.fill();
+    const b1 = (cx, cy, w, h, col1, col2) => {
+      c.fillStyle = col1; c.fillRect(cx - w / 2, cy - h / 2, w, h);
+      c.strokeStyle = col2; c.lineWidth = 1.2; c.strokeRect(cx - w / 2, cy - h / 2, w, h);
+    };
+    b1(s * 0.42, s * 0.52, s * 0.42, s * 0.34, '#8a7258', '#4d3d2c');
+    b1(s * 0.62, s * 0.64, s * 0.36, s * 0.28, '#735e48', '#3d2f21');
+    b1(s * 0.36, s * 0.68, s * 0.28, s * 0.22, '#9a8268', '#544332');
+    c.strokeStyle = '#2b1f14'; c.lineWidth = 1.4;
+    c.beginPath();
+    c.moveTo(s * 0.32, s * 0.4); c.lineTo(s * 0.44, s * 0.54); c.lineTo(s * 0.4, s * 0.66);
+    c.moveTo(s * 0.55, s * 0.52); c.lineTo(s * 0.68, s * 0.6);
+    c.stroke();
+    c.fillStyle = 'rgba(95,125,55,.6)';
+    c.beginPath(); c.arc(s * 0.32, s * 0.48, s * 0.06, 0, 7); c.arc(s * 0.58, s * 0.58, s * 0.05, 0, 7); c.fill();
   }
 }
 function drawMountain(x, X, Y, s) {
@@ -981,11 +1118,14 @@ function frame(now) {
     if (A.kind === 'quake' && A.t < A.delay && !RM) jitter = Math.sin(A.t * 0.25) * cs * 0.025;
   }
   const ids = A ? A.from : G.ids;
-  // next-quake band
+  // next-quake band & metadata
   const nq = A && A.kind === 'quake' ? A.m : anims.length ? -1 : nextQuake();
-  if (nq >= 0 && G.state === 'play') {
-    const r = nq >> 1, a = A && A.kind === 'quake' ? 0.28 : 0.1 + 0.06 * Math.sin(now / 200);
-    ctx.fillStyle = `rgba(214,70,40,${a})`; ctx.fillRect(ox, oy + r * cs, BW, cs);
+  const qBandInfo = nq >= 0 && G.pz && G.pz.quakeMeta && G.pz.quakeMeta[nq] ? G.pz.quakeMeta[nq] : nq >= 0 ? { lines: [nq >> 1], dirs: [moveDir(nq)] } : null;
+  const qAnimInfo = A && A.kind === 'quake' && G.pz && G.pz.quakeMeta && G.pz.quakeMeta[A.m] ? G.pz.quakeMeta[A.m] : null;
+  if (qBandInfo && G.state === 'play') {
+    const a = A && A.kind === 'quake' ? 0.28 : 0.1 + 0.06 * Math.sin(now / 200);
+    ctx.fillStyle = `rgba(214,70,40,${a})`;
+    for (const r of qBandInfo.lines) ctx.fillRect(ox, oy + r * cs, BW, cs);
   }
   if (hover >= 0 && !anims.length && G.state === 'play' && !G.bot) {
     ctx.fillStyle = 'rgba(255,255,255,.1)';
@@ -1002,10 +1142,20 @@ function frame(now) {
       const tc = A.toPos[id];
       if (tc !== i) {
         moving[i] = 1;
-        const d = moveDir(A.m);
-        if (line < N) { let x1 = tc % N; if (d > 0 && x1 < x) x1 += N; if (d < 0 && x1 > x) x1 -= N; x += (x1 - x) * e; }
-        else { let y1 = (tc / N) | 0; if (d > 0 && y1 < y) y1 += N; if (d < 0 && y1 > y) y1 -= N; y += (y1 - y) * e; }
-      } else if (jitter && line === y) x += jitter / cs;
+        const lineIdx = qAnimInfo && qAnimInfo.lines.includes(y) ? qAnimInfo.lines.indexOf(y) : -1;
+        const d = lineIdx >= 0 ? qAnimInfo.dirs[lineIdx] : moveDir(A.m);
+        if (lineIdx >= 0 || line < N) {
+          let x1 = tc % N;
+          if (d > 0 && x1 < x) x1 += N;
+          if (d < 0 && x1 > x) x1 -= N;
+          x += (x1 - x) * e;
+        } else {
+          let y1 = (tc / N) | 0;
+          if (d > 0 && y1 < y) y1 += N;
+          if (d < 0 && y1 > y) y1 -= N;
+          y += (y1 - y) * e;
+        }
+      } else if (jitter && (qAnimInfo ? qAnimInfo.lines.includes(y) : line === y)) x += jitter / cs;
     }
     const X = ox + x * cs, Y = oy + y * cs;
     ctx.drawImage(plates[id], X, Y, cs, cs);
@@ -1017,17 +1167,27 @@ function frame(now) {
     }
   }
   // fixed tiles stay on top while a line slides under them
-  if (A) for (let i = 0; i < NN; i++) if (pz.fixed[i] && (line < N ? ((i / N) | 0) === line : i % N === line - N))
-    ctx.drawImage(baseC.c, (pad + (i % N) * cs) * DPR, (pad + ((i / N) | 0) * cs) * DPR, cs * DPR, cs * DPR, ox + (i % N) * cs, oy + ((i / N) | 0) * cs, cs, cs);
+  if (A) for (let i = 0; i < NN; i++) {
+    if (!pz.fixed[i]) continue;
+    const iy = (i / N) | 0, ix = i % N;
+    const hitRow = qAnimInfo ? qAnimInfo.lines.includes(iy) : (line < N ? iy === line : ix === line - N);
+    if (hitRow) ctx.drawImage(baseC.c, (pad + ix * cs) * DPR, (pad + iy * cs) * DPR, cs * DPR, cs * DPR, ox + ix * cs, oy + iy * cs, cs, cs);
+  }
   ctx.restore();
 
   // water and caravans flow along the connected network; connector stubs; village badges
   const vals = disp.vals, wave = G.celebrateAt ? (now - G.celebrateAt) / 110 : -9;
   for (let i = 0; i < NN; i++) {
-    if (moving[i] || (jitter && line === ((i / N) | 0))) continue;
+    if (moving[i] || (jitter && (qAnimInfo ? qAnimInfo.lines.includes((i / N) | 0) : line === ((i / N) | 0)))) continue;
     const v = vals[i], k = v >> 4, X = ox + (i % N) * cs, Y = oy + ((i / N) | 0) * cs;
-    if (k === KR && disp.dR[i] >= 0) drawFlow(X, Y, v, i, disp.dR, true, time, wave > -9 ? Math.max(0, 1 - Math.abs(disp.dR[i] - wave) / 1.6) : 0);
-    else if (k === KD && disp.dD[i] >= 0) drawFlow(X, Y, v, i, disp.dD, false, time, wave > -9 ? Math.max(0, 1 - Math.abs(disp.dD[i] - wave) / 1.6) : 0);
+    if ((k === KR || k === KB) && disp.dR[i] >= 0) {
+      const fv = k === KB ? tv(KR, (v & 1) ? 10 : 5) : v;
+      drawFlow(X, Y, fv, i, disp.dR, true, time, wave > -9 ? Math.max(0, 1 - Math.abs(disp.dR[i] - wave) / 1.6) : 0);
+    }
+    if ((k === KD || k === KB) && disp.dD[i] >= 0) {
+      const fv = k === KB ? tv(KD, (v & 1) ? 5 : 10) : v;
+      drawFlow(X, Y, fv, i, disp.dD, false, time, wave > -9 ? Math.max(0, 1 - Math.abs(disp.dD[i] - wave) / 1.6) : 0);
+    }
     if (k === KV || k === KS || k === KH) {
       for (let e2 = 0; e2 < 4; e2++) {
         const j = NB[i * 4 + e2];
@@ -1049,21 +1209,24 @@ function frame(now) {
     if (vg.need & NEED_ROAD) drawBadge(X + cs * 0.8, Y + cs * 0.2, r, false, (disp.st.rd >> vg.cell) & 1, pulse);
   });
   // gutter arrows (tap targets) and the quake marker
-  const qRow = nq >= 0 && G.state === 'play' ? nq >> 1 : -1, qDir = nq >= 0 ? moveDir(nq) : 0;
   const gx = (cs * GUT + pad) / 2, chs = cs * 0.13;
   for (let l = 0; l < 2 * N; l++) {
     if (pz.lens[l] < 2) continue;
     const hot = hover >= 0 && (l < N ? ((hover / N) | 0) === l : hover % N === l - N);
-    const col = l === qRow ? 'rgba(255,140,110,.95)' : hot ? 'rgba(243,234,216,.95)' : 'rgba(243,234,216,.42)';
+    const isQuake = qBandInfo && l < N && qBandInfo.lines.includes(l);
+    const col = isQuake ? 'rgba(255,140,110,.95)' : hot ? 'rgba(243,234,216,.95)' : 'rgba(243,234,216,.42)';
     if (l < N) { const cy = oy + l * cs + cs / 2; chevron(ox - gx, cy, -1, false, chs, col); chevron(ox + BW + gx, cy, 1, false, chs, col); }
     else { const cx = ox + (l - N) * cs + cs / 2; chevron(cx, oy - gx, -1, true, chs, col); chevron(cx, oy + BW + gx, 1, true, chs, col); }
   }
-  if (qRow >= 0) {
-    const cy = oy + qRow * cs + cs / 2, tx = qDir > 0 ? ox + BW + pad * 0.5 : ox - pad * 0.5, sz = Math.max(6, pad * 0.75);
-    ctx.fillStyle = '#e0553a'; ctx.strokeStyle = '#fff3e6'; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(tx + qDir * sz * 0.7, cy); ctx.lineTo(tx - qDir * sz * 0.5, cy - sz); ctx.lineTo(tx - qDir * sz * 0.5, cy + sz); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.setLineDash([cs * 0.08, cs * 0.06]); ctx.strokeStyle = 'rgba(224,85,58,.85)'; ctx.lineWidth = 2;
-    ctx.strokeRect(ox + 1, oy + qRow * cs + 1, BW - 2, cs - 2); ctx.setLineDash([]);
+  if (qBandInfo && G.state === 'play') {
+    for (let qi = 0; qi < qBandInfo.lines.length; qi++) {
+      const qRow = qBandInfo.lines[qi], qDir = qBandInfo.dirs[qi];
+      const cy = oy + qRow * cs + cs / 2, tx = qDir > 0 ? ox + BW + pad * 0.5 : ox - pad * 0.5, sz = Math.max(6, pad * 0.75);
+      ctx.fillStyle = '#e0553a'; ctx.strokeStyle = '#fff3e6'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(tx + qDir * sz * 0.7, cy); ctx.lineTo(tx - qDir * sz * 0.5, cy - sz); ctx.lineTo(tx - qDir * sz * 0.5, cy + sz); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.setLineDash([cs * 0.08, cs * 0.06]); ctx.strokeStyle = 'rgba(224,85,58,.85)'; ctx.lineWidth = 2;
+      ctx.strokeRect(ox + 1, oy + qRow * cs + 1, BW - 2, cs - 2); ctx.setLineDash([]);
+    }
   }
   if (cursor >= 0 && G.state === 'play' && !G.bot) { ctx.strokeStyle = '#7cc4f0'; ctx.lineWidth = 3; rr(ctx, ox + (cursor % N) * cs + 3, oy + ((cursor / N) | 0) * cs + 3, cs - 6, cs - 6, cs * 0.14); ctx.stroke(); }
   drawParticles(dt);
@@ -1155,7 +1318,16 @@ function updateHud() {
   const q = $('quake'), nq = nextQuake();
   if (G.state === 'loading') { q.className = 'calm'; $('tQuake').textContent = t('loading'); }
   else if (nq < 0) { q.className = 'calm'; $('tQuake').textContent = t('calm'); }
-  else { q.className = ''; $('tQuake').textContent = t('quakeNext', { r: (nq >> 1) + 1, a: moveDir(nq) > 0 ? '→' : '←' }); }
+  else {
+    const qInfo = G.pz && G.pz.quakeMeta && G.pz.quakeMeta[nq] ? G.pz.quakeMeta[nq] : { lines: [nq >> 1], dirs: [moveDir(nq)] };
+    q.className = '';
+    if (qInfo.lines.length > 1) {
+      const desc = qInfo.lines.map((l, idx) => (l + 1) + (qInfo.dirs[idx] > 0 ? '→' : '←')).join(' & ');
+      $('tQuake').textContent = t('quakeDouble', { s: desc });
+    } else {
+      $('tQuake').textContent = t('quakeNext', { r: qInfo.lines[0] + 1, a: qInfo.dirs[0] > 0 ? '→' : '←' });
+    }
+  }
   const b = $('bot'); b.style.display = G.bot ? 'inline-block' : 'none'; b.textContent = G.bot ? 'BOT ' + G.bot.strategy.toUpperCase() : '';
   ['Undo', 'Restart', 'Menu'].forEach((k) => ($('l' + k).textContent = t(k.toLowerCase())));
   $('bUndo').disabled = !G.undo.length || G.won || !!G.bot;
@@ -1184,7 +1356,7 @@ function openHelp() {
   helpReturn = $('menu').classList.contains('on') ? 'menu' : null; closeAll();
   $('hTitle').textContent = t('how');
   $('hList').innerHTML = ['h1', 'h2', 'h3', 'h4', 'h5'].map((k) => `<li>${t(k)}</li>`).join('');
-  $('hLegend').innerHTML = [['#3d95cf', 'lRiver'], ['#c79a5e', 'lRoad'], ['#c25b35', 'lVillage'], ['#2fa3b6', 'lSpring'], ['#b8a07a', 'lHan'], ['#7a6551', 'lMount']].map(([c, k]) => `<span><i style="background:${c}"></i>${t(k)}</span>`).join('');
+  $('hLegend').innerHTML = [['#3d95cf', 'lRiver'], ['#c79a5e', 'lRoad'], ['#c25b35', 'lVillage'], ['#2fa3b6', 'lSpring'], ['#b8a07a', 'lHan'], ['#7a6551', 'lMount'], ['#b89d6e', 'lBridge'], ['#615243', 'lBlocked']].map(([c, k]) => `<span><i style="background:${c}"></i>${t(k)}</span>`).join('');
   $('bHelpOk').textContent = t('gotIt');
   $('help').classList.add('on'); if (!COARSE) setTimeout(() => $('bHelpOk').focus(), 30);
 }
@@ -1240,14 +1412,36 @@ function dbg() {
   el.style.display = 'block';
   el.textContent = `fps ${fps}  dpr ${DPR}  cell ${cs}px\nseed ${G.seed}  K ${pz ? pz.K : '-'}  par ${pz ? pz.par : '-'}\ngen ${G.genMs} ms  nodes ${pz ? pz.solveNodes : '-'}\nmoves ${G.moves}  quake ${G.moves % 5}` + (G.bot ? `\nbot ${G.bot.strategy} plan ${G.bot.plan.length} (${G.bot.ms} ms)` : '');
 }
-const GLYPH = { 0: '..', 3: 'VV', 4: 'SS', 5: 'HH', 6: 'MM' };
+const GLYPH = { 0: '..', 3: 'VV', 4: 'SS', 5: 'HH', 6: 'MM', 7: 'BB', 8: 'XX' };
 window.fayHatti = {
   get seed() { return G.seed; }, get moves() { return G.moves; }, get solved() { return G.won; }, get state() { return G.state; },
   get mode() { return G.mode; }, get level() { return G.level; }, get par() { return G.pz ? G.pz.par : null; }, get stars() { return G.stars; },
-  get nextQuake() { const q = nextQuake(); return q < 0 ? null : { row: q >> 1, dir: moveDir(q) }; },
+  get nextQuake() {
+    const q = nextQuake();
+    if (q < 0 || !G.pz) return null;
+    const info = G.pz.quakeMeta && G.pz.quakeMeta[q] ? G.pz.quakeMeta[q] : { lines: [q >> 1], dirs: [moveDir(q)] };
+    return {
+      row: info.lines[0], dir: info.dirs[0],
+      double: info.lines.length > 1,
+      rows: info.lines.slice(), dirs: info.dirs.slice(),
+      row2: info.lines[1], dir2: info.dirs[1],
+    };
+  },
   get bot() { return G.bot ? { strategy: G.bot.strategy, planned: G.bot.plan.length, played: G.bot.i } : null; },
   get genMs() { return G.genMs; }, get fps() { return fps; }, get plan() { return G.pz ? G.pz.solution.slice() : null; },
-  get board() { if (!G.pz) return null; const v = toVals(G.pz, G.ids), out = []; for (let r = 0; r < N; r++) { const row = []; for (let c = 0; c < N; c++) { const x = v[r * N + c], k = x >> 4; row.push(k === KR ? 'r' + (x & 15).toString(16) : k === KD ? 'd' + (x & 15).toString(16) : GLYPH[k]); } out.push(row.join(' ')); } return out; },
+  get board() {
+    if (!G.pz) return null;
+    const v = toVals(G.pz, G.ids), out = [];
+    for (let r = 0; r < N; r++) {
+      const row = [];
+      for (let c = 0; c < N; c++) {
+        const x = v[r * N + c], k = x >> 4;
+        row.push(k === KR ? 'r' + (x & 15).toString(16) : k === KD ? 'd' + (x & 15).toString(16) : k === KB ? 'b' + (x & 1) : GLYPH[k] || '??');
+      }
+      out.push(row.join(' '));
+    }
+    return out;
+  },
   move: (m) => doMove(m), undo, restart, start: (mode, arg) => startPuzzle(mode, arg, false),
 };
 addEventListener('resize', layout);
