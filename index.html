@@ -791,6 +791,17 @@ const CARDS = [
     },
     apply: () => applyBiome('ege'),
   },
+  {
+    id: 'juice-dust',
+    type: 'cosmetic',
+    implemented: true,
+    title: { en: 'Floating Dust & Sand Motes', tr: 'Uçuşan Toz ve Kum Zerrecikleri' },
+    desc: {
+      en: 'Atmospheric motes drifting across the parchment map with gentle wind sway and quake agitation.',
+      tr: 'Rüzgâr salınımı ve deprem tepkisiyle parşömen harita üzerinde süzülen ortam toz ve kum zerrecikleri.'
+    },
+    apply: () => setMotes(true),
+  },
 ];
 const STR = {
   en: {
@@ -810,6 +821,7 @@ const STR = {
     h4: 'After each move a small quake shifts one row by itself. The red band shows which row is next.',
     h5: 'Solve within par for 3 stars. Keys: WASD picks tile, arrows shift, Z undo, R restart, C contrast.',
     lRiver: 'river', lRoad: 'road', lVillage: 'village', lMount: 'mountain', lSpring: 'spring', lHan: 'caravanserai',
+    motes: 'Dust motes',
     integrity: 'Seed Integrity', freezeTitle: 'Code Freeze & Integrity', freezeSub: 'Seeds verified through Dec 31',
     freezeRange: 'Range: {from} → {to}', freezeStatus: '{ok}/{total} daily seeds verified solvable',
     freezePar: 'Par range: {min}–{max} moves (avg {avg})', freezeSeal: 'CODE FREEZE LOCKED · SEED INTEGRITY VERIFIED',
@@ -837,6 +849,7 @@ const STR = {
     h4: 'Her hamleden sonra küçük bir deprem bir satırı kendiliğinden kaydırır. Kırmızı bant sıradaki satırı gösterir.',
     h5: 'Hedef hamlede çöz, 3 yıldız al. Tuşlar: WASD taş seçer, oklar kaydırır, Z geri alır, R baştan, C kontrast.',
     lRiver: 'nehir', lRoad: 'yol', lVillage: 'köy', lMount: 'dağ', lSpring: 'pınar', lHan: 'kervansaray',
+    motes: 'Toz zerrecikleri',
     integrity: 'Tohum Doğrulama', freezeTitle: 'Kod Dondurma & Doğrulama', freezeSub: '31 Aralık\'a kadar çözülebilirlik onaylandı',
     freezeRange: 'Aralık: {from} → {to}', freezeStatus: '{ok}/{total} günlük tohum çözülebilir',
     freezePar: 'Hedef hamle: {min}–{max} (ort. {avg})', freezeSeal: 'KOD DONDURULDU · TOHUM GÜVENLİĞİ ONAYLANDI',
@@ -2367,6 +2380,7 @@ function frame(now) {
       ctx.strokeStyle = '#7cc4f0'; ctx.lineWidth = 3; rr(ctx, ox + (cursor % N) * cs + 3, oy + ((cursor / N) | 0) * cs + 3, cs - 6, cs - 6, cs * 0.14); ctx.stroke();
     }
   }
+  drawMotes(dt, now);
   drawParticles(dt);
   ctx.restore();
 }
@@ -2393,6 +2407,88 @@ function drawParticles(dt) {
     ctx.save(); ctx.globalAlpha = Math.max(0, 1 - (p.t - p.delay) / p.life); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillStyle = p.col;
     ctx.beginPath(); ctx.ellipse(0, 0, cs * 0.06, cs * 0.03, 0, 0, 7); ctx.fill(); ctx.restore();
   }
+}
+
+// ---------------------------------------------------------------- floating dust / sand motes (cosmetic card: juice-dust)
+// Ambient atmospheric motes drifting across the warm parchment map with wind sway & quake reaction.
+const MOTE_COUNT = 22;
+let motes = [];
+let motesEnabled = true;
+function setMotes(v) { motesEnabled = !!v; }
+const MOTE_PALETTES = {
+  classic: ['rgba(242,179,61,', 'rgba(238,220,176,', 'rgba(255,248,231,', 'rgba(194,154,96,'],
+  kapadokya: ['rgba(232,164,54,', 'rgba(205,189,174,', 'rgba(246,237,226,', 'rgba(181,76,48,'],
+  karadeniz: ['rgba(226,168,59,', 'rgba(178,206,191,', 'rgba(237,247,240,', 'rgba(89,207,158,'],
+  ege: ['rgba(240,184,58,', 'rgba(184,199,174,', 'rgba(244,238,225,', 'rgba(184,84,55,'],
+  gece: ['rgba(245,190,71,', 'rgba(142,164,190,', 'rgba(230,240,250,', 'rgba(100,181,246,'],
+  kagit: ['rgba(224,156,48,', 'rgba(200,188,171,', 'rgba(250,245,232,', 'rgba(181,68,43,'],
+  contrast: ['rgba(255,255,255,', 'rgba(255,183,3,', 'rgba(0,229,255,', 'rgba(240,240,240,'],
+};
+function getMoteColors() {
+  if (highContrast) return MOTE_PALETTES.contrast;
+  if (currentTheme === 'gece') return MOTE_PALETTES.gece;
+  if (currentTheme === 'kagit') return MOTE_PALETTES.kagit;
+  if (G.biome && MOTE_PALETTES[G.biome]) return MOTE_PALETTES[G.biome];
+  return MOTE_PALETTES.classic;
+}
+function initMotes() {
+  motes = [];
+  const R = rng32(0xd057);
+  const cols = MOTE_PALETTES.classic;
+  for (let i = 0; i < MOTE_COUNT; i++) {
+    motes.push({
+      u: R(),
+      v: R(),
+      speed: 0.012 + R() * 0.022,
+      angle: 0.65 + (R() - 0.5) * 0.45,
+      wobbleSpeed: 1.2 + R() * 2.2,
+      wobbleAmp: 0.003 + R() * 0.005,
+      phase: R() * Math.PI * 2,
+      size: 0.75 + R() * 1.35,
+      baseAlpha: 0.18 + R() * 0.32,
+      colorPrefix: cols[i % cols.length],
+      colorIdx: i % cols.length,
+      halo: i % 7 === 0,
+    });
+  }
+}
+initMotes();
+
+function drawMotes(dt, now) {
+  if (RM || !motesEnabled || !G.pz || !baseC || !disp) return;
+  const s = dt / 1000, S = baseC.S;
+  if (!S || S <= 0) return;
+  const x0 = ox - pad, y0 = oy - pad;
+  // Agitation factor when quakes shake the steppe ground
+  const turb = shake > 0 ? Math.min(3, shake / (cs * 0.03)) : 0;
+  const cols = getMoteColors();
+  ctx.save();
+  for (let i = 0; i < motes.length; i++) {
+    const m = motes[i];
+    const sway = Math.sin(now * 0.0016 * m.wobbleSpeed + m.phase);
+    const swayCos = Math.cos(now * 0.0014 * m.wobbleSpeed + m.phase);
+    m.u += (Math.cos(m.angle) * m.speed + sway * m.wobbleAmp * (1 + turb * 1.5)) * s;
+    m.v += (Math.sin(m.angle) * m.speed * (1 + turb * 0.6) + swayCos * m.wobbleAmp * (1 + turb * 2)) * s;
+    if (m.u < 0) m.u += 1; else if (m.u > 1) m.u -= 1;
+    if (m.v < 0) m.v += 1; else if (m.v > 1) m.v -= 1;
+    const edgeFade = Math.min(1, m.u / 0.08, (1 - m.u) / 0.08, m.v / 0.08, (1 - m.v) / 0.08);
+    if (edgeFade <= 0) continue;
+    const twinkle = 0.82 + 0.18 * Math.sin(now * 0.0025 + m.phase);
+    const a = m.baseAlpha * edgeFade * twinkle;
+    const px = x0 + m.u * S, py = y0 + m.v * S;
+    const prefix = cols[m.colorIdx % cols.length] || m.colorPrefix;
+    ctx.fillStyle = prefix + a.toFixed(3) + ')';
+    ctx.beginPath();
+    ctx.arc(px, py, m.size, 0, 6.283);
+    ctx.fill();
+    if (m.halo && a > 0.15) {
+      ctx.fillStyle = prefix + (a * 0.35).toFixed(3) + ')';
+      ctx.beginPath();
+      ctx.arc(px, py, m.size * 2.4, 0, 6.283);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
 }
 
 // ---------------------------------------------------------------- input
@@ -2723,7 +2819,7 @@ function dbg() {
   if (!DEBUG) return;
   const el = $('debug'), pz = G.pz;
   el.style.display = 'block';
-  el.textContent = `fps ${fps}  dpr ${DPR}  cell ${cs}px\nseed ${G.seed}  K ${pz ? pz.K : '-'}  par ${pz ? pz.par : '-'}\ngen ${G.genMs} ms  nodes ${pz ? pz.solveNodes : '-'}\nmoves ${G.moves}  quake ${G.moves % 5}\nevents ${telemetryLog.length}` + (G.bot ? `\nbot ${G.bot.strategy} plan ${G.bot.plan.length} (${G.bot.ms} ms)` : '');
+  el.textContent = `fps ${fps}  dpr ${DPR}  cell ${cs}px\nseed ${G.seed}  K ${pz ? pz.K : '-'}  par ${pz ? pz.par : '-'}\ngen ${G.genMs} ms  nodes ${pz ? pz.solveNodes : '-'}\nmoves ${G.moves}  quake ${G.moves % 5}  motes ${motes.length}\nevents ${telemetryLog.length}` + (G.bot ? `\nbot ${G.bot.strategy} plan ${G.bot.plan.length} (${G.bot.ms} ms)` : '');
 }
 const GLYPH = { 0: '..', 3: 'VV', 4: 'SS', 5: 'HH', 6: 'MM' };
 window.fayHatti = {
@@ -2736,6 +2832,7 @@ window.fayHatti = {
   get nextQuake() { const q = nextQuake(); return q < 0 ? null : { row: q >> 1, dir: moveDir(q) }; },
   get bot() { return G.bot ? { strategy: G.bot.strategy, planned: G.bot.plan.length, played: G.bot.i } : null; },
   get genMs() { return G.genMs; }, get fps() { return fps; }, get plan() { return G.pz ? G.pz.solution.slice() : null; },
+  get motes() { return motes; }, get motesCount() { return motes.length; }, get motesEnabled() { return motesEnabled; }, setMotes: (v) => setMotes(v),
   get board() { if (!G.pz) return null; const v = toVals(G.pz, G.ids), out = []; for (let r = 0; r < N; r++) { const row = []; for (let c = 0; c < N; c++) { const x = v[r * N + c], k = x >> 4; row.push(k === KR ? 'r' + (x & 15).toString(16) : k === KD ? 'd' + (x & 15).toString(16) : GLYPH[k]); } out.push(row.join(' ')); } return out; },
   get highContrast() { return highContrast; }, setContrast, toggleContrast,
   get haptic() { return haptic; }, setHaptic, toggleHaptic, vibe,
