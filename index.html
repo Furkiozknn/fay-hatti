@@ -52,6 +52,11 @@ button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 .row{display:flex;gap:8px}.row .btn{text-align:center}
 .mini{display:flex;gap:8px;margin-top:10px}
 .mini button{flex:1;min-height:44px;border-radius:10px;border:1px solid #b8935a;background:transparent;color:var(--paper-ink);font-size:15px}
+.tier-picker{display:flex;gap:6px;margin:3px 0 5px}
+.tier-btn{flex:1;min-height:44px;padding:6px 2px;border-radius:10px;border:1.5px solid #b8935a;background:rgba(230,211,168,.4);color:var(--paper-ink);font-size:14px;font-weight:700;letter-spacing:.02em;text-align:center;transition:background .15s,color .15s,border-color .15s}
+.tier-btn:hover{background:#ecdcb6}
+.tier-btn.active{background:var(--terra);color:#fff8ec;border-color:var(--terra);box-shadow:0 2px 6px rgba(166,63,39,.35)}
+.tier-hint{margin:0 0 8px;font-size:13px;line-height:1.35;color:#5b4a36;text-align:center}
 .big-stars{display:flex;justify-content:center;gap:6px;margin:6px 0 4px}
 .big-stars svg{width:46px;height:46px}
 .big-stars svg.on{animation:starpop .45s cubic-bezier(.3,1.6,.5,1) both}
@@ -74,7 +79,7 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
   #bar{flex-direction:column;padding:8px 10px 8px 4px;overflow:auto}
   .tb{min-height:44px;flex-direction:row;gap:6px}
 }
-@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on{animation:none}}
+@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on{animation:none}.tier-btn{transition:none}}
 </style>
 </head>
 <body>
@@ -104,6 +109,12 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
     <p class="sub" id="mSub"></p>
     <button class="btn" id="bDaily"></button>
     <button class="btn" id="bEndless"></button>
+    <div class="tier-picker" role="radiogroup" id="tierGroup" aria-label="Endless difficulty">
+      <button type="button" class="tier-btn" id="tKolay" role="radio" aria-checked="false">Kolay</button>
+      <button type="button" class="tier-btn active" id="tNormal" role="radio" aria-checked="true">Normal</button>
+      <button type="button" class="tier-btn" id="tZor" role="radio" aria-checked="false">Zor</button>
+    </div>
+    <p class="tier-hint" id="tierHint"></p>
     <button class="btn alt" id="bHow"></button>
     <div class="mini"><button id="mLang"></button><button id="mSound"></button></div>
   </div>
@@ -251,6 +262,10 @@ function buildPerms(fixed) {
       perms.push(p);
     }
   }
+  // Calm identity permutations (indices 20 & 21) for turns without quakes
+  const idp = new Uint8Array(NN);
+  for (let i = 0; i < NN; i++) idp[i] = i;
+  perms.push(idp, idp);
   return { perms, lens };
 }
 function permOff(src, so, dst, d0, p) { for (let i = 0; i < NN; i++) dst[d0 + i] = src[so + p[i]]; }
@@ -471,8 +486,12 @@ function makePuzzle(seed, cfg) {
     if (qRows.length < 2) continue;
     const quakes = [];
     for (let k = 0; k < cfg.P; k++) {
+      if (cfg.qPattern && !cfg.qPattern[k % cfg.qPattern.length]) {
+        quakes.push(20); // calm turn: no quake shift this move
+        continue;
+      }
       let r;
-      do r = qRows[(R() * qRows.length) | 0]; while (k > 0 && r === moveLine(quakes[k - 1]) && qRows.length > 1);
+      do r = qRows[(R() * qRows.length) | 0]; while (k > 0 && quakes[k - 1] < 20 && r === moveLine(quakes[k - 1]) && qRows.length > 1);
       quakes.push(r * 2 + (R() < 0.5 ? 0 : 1));
     }
     const pz = {
@@ -521,7 +540,37 @@ function dailyConfig(seed) {
   const K = [6, 4, 4, 5, 5, 5, 6][dow];
   return { K, minPar: K - 1, nv: 3, nm: 1 + (hashStr('m' + t) % 2), decoy: 0.55, minPath: 7, P: 5 };
 }
-function endlessConfig(level) {
+function normTier(t) {
+  t = String(t || '').toLowerCase();
+  if (t === 'kolay' || t === 'easy') return 'kolay';
+  if (t === 'zor' || t === 'hard') return 'zor';
+  return 'normal';
+}
+function endlessConfig(level, tier = 'normal') {
+  tier = normTier(tier);
+  if (tier === 'kolay') {
+    // Kolay: gentle par (2-4), 2 villages, fewer mountains, infrequent quakes (calm intervals)
+    const K = level <= 3 ? 2 : level <= 7 ? 3 : level <= 12 ? 4 : Math.min(5, 3 + Math.ceil(level / 6));
+    const minPar = Math.max(2, K - 1);
+    const nv = level <= 6 ? 2 : 3;
+    const nm = level <= 6 ? 0 : 1;
+    const decoy = level <= 4 ? 0.22 : 0.35;
+    const minPath = level <= 4 ? 4 : 5;
+    // Quake pattern: 1 = quake, 0 = calm
+    const qPattern = level <= 4 ? [0, 0, 1, 0, 0, 1] : level <= 10 ? [0, 1, 0, 1, 0, 1] : [1, 0, 1, 1, 0, 1];
+    return { K, minPar, nv, nm, decoy, minPath, P: 6, qPattern };
+  }
+  if (tier === 'zor') {
+    // Zor: steep par (3-6), 3 villages & mountains from level 1, tight 4-quake cycle every move
+    const K = level <= 2 ? 4 : level <= 5 ? 5 : 6;
+    const minPar = Math.max(3, K - 1);
+    const nv = 3;
+    const nm = level <= 3 ? 1 : 2;
+    const decoy = level <= 3 ? 0.55 : 0.65;
+    const minPath = level <= 3 ? 7 : 8;
+    return { K, minPar, nv, nm, decoy, minPath, P: 4 };
+  }
+  // Normal: classic balanced progression (par 3-6, 5-quake cycle every move)
   const K = Math.min(6, 2 + Math.ceil(level / 2));
   return { K, minPar: Math.max(2, K - 1), nv: level < 3 ? 2 : 3, nm: level < 4 ? 0 : level < 8 ? 1 : 2, decoy: level < 3 ? 0.35 : 0.55, minPath: level < 3 ? 5 : 7, P: 5 };
 }
@@ -544,9 +593,14 @@ const STR = {
     sub: 'Shift the land of Anatolia. Bring water and roads to every village.',
     daily: 'Daily puzzle', endless: 'Endless', how: 'How to play', moves: 'Moves', par: 'Par', undo: 'Undo', restart: 'Restart',
     menu: 'Menu', sound: 'Sound', on: 'on', off: 'off', level: 'Level {n}', dailyTag: 'Daily · {d}',
+    tier_kolay: 'Easy', tier_normal: 'Normal', tier_zor: 'Hard',
+    tierDesc_kolay: 'Gentle par (2–4 moves), 2 villages, quakes every 2–3 moves.',
+    tierDesc_normal: 'Balanced challenge, quakes every move.',
+    tierDesc_zor: '3 villages & mountains from level 1, tight par, active quakes.',
+    tierGroupLabel: 'Endless difficulty',
     quakeNext: 'Next quake: row {r} {a}', calm: 'The ground is calm', loading: 'Drawing the map…', solvedT: 'Connected!',
     resLine: '{m} moves · par {p}', share: 'Share result', next: 'Next level', toEndless: 'Play endless', back: 'Menu',
-    copied: 'Copied to clipboard', tomorrow: 'A new map tomorrow.', endlessNote: 'Level {n} done.', movesWord: 'moves',
+    copied: 'Copied to clipboard', tomorrow: 'A new map tomorrow.', endlessNote: '{t} · Level {n} done.', movesWord: 'moves',
     gotIt: 'Got it', solvedOn: 'Solved', playTag: 'same map for everyone', board: 'Puzzle board',
     h1: 'Drag a row sideways or a column up or down (or tap the arrows). Tiles wrap around the edge.',
     h2: 'Villages, mountains, the spring and the caravanserai never move: tiles slide past them.',
@@ -559,9 +613,14 @@ const STR = {
     sub: 'Anadolu toprağını kaydır. Her köye su ve yol götür.',
     daily: 'Günün bulmacası', endless: 'Sonsuz mod', how: 'Nasıl oynanır', moves: 'Hamle', par: 'Hedef', undo: 'Geri al', restart: 'Baştan',
     menu: 'Menü', sound: 'Ses', on: 'açık', off: 'kapalı', level: 'Bölüm {n}', dailyTag: 'Günlük · {d}',
+    tier_kolay: 'Kolay', tier_normal: 'Normal', tier_zor: 'Zor',
+    tierDesc_kolay: 'Sakin hedef (2–4 hamle), 2 köy, 2–3 hamlede bir deprem.',
+    tierDesc_normal: 'Dengeli akış, her hamleden sonra deprem.',
+    tierDesc_zor: '1. bölümden itibaren 3 köy ve dağ, sıkı hedef, seri depremler.',
+    tierGroupLabel: 'Sonsuz mod zorluğu',
     quakeNext: 'Sıradaki deprem: {r}. satır {a}', calm: 'Yer sakin', loading: 'Harita çiziliyor…', solvedT: 'Bağlandı!',
     resLine: '{m} hamle · hedef {p}', share: 'Sonucu paylaş', next: 'Sonraki bölüm', toEndless: 'Sonsuz moda geç', back: 'Menü',
-    copied: 'Panoya kopyalandı', tomorrow: 'Yarın yeni bir harita.', endlessNote: '{n}. bölüm tamam.', movesWord: 'hamle',
+    copied: 'Panoya kopyalandı', tomorrow: 'Yarın yeni bir harita.', endlessNote: '{t} · {n}. bölüm tamam.', movesWord: 'hamle',
     gotIt: 'Anladım', solvedOn: 'Çözüldü', playTag: 'herkes için aynı harita', board: 'Bulmaca tahtası',
     h1: 'Bir satırı yana, bir sütunu yukarı ya da aşağı sürükle (ya da oklara dokun). Taşlar kenardan dolanır.',
     h2: 'Köyler, dağlar, pınar ve kervansaray yerinden oynamaz: taşlar onların yanından kayar.',
@@ -632,22 +691,39 @@ const sfx = {
 };
 
 // ---------------------------------------------------------------- game state
-const G = { mode: 'daily', seed: '', level: 1, pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], bot: null, celebrateAt: 0, place: '' };
+const G = { mode: 'daily', seed: '', level: 1, tier: 'normal', pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], bot: null, celebrateAt: 0, place: '' };
 let anims = [], shake = 0, particles = [], botTimer = 0, disp = null;
 
 function starsFor(moves, par) { return moves <= par ? 3 : moves <= par + 2 ? 2 : 1; }
-function nextQuake() { return G.pz && !G.won ? G.pz.quakes[G.moves % G.pz.quakes.length] : -1; }
+function nextQuake() {
+  if (!G.pz || G.won) return -1;
+  const q = G.pz.quakes[G.moves % G.pz.quakes.length];
+  return q >= 20 ? -1 : q;
+}
+const tierKey = (tier) => {
+  const t = normTier(tier);
+  return t === 'kolay' ? 'endless_kolay' : t === 'zor' ? 'endless_zor' : 'endless';
+};
 
-function startPuzzle(mode, arg, firstHelp = true) {
+function startPuzzle(mode, arg, firstHelp = true, tier = null) {
   clearTimeout(botTimer); G.bot = null;
   G.mode = mode; G.state = 'loading'; G.pz = null; disp = null; anims = []; particles = []; closeAll();
-  if (mode === 'daily') G.seed = String(arg); else { G.level = arg; G.seed = 'L' + arg; }
+  if (tier) G.tier = normTier(tier);
+  else if (!G.tier) G.tier = normTier(store.get('tier', 'normal'));
+  if (mode === 'daily') G.seed = String(arg);
+  else {
+    G.level = arg;
+    G.seed = (G.tier === 'normal' ? 'L' : 'L' + G.tier[0].toUpperCase()) + arg;
+  }
   updateHud();
   setTimeout(() => {
     const t0 = performance.now();
     let seed, cfg;
     if (mode === 'daily') { seed = /^\d+$/.test(G.seed) ? +G.seed : hashStr(G.seed); cfg = dailyConfig(G.seed); }
-    else { seed = hashStr('endless' + arg); cfg = endlessConfig(arg); }
+    else {
+      seed = G.tier === 'normal' ? hashStr('endless' + arg) : hashStr('endless_' + G.tier + arg);
+      cfg = endlessConfig(arg, G.tier);
+    }
     let pz = null;
     for (let k = 0; !pz && k < 5; k++) pz = makePuzzle(seed + k * 7919, cfg);
     G.genMs = Math.round(performance.now() - t0);
@@ -675,8 +751,12 @@ function doMove(m) {
   if (isSolved(pz, toVals(pz, a), 0)) G.won = true; // solved by the move itself: the ground stays calm
   else {
     const q = pz.quakes[(G.moves - 1) % pz.quakes.length];
-    cur = applyPerm(a, pz.perms[q]);
-    pushAnim('quake', a, cur, q);
+    if (q >= 20) {
+      cur = a; // calm turn: no quake shift this move
+    } else {
+      cur = applyPerm(a, pz.perms[q]);
+      pushAnim('quake', a, cur, q);
+    }
     if (isSolved(pz, toVals(pz, cur), 0)) G.won = true;
   }
   G.ids = cur;
@@ -700,7 +780,10 @@ function win() {
   const pz = G.pz;
   G.state = 'won';
   if (G.mode === 'daily') { if (!store.get('daily.' + G.seed, null)) store.set('daily.' + G.seed, { m: G.moves, s: G.stars }); }
-  else store.set('endless', Math.max(store.get('endless', 1), G.level + 1));
+  else {
+    const k = tierKey(G.tier);
+    store.set(k, Math.max(store.get(k, 1), G.level + 1));
+  }
   G.celebrateAt = performance.now();
   sfx.win();
   if (!RM) for (const v of pz.villages) burst(v.cell);
@@ -1147,7 +1230,9 @@ addEventListener('keydown', (e) => {
 
 // ---------------------------------------------------------------- UI
 function updateHud() {
-  $('tMode').textContent = G.mode === 'daily' ? t('dailyTag', { d: seedLabel(G.seed) }) + (G.place && G.pz ? ' · ' + G.place : '') : t('endless') + ' · ' + t('level', { n: G.level });
+  $('tMode').textContent = G.mode === 'daily'
+    ? t('dailyTag', { d: seedLabel(G.seed) }) + (G.place && G.pz ? ' · ' + G.place : '')
+    : t('endless') + ' · ' + t('tier_' + (G.tier || 'normal')) + ' · ' + t('level', { n: G.level });
   $('lMoves').textContent = t('moves'); $('lPar').textContent = t('par');
   $('vMoves').textContent = G.moves; $('vPar').textContent = G.pz ? G.pz.par : '–';
   const st = G.pz ? (G.won ? G.stars : starsFor(G.moves, G.pz.par)) : 0;
@@ -1171,7 +1256,21 @@ function fillMenu() {
   $('mSub').textContent = t('sub');
   const ds = todaySeed(), done = store.get('daily.' + ds, null);
   $('bDaily').innerHTML = `${t('daily')}<small>${seedLabel(ds)} · ${done ? t('solvedOn') + ' ' + '★'.repeat(done.s) + ' ' + done.m + ' ' + t('movesWord') : t('playTag')}</small>`;
-  $('bEndless').innerHTML = `${t('endless')}<small>${t('level', { n: store.get('endless', 1) })}</small>`;
+  const curTier = G.tier || normTier(store.get('tier', 'normal'));
+  const tierLvl = store.get(tierKey(curTier), 1);
+  $('bEndless').innerHTML = `${t('endless')}<small>${t('tier_' + curTier)} · ${t('level', { n: tierLvl })}</small>`;
+  const tg = $('tierGroup');
+  if (tg) tg.setAttribute('aria-label', t('tierGroupLabel'));
+  ['kolay', 'normal', 'zor'].forEach((k) => {
+    const btn = $('t' + k[0].toUpperCase() + k.slice(1));
+    if (!btn) return;
+    const isAct = k === curTier;
+    btn.classList.toggle('active', isAct);
+    btn.setAttribute('aria-checked', String(isAct));
+    btn.textContent = t('tier_' + k);
+  });
+  const hintEl = $('tierHint');
+  if (hintEl) hintEl.textContent = t('tierDesc_' + curTier);
   $('bHow').textContent = t('how');
   $('mLang').textContent = lang === 'tr' ? 'English' : 'Türkçe';
   $('mSound').textContent = t('sound') + ': ' + (muted ? t('off') : t('on'));
@@ -1189,8 +1288,13 @@ function openHelp() {
   $('help').classList.add('on'); if (!COARSE) setTimeout(() => $('bHelpOk').focus(), 30);
 }
 function closeHelp() { $('help').classList.remove('on'); if (helpReturn === 'menu') openMenu(); }
-function shareText() { return `Fay Hattı ${G.mode === 'daily' ? seedLabel(G.seed) : '#' + G.level} ${'⭐'.repeat(G.stars)} ${G.moves} ${t('movesWord')}`; }
-function shareUrl() { return CANON + (G.mode === 'daily' ? '?seed=' + G.seed : '?level=' + G.level); }
+function shareText() {
+  const modeLabel = G.mode === 'daily' ? seedLabel(G.seed) : t('tier_' + (G.tier || 'normal')) + ' #' + G.level;
+  return `Fay Hattı ${modeLabel} ${'⭐'.repeat(G.stars)} ${G.moves} ${t('movesWord')}`;
+}
+function shareUrl() {
+  return CANON + (G.mode === 'daily' ? '?seed=' + G.seed : '?level=' + G.level + (G.tier && G.tier !== 'normal' ? '&tier=' + G.tier : ''));
+}
 function showResult() {
   if (!G.won) return;
   closeAll();
@@ -1201,7 +1305,7 @@ function showResult() {
   $('bShare').textContent = t('share');
   $('bNext').textContent = G.mode === 'daily' ? t('toEndless') : t('next');
   $('bRMenu').textContent = t('back');
-  $('rNote').textContent = G.mode === 'daily' ? t('tomorrow') : t('endlessNote', { n: G.level });
+  $('rNote').textContent = G.mode === 'daily' ? t('tomorrow') : t('endlessNote', { t: t('tier_' + (G.tier || 'normal')), n: G.level });
   $('result').classList.add('on');
   if (!BOT && !COARSE) setTimeout(() => $('bShare').focus(), 30);
 }
@@ -1216,6 +1320,12 @@ async function share() {
 function toggleMute() { muted = !muted; store.set('mute', muted); if (AC) master.gain.value = muted ? 0 : 0.55; updateHud(); fillMenu(); if (!muted) sfx.click(); }
 function toggleLang() { lang = lang === 'tr' ? 'en' : 'tr'; store.set('lang', lang); updateHud(); fillMenu(); if ($('result').classList.contains('on')) showResult(); if ($('help').classList.contains('on')) { const r = helpReturn; openHelp(); helpReturn = r; } }
 
+function selectTier(tier) {
+  sfx.click();
+  G.tier = normTier(tier);
+  store.set('tier', G.tier);
+  fillMenu();
+}
 $('bUndo').onclick = undo; $('bRestart').onclick = restart; $('bMenu').onclick = () => { sfx.click(); openMenu(); };
 $('bSound').onclick = toggleMute; $('mSound').onclick = toggleMute; $('bLang').onclick = toggleLang; $('mLang').onclick = toggleLang;
 $('bDaily').onclick = () => {
@@ -1223,11 +1333,37 @@ $('bDaily').onclick = () => {
   if (G.mode === 'daily' && G.seed === todaySeed() && G.pz && !G.won) { closeAll(); if (!NOSAVE && !store.get('help', false)) { store.set('help', true); openHelp(); } }
   else startPuzzle('daily', todaySeed());
 };
-$('bEndless').onclick = () => { sfx.click(); startPuzzle('endless', store.get('endless', 1)); };
+$('bEndless').onclick = () => {
+  sfx.click();
+  const curTier = G.tier || normTier(store.get('tier', 'normal'));
+  startPuzzle('endless', store.get(tierKey(curTier), 1), true, curTier);
+};
+$('tKolay').onclick = () => selectTier('kolay');
+$('tNormal').onclick = () => selectTier('normal');
+$('tZor').onclick = () => selectTier('zor');
+$('tierGroup').addEventListener('keydown', (e) => {
+  const tiers = ['kolay', 'normal', 'zor'];
+  let idx = tiers.indexOf(G.tier || 'normal');
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+    idx = (idx + 1) % tiers.length;
+    selectTier(tiers[idx]);
+    $('t' + tiers[idx][0].toUpperCase() + tiers[idx].slice(1)).focus();
+    e.preventDefault();
+  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    idx = (idx - 1 + tiers.length) % tiers.length;
+    selectTier(tiers[idx]);
+    $('t' + tiers[idx][0].toUpperCase() + tiers[idx].slice(1)).focus();
+    e.preventDefault();
+  }
+});
 $('bHow').onclick = () => { sfx.click(); openHelp(); };
 $('bHelpOk').onclick = closeHelp;
 $('bShare').onclick = share;
-$('bNext').onclick = () => { sfx.click(); startPuzzle('endless', G.mode === 'daily' ? store.get('endless', 1) : G.level + 1); };
+$('bNext').onclick = () => {
+  sfx.click();
+  const curTier = G.tier || normTier(store.get('tier', 'normal'));
+  startPuzzle('endless', G.mode === 'daily' ? store.get(tierKey(curTier), 1) : G.level + 1, false, curTier);
+};
 $('bRMenu').onclick = () => { sfx.click(); openMenu(); };
 document.querySelectorAll('.ov').forEach((o) => o.addEventListener('click', (e) => { if (e.target === o && o.id !== 'menu') { if (o.id === 'help') closeHelp(); else o.classList.remove('on'); } }));
 
@@ -1243,12 +1379,13 @@ function dbg() {
 const GLYPH = { 0: '..', 3: 'VV', 4: 'SS', 5: 'HH', 6: 'MM' };
 window.fayHatti = {
   get seed() { return G.seed; }, get moves() { return G.moves; }, get solved() { return G.won; }, get state() { return G.state; },
-  get mode() { return G.mode; }, get level() { return G.level; }, get par() { return G.pz ? G.pz.par : null; }, get stars() { return G.stars; },
+  get mode() { return G.mode; }, get level() { return G.level; }, get tier() { return G.tier; }, get par() { return G.pz ? G.pz.par : null; }, get stars() { return G.stars; },
   get nextQuake() { const q = nextQuake(); return q < 0 ? null : { row: q >> 1, dir: moveDir(q) }; },
   get bot() { return G.bot ? { strategy: G.bot.strategy, planned: G.bot.plan.length, played: G.bot.i } : null; },
   get genMs() { return G.genMs; }, get fps() { return fps; }, get plan() { return G.pz ? G.pz.solution.slice() : null; },
   get board() { if (!G.pz) return null; const v = toVals(G.pz, G.ids), out = []; for (let r = 0; r < N; r++) { const row = []; for (let c = 0; c < N; c++) { const x = v[r * N + c], k = x >> 4; row.push(k === KR ? 'r' + (x & 15).toString(16) : k === KD ? 'd' + (x & 15).toString(16) : GLYPH[k]); } out.push(row.join(' ')); } return out; },
-  move: (m) => doMove(m), undo, restart, start: (mode, arg) => startPuzzle(mode, arg, false),
+  move: (m) => doMove(m), undo, restart, start: (mode, arg, tier) => startPuzzle(mode, arg, false, tier),
+  setTier: (t) => { selectTier(t); },
 };
 addEventListener('resize', layout);
 layout();
@@ -1256,7 +1393,9 @@ updateHud();
 requestAnimationFrame(frame);
 {
   const seedQ = (QS.get('seed') || '').replace(/-/g, ''), levelQ = parseInt(QS.get('level'), 10);
-  if (levelQ > 0) startPuzzle('endless', levelQ);
+  const tierQ = normTier(QS.get('tier') || QS.get('diff') || store.get('tier', 'normal'));
+  G.tier = tierQ;
+  if (levelQ > 0) startPuzzle('endless', levelQ, true, tierQ);
   else if (seedQ && /^\w{1,24}$/.test(seedQ)) startPuzzle('daily', seedQ);
   else if (BOT) startPuzzle('daily', todaySeed());
   else { startPuzzle('daily', todaySeed(), false); setTimeout(openMenu, 0); }

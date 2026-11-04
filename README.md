@@ -8,7 +8,7 @@ Shift rows and columns to bring rivers and caravan roads to the villages. After 
 <img src="docs/screenshot.png" alt="Fay Hattı on a phone: a 5x5 parchment map with rivers, roads, villages, a spring and a caravanserai" width="300">
 
 - **Daily puzzle:** everyone gets the same map each day (seeded by the date).
-- **Endless mode:** numbered levels that grow from 2 villages and short solutions to 3 villages, mountains and longer solutions.
+- **Endless mode:** numbered levels with three selectable difficulty tiers (Kolay / Normal / Zor): Kolay features calmer quakes with calm intervals and gentle par (2–4), Normal is the classic balanced game, and Zor brings 3 villages, mountains and rapid 4-quake cycles from level 1.
 - One HTML file, no downloads, no external requests. Phone first (portrait), works on desktop. English and Turkish.
 
 ## How to play
@@ -27,6 +27,7 @@ Shift rows and columns to bring rivers and caravan roads to the villages. After 
 |---|---|
 | `?seed=YYYYMMDD` | Play the daily map of that date (any short word also works as a seed) |
 | `?level=N` | Play endless level N |
+| `?tier=kolay` / `?tier=zor` | Select endless difficulty tier (`kolay`/`easy`, `normal`, `zor`/`hard`) |
 | `?demo=1` | The bot solves the map visibly, about one move every 0.8 s (strategy A) |
 | `?demo=a` / `?demo=b` | Bot strategy A (optimal planner) or B (greedy beam search, often slower) for "bot race" videos |
 | `?auto` | Fast bot (strategy A; add `&demo=b` for B) |
@@ -34,7 +35,7 @@ Shift rows and columns to bring rivers and caravan roads to the villages. After 
 | `?lang=en` / `?lang=tr` | Force the language (default: Turkish for Turkish browsers, English otherwise) |
 | `?nosave` | Do not write to localStorage |
 
-`window.fayHatti` exposes `seed`, `moves`, `solved`, `state` (`loading`, `play`, `won`), `par`, `stars`, `mode`, `level`, `nextQuake`, `bot`, `plan`, `board`, `fps`, `genMs` and the actions `move(code)`, `undo()`, `restart()`, `start(mode, arg)`. A move code is `line * 2 + dir`: lines 0-4 are rows, 5-9 columns; dir 0 is right/down, 1 is left/up.
+`window.fayHatti` exposes `seed`, `moves`, `solved`, `state` (`loading`, `play`, `won`), `par`, `stars`, `mode`, `level`, `tier`, `nextQuake`, `bot`, `plan`, `board`, `fps`, `genMs` and the actions `move(code)`, `undo()`, `restart()`, `start(mode, arg, tier)`, `setTier(tier)`. A move code is `line * 2 + dir`: lines 0-4 are rows, 5-9 columns; dir 0 is right/down, 1 is left/up.
 
 Saves use localStorage keys starting with `fayhatti.` (language, mute, daily results, endless level, help seen).
 
