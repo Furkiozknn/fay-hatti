@@ -18,10 +18,14 @@ button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 .brand{min-width:0}
 .brand b{display:block;font:700 22px/1.1 "Palatino Linotype",Palatino,Georgia,serif;letter-spacing:.02em}
 .brand span{display:block;font-size:14px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.stats{display:flex;align-items:center;gap:14px}
-.stat{text-align:center;min-width:44px}
+.stats{display:flex;align-items:center;gap:10px}
+.stat{text-align:center;min-width:40px}
+.stat.timer{min-width:52px;display:none}
 .stat span{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2)}
 .stat b{display:block;font-size:22px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat .par-tag{display:inline-flex;align-items:center;justify-content:center;gap:2px;font-size:11px;font-weight:600;padding:1px 5px;border-radius:4px;background:rgba(242,179,61,.18);color:var(--gold);margin-top:1px;font-variant-numeric:tabular-nums;line-height:1.2;transition:background .2s,color .2s}
+.stat .par-tag.over{background:rgba(201,189,164,.12);color:var(--ink2);opacity:.75}
+.stat .par-tag svg{width:11px;height:11px;flex:none}
 .stars{display:flex;gap:2px}
 .stars svg{width:18px;height:18px}
 #quake{grid-area:quake;display:flex;align-items:center;justify-content:center;gap:8px;min-height:30px;padding:2px 16px;font-size:15px;color:#ffd9cf}
@@ -58,6 +62,11 @@ button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 .big-stars svg:nth-child(2){animation-delay:.12s}.big-stars svg:nth-child(3){animation-delay:.24s}
 @keyframes starpop{from{transform:scale(0) rotate(-30deg)}to{transform:none}}
 .res-line{text-align:center;font-size:17px;margin:2px 0 10px}
+.res-speedrun{display:none;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 10px;padding:6px 12px;margin:2px 0 8px;background:#e8d8b2;border-radius:10px;font-size:14px;color:#5a2a18}
+.res-speedrun b{font-size:16px;font-variant-numeric:tabular-nums;color:#351a0e}
+.res-speedrun .pill{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:700;padding:2px 7px;border-radius:999px;background:#965c19;color:#fffaf0}
+.res-speedrun .pill.best{background:#2a6332;color:#f4fbf4}
+.res-speedrun svg{width:13px;height:13px;flex:none}
 .share-prev{font:15px/1.3 ui-monospace,Consolas,monospace;background:#e9dab6;border-radius:10px;padding:10px 12px;text-align:center;margin:8px 0;white-space:pre-wrap;word-break:break-word}
 .note{text-align:center;font-size:14px;color:#5b4a36;margin:4px 0 0}
 ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
@@ -74,7 +83,7 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
   #bar{flex-direction:column;padding:8px 10px 8px 4px;overflow:auto}
   .tb{min-height:44px;flex-direction:row;gap:6px}
 }
-@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on{animation:none}}
+@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on{animation:none}.stat .par-tag{transition:none}}
 </style>
 </head>
 <body>
@@ -84,6 +93,13 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
     <div class="stats">
       <div class="stat"><span id="lMoves">Moves</span><b id="vMoves">0</b></div>
       <div class="stat"><span id="lPar">Par</span><b id="vPar">–</b></div>
+      <div class="stat timer" id="statTimer" aria-label="Speedrun timer">
+        <span id="lTimer">Time</span><b id="vTimer">0.0s</b>
+        <span class="par-tag" id="tParTag" title="Par Time">
+          <svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="9" r="5.5"/><path d="M8 6.2v2.8l1.8 1M6 2h4M8 2v1.5"/></svg>
+          <span id="vParTime">–</span>
+        </span>
+      </div>
       <div class="stars" id="vStars" aria-hidden="true"></div>
     </div>
   </header>
@@ -121,6 +137,7 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
     <h2 id="rTitle"></h2>
     <div class="big-stars" id="rStars"></div>
     <p class="res-line" id="rLine"></p>
+    <div class="res-speedrun" id="rSpeedrun"></div>
     <div class="share-prev" id="rShare"></div>
     <button class="btn" id="bShare" style="text-align:center"></button>
     <div class="row"><button class="btn alt" id="bNext"></button><button class="btn alt" id="bRMenu"></button></div>
@@ -554,6 +571,7 @@ const STR = {
     h4: 'After each move a small quake shifts one row by itself. The red band shows which row is next.',
     h5: 'Solve within par for 3 stars. Keys: WASD picks a tile, arrow keys shift, Z undo, R restart.',
     lRiver: 'river', lRoad: 'road', lVillage: 'village', lMount: 'mountain', lSpring: 'spring', lHan: 'caravanserai',
+    time: 'Time', parTime: 'Par time', parTimeTag: 'par {s}s', parTimeBeat: 'Under par time!', bestTime: 'Best: {s}s', newBestTime: 'New best!',
   },
   tr: {
     sub: 'Anadolu toprağını kaydır. Her köye su ve yol götür.',
@@ -569,6 +587,7 @@ const STR = {
     h4: 'Her hamleden sonra küçük bir deprem bir satırı kendiliğinden kaydırır. Kırmızı bant sıradaki satırı gösterir.',
     h5: 'Hedef hamlede çöz, 3 yıldız al. Tuşlar: WASD taş seçer, ok tuşları kaydırır, Z geri alır, R baştan.',
     lRiver: 'nehir', lRoad: 'yol', lVillage: 'köy', lMount: 'dağ', lSpring: 'pınar', lHan: 'kervansaray',
+    time: 'Süre', parTime: 'Hedef süre', parTimeTag: 'hedef {s} sn', parTimeBeat: 'Hedef sürenin altında!', bestTime: 'En iyi: {s} sn', newBestTime: 'Yeni rekor!',
   },
 };
 let lang = (QS.get('lang') || '').toLowerCase();
@@ -627,13 +646,34 @@ const sfx = {
   ping(i) { if (!audio()) return; const t0 = AC.currentTime, f = [587.3, 740, 880, 1174.7][i % 4]; tone(t0, f, 0.5, 'sine', 0.2); tone(t0, f * 2.01, 0.25, 'sine', 0.06); },
   // Hicaz-flavoured run on D: D Eb F# G A D
   win() { if (!audio()) return; const t0 = AC.currentTime; [293.7, 311.1, 370, 392, 440, 587.3].forEach((f, i) => pluck(t0 + i * 0.09, f, 0.16)); tone(t0 + 0.55, 587.3, 1.2, 'sine', 0.12); tone(t0 + 0.55, 880, 1.2, 'sine', 0.07); },
+  speedrun() { if (!audio()) return; const t0 = AC.currentTime; tone(t0 + 0.35, 784, 0.15, 'sine', 0.14); tone(t0 + 0.48, 1046.5, 0.3, 'sine', 0.18); },
   click() { if (!audio()) return; tone(AC.currentTime, 900, 0.04, 'square', 0.04); },
   undo() { if (!audio()) return; noise(AC.currentTime, 0.1, 'bandpass', 500, 1300, 0.16, 1.2); },
 };
 
 // ---------------------------------------------------------------- game state
-const G = { mode: 'daily', seed: '', level: 1, pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], bot: null, celebrateAt: 0, place: '' };
+// 19 Nov: Added parTime, timerStart/offset/paused, finalTime, isUnderParTime, isNewBest for Endless Mode speedrun
+const G = { mode: 'daily', seed: '', level: 1, pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], bot: null, celebrateAt: 0, place: '', parTime: null, timerStart: 0, timerOffset: 0, timerPaused: false, pauseTime: 0, finalTime: null, isUnderParTime: false, isNewBest: false };
 let anims = [], shake = 0, particles = [], botTimer = 0, disp = null;
+
+function getElapsed() {
+  if (!G.timerStart) return 0;
+  if (G.finalTime != null) return G.finalTime;
+  const now = G.timerPaused ? (G.pauseTime || performance.now()) : performance.now();
+  return Math.max(0, (now - G.timerStart - G.timerOffset) / 1000);
+}
+function pauseTimer() {
+  if (G.mode === 'endless' && G.state === 'play' && !G.timerPaused && G.timerStart) {
+    G.timerPaused = true;
+    G.pauseTime = performance.now();
+  }
+}
+function resumeTimer() {
+  if (G.mode === 'endless' && G.state === 'play' && G.timerPaused) {
+    G.timerOffset += performance.now() - (G.pauseTime || performance.now());
+    G.timerPaused = false;
+  }
+}
 
 function starsFor(moves, par) { return moves <= par ? 3 : moves <= par + 2 ? 2 : 1; }
 function nextQuake() { return G.pz && !G.won ? G.pz.quakes[G.moves % G.pz.quakes.length] : -1; }
@@ -654,6 +694,19 @@ function startPuzzle(mode, arg, firstHelp = true) {
     G.pz = pz; G.ids = pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.sat = [];
     G.place = PLACES[hashStr('p' + G.seed) % PLACES.length];
     G.state = 'play';
+    if (G.mode === 'endless') {
+      G.parTime = Math.max(8, pz.par * 4);
+      G.timerStart = performance.now();
+      G.timerOffset = 0;
+      G.timerPaused = false;
+      G.finalTime = null;
+      G.isUnderParTime = false;
+      G.isNewBest = false;
+    } else {
+      G.parTime = null;
+      G.timerStart = 0;
+      G.finalTime = null;
+    }
     buildCaches(); settle(true); updateHud();
     if (BOT) startBot();
     else if (firstHelp && !NOSAVE && !store.get('help', false)) { store.set('help', true); openHelp(); }
@@ -694,13 +747,35 @@ function restart() {
   if (!G.pz || G.bot) return;
   flushAnims(); closeAll();
   G.ids = G.pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.state = 'play'; particles = [];
+  if (G.mode === 'endless') {
+    G.timerStart = performance.now();
+    G.timerOffset = 0;
+    G.timerPaused = false;
+    G.finalTime = null;
+    G.isUnderParTime = false;
+    G.isNewBest = false;
+  }
   sfx.undo(); settle(true); updateHud();
 }
 function win() {
   const pz = G.pz;
   G.state = 'won';
   if (G.mode === 'daily') { if (!store.get('daily.' + G.seed, null)) store.set('daily.' + G.seed, { m: G.moves, s: G.stars }); }
-  else store.set('endless', Math.max(store.get('endless', 1), G.level + 1));
+  else {
+    store.set('endless', Math.max(store.get('endless', 1), G.level + 1));
+    G.finalTime = getElapsed();
+    G.timerPaused = true;
+    G.isUnderParTime = G.parTime != null && G.finalTime <= G.parTime;
+    const bestKey = 'time.L' + G.level;
+    const prevBest = store.get(bestKey, null);
+    if (prevBest == null || G.finalTime < prevBest) {
+      store.set(bestKey, Math.round(G.finalTime * 10) / 10);
+      G.isNewBest = true;
+    } else {
+      G.isNewBest = false;
+    }
+    if (G.isUnderParTime) sfx.speedrun();
+  }
   G.celebrateAt = performance.now();
   sfx.win();
   if (!RM) for (const v of pz.villages) burst(v.cell);
@@ -957,10 +1032,29 @@ function chevron(cx, cy, dir, vertical, size, col) {
   ctx.beginPath(); ctx.moveTo(-size * 0.35, -size * 0.6); ctx.lineTo(size * 0.35, 0); ctx.lineTo(-size * 0.35, size * 0.6); ctx.stroke(); ctx.restore();
 }
 
+let lastTimerDom = 0;
+function updateTimerHud(now) {
+  if (G.mode !== 'endless' || G.state !== 'play' || G.timerPaused) return;
+  if (now - lastTimerDom < 95) return;
+  lastTimerDom = now;
+  const elapsed = getElapsed();
+  const el = $('vTimer');
+  if (el) el.textContent = elapsed.toFixed(1) + 's';
+  const tag = $('tParTag');
+  if (tag && G.parTime != null) {
+    if (elapsed > G.parTime) {
+      if (!tag.classList.contains('over')) tag.classList.add('over');
+    } else {
+      if (tag.classList.contains('over')) tag.classList.remove('over');
+    }
+  }
+}
+
 function frame(now) {
   requestAnimationFrame(frame);
   const dt = Math.min(64, now - (lastNow || now)); lastNow = now;
   fpsTick(now);
+  updateTimerHud(now);
   stepAnims(dt);
   shake *= Math.exp(-dt / 70); if (shake < 0.2) shake = 0;
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -1152,6 +1246,24 @@ function updateHud() {
   $('vMoves').textContent = G.moves; $('vPar').textContent = G.pz ? G.pz.par : '–';
   const st = G.pz ? (G.won ? G.stars : starsFor(G.moves, G.pz.par)) : 0;
   $('vStars').innerHTML = [0, 1, 2].map((i) => starSvg(i < st, 18)).join('');
+  const stTimer = $('statTimer');
+  if (stTimer) {
+    if (G.mode === 'endless') {
+      stTimer.style.display = 'block';
+      $('lTimer').textContent = t('time');
+      const elVal = G.finalTime != null ? G.finalTime : getElapsed();
+      $('vTimer').textContent = elVal.toFixed(1) + 's';
+      $('vParTime').textContent = (G.parTime || '–') + 's';
+      const tag = $('tParTag');
+      if (tag) {
+        tag.title = t('parTimeTag', { s: G.parTime || '–' });
+        if (G.parTime && elVal > G.parTime) tag.classList.add('over');
+        else tag.classList.remove('over');
+      }
+    } else {
+      stTimer.style.display = 'none';
+    }
+  }
   const q = $('quake'), nq = nextQuake();
   if (G.state === 'loading') { q.className = 'calm'; $('tQuake').textContent = t('loading'); }
   else if (nq < 0) { q.className = 'calm'; $('tQuake').textContent = t('calm'); }
@@ -1176,11 +1288,12 @@ function fillMenu() {
   $('mLang').textContent = lang === 'tr' ? 'English' : 'Türkçe';
   $('mSound').textContent = t('sound') + ': ' + (muted ? t('off') : t('on'));
 }
-function closeAll() { document.querySelectorAll('.ov').forEach((o) => o.classList.remove('on')); }
+function closeAll() { document.querySelectorAll('.ov').forEach((o) => o.classList.remove('on')); resumeTimer(); }
 const COARSE = matchMedia('(pointer:coarse)').matches;
-function openMenu() { fillMenu(); closeAll(); $('menu').classList.add('on'); if (!COARSE) setTimeout(() => $('bDaily').focus(), 30); }
+function openMenu() { pauseTimer(); fillMenu(); closeAll(); $('menu').classList.add('on'); if (!COARSE) setTimeout(() => $('bDaily').focus(), 30); }
 let helpReturn = null;
 function openHelp() {
+  pauseTimer();
   helpReturn = $('menu').classList.contains('on') ? 'menu' : null; closeAll();
   $('hTitle').textContent = t('how');
   $('hList').innerHTML = ['h1', 'h2', 'h3', 'h4', 'h5'].map((k) => `<li>${t(k)}</li>`).join('');
@@ -1188,8 +1301,12 @@ function openHelp() {
   $('bHelpOk').textContent = t('gotIt');
   $('help').classList.add('on'); if (!COARSE) setTimeout(() => $('bHelpOk').focus(), 30);
 }
-function closeHelp() { $('help').classList.remove('on'); if (helpReturn === 'menu') openMenu(); }
-function shareText() { return `Fay Hattı ${G.mode === 'daily' ? seedLabel(G.seed) : '#' + G.level} ${'⭐'.repeat(G.stars)} ${G.moves} ${t('movesWord')}`; }
+function closeHelp() { $('help').classList.remove('on'); if (helpReturn === 'menu') openMenu(); else resumeTimer(); }
+function shareText() {
+  if (G.mode === 'daily') return `Fay Hattı ${seedLabel(G.seed)} ${'⭐'.repeat(G.stars)} ${G.moves} ${t('movesWord')}`;
+  const tStr = G.finalTime != null ? ` · ${G.finalTime.toFixed(1)}s` : '';
+  return `Fay Hattı #${G.level} ${'⭐'.repeat(G.stars)} ${G.moves} ${t('movesWord')}${tStr}`;
+}
 function shareUrl() { return CANON + (G.mode === 'daily' ? '?seed=' + G.seed : '?level=' + G.level); }
 function showResult() {
   if (!G.won) return;
@@ -1197,6 +1314,21 @@ function showResult() {
   $('rTitle').textContent = t('solvedT');
   $('rStars').innerHTML = [0, 1, 2].map((i) => starSvg(i < G.stars, 46)).join('');
   $('rLine').textContent = t('resLine', { m: G.moves, p: G.pz.par });
+  const rSp = $('rSpeedrun');
+  if (rSp) {
+    if (G.mode === 'endless' && G.finalTime != null) {
+      rSp.style.display = 'flex';
+      const best = store.get('time.L' + G.level, null);
+      const icon = '<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="9" r="5.5"/><path d="M8 6.2v2.8l1.8 1M6 2h4M8 2v1.5"/></svg>';
+      let extra = '';
+      if (G.isUnderParTime) extra += `<span class="pill">${t('parTimeBeat')}</span>`;
+      if (G.isNewBest) extra += `<span class="pill best">${t('newBestTime')}</span>`;
+      else if (best != null) extra += `<span style="font-size:12px;opacity:.8">${t('bestTime', { s: best.toFixed(1) })}</span>`;
+      rSp.innerHTML = `${icon}<span><b>${G.finalTime.toFixed(1)}s</b> · ${t('parTimeTag', { s: G.parTime })}</span>${extra}`;
+    } else {
+      rSp.style.display = 'none';
+    }
+  }
   $('rShare').textContent = shareText() + '\n' + shareUrl();
   $('bShare').textContent = t('share');
   $('bNext').textContent = G.mode === 'daily' ? t('toEndless') : t('next');
@@ -1230,6 +1362,7 @@ $('bShare').onclick = share;
 $('bNext').onclick = () => { sfx.click(); startPuzzle('endless', G.mode === 'daily' ? store.get('endless', 1) : G.level + 1); };
 $('bRMenu').onclick = () => { sfx.click(); openMenu(); };
 document.querySelectorAll('.ov').forEach((o) => o.addEventListener('click', (e) => { if (e.target === o && o.id !== 'menu') { if (o.id === 'help') closeHelp(); else o.classList.remove('on'); } }));
+document.addEventListener('visibilitychange', () => { if (document.hidden) pauseTimer(); else if (!document.querySelector('.ov.on')) resumeTimer(); });
 
 // ---------------------------------------------------------------- debug overlay, API, boot
 let fpsN = 0, fpsT = 0, fps = 0;
@@ -1248,6 +1381,10 @@ window.fayHatti = {
   get bot() { return G.bot ? { strategy: G.bot.strategy, planned: G.bot.plan.length, played: G.bot.i } : null; },
   get genMs() { return G.genMs; }, get fps() { return fps; }, get plan() { return G.pz ? G.pz.solution.slice() : null; },
   get board() { if (!G.pz) return null; const v = toVals(G.pz, G.ids), out = []; for (let r = 0; r < N; r++) { const row = []; for (let c = 0; c < N; c++) { const x = v[r * N + c], k = x >> 4; row.push(k === KR ? 'r' + (x & 15).toString(16) : k === KD ? 'd' + (x & 15).toString(16) : GLYPH[k]); } out.push(row.join(' ')); } return out; },
+  get time() { return G.mode === 'endless' ? (G.finalTime != null ? Math.round(G.finalTime * 10) / 10 : Math.round(getElapsed() * 10) / 10) : null; },
+  get parTime() { return G.mode === 'endless' && G.pz ? G.parTime : null; },
+  get bestTime() { return G.mode === 'endless' ? store.get('time.L' + G.level, null) : null; },
+  get underParTime() { return G.mode === 'endless' && G.parTime != null ? (G.finalTime != null ? G.finalTime : getElapsed()) <= G.parTime : null; },
   move: (m) => doMove(m), undo, restart, start: (mode, arg) => startPuzzle(mode, arg, false),
 };
 addEventListener('resize', layout);
