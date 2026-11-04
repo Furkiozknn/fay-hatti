@@ -66,8 +66,16 @@ body.high-contrast button:focus-visible{outline:3px solid var(--focus);outline-o
 #app{position:fixed;inset:0;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto 1fr auto;grid-template-areas:"hud" "quake" "stage" "bar";padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left)}
 #hud{grid-area:hud;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px 4px;max-width:620px;width:100%;margin:0 auto}
 .brand{min-width:0}
+.brand-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .brand b{display:block;font:700 22px/1.1 "Palatino Linotype",Palatino,Georgia,serif;letter-spacing:.02em}
 .brand span{display:block;font-size:14px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.streak-pill{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:rgba(224,85,58,.16);color:#ffd9cf;border:1px solid rgba(224,85,58,.35);line-height:1.2;font-variant-numeric:tabular-nums}
+.streak-pill span{display:inline;color:inherit;font-size:inherit;white-space:nowrap;overflow:visible}
+.streak-pill .fire-ico{flex:none;fill:#f2b33d}
+.res-streak{display:flex;align-items:center;justify-content:center;gap:6px;margin:2px 0 8px;font-size:15px;font-weight:700;color:#7a2e18;font-variant-numeric:tabular-nums}
+.res-streak .fire-ico{fill:#e0553a}
+.streak-pop{animation:streakpop .5s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes streakpop{0%{transform:scale(.75)}50%{transform:scale(1.22)}100%{transform:scale(1)}}
 .stats{display:flex;align-items:center;gap:10px}
 .stat{text-align:center;min-width:40px}
 .stat.timer{min-width:52px;display:none}
@@ -231,7 +239,7 @@ body.high-contrast .tut-badge{box-shadow:inset 0 0 0 1px #ffffff}
 .badge-banner .bb-info{flex:1;min-width:0;text-align:left}
 .badge-banner .bb-info b{display:block;font-size:14px;color:#5a2a18;line-height:1.2}
 .badge-banner .bb-info span{display:block;font-size:12px;color:#7a5638;line-height:1.2;margin-top:2px}
-@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on,.seal-svg,#tutTip,.badge-banner{animation:none}.badge-btn{transition:none}.tut-dot{transition:none}#quake.quaking{transition:background .2s}.tb.active{box-shadow:none}.hint-hud{box-shadow:0 2px 6px rgba(0,0,0,.5)}.stat .par-tag{transition:none}}
+@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on,.seal-svg,#tutTip,.badge-banner,.streak-pop{animation:none}.badge-btn{transition:none}.tut-dot{transition:none}#quake.quaking{transition:background .2s}.tb.active{box-shadow:none}.hint-hud{box-shadow:0 2px 6px rgba(0,0,0,.5)}.stat .par-tag{transition:none}}
 /* Themes: Gece (night) and Kâğıt (paper-cut) */
 :root[data-theme="gece"]{--bg:#0b111a;--bg2:#141f2e;--ink:#e5eef8;--ink2:#8ea4be;--paper:#162234;--paper-ink:#e8f0fa;--terra:#2a6ab0;--gold:#f5be47;--quake:#ff6247;--focus:#64b5f6}
 html[data-theme="gece"] body{background:radial-gradient(120% 80% at 50% 0%,#16253c 0%,#0b111a 60%)}
@@ -282,6 +290,8 @@ html[data-theme="gece"] .res-speedrun{background:#101826;color:#c0d5ec}
 html[data-theme="gece"] .res-speedrun b{color:#7cb7ff}
 html[data-theme="gece"] .res-speedrun .pill{background:#1e4d79;color:#e8f0fa}
 html[data-theme="gece"] .res-speedrun .pill.best{background:#1d6b38;color:#f4fbf4}
+html[data-theme="gece"] .res-streak{color:#ff9e8a}
+html[data-theme="gece"] .res-streak .fire-ico{fill:#f5be47}
 
 :root[data-theme="kagit"]{--bg:#2e2820;--bg2:#3c342b;--ink:#f8f2e4;--ink2:#c8bcab;--paper:#faf5e8;--paper-ink:#2e241c;--terra:#b5442b;--gold:#e09c30;--quake:#d94830;--focus:#60a5fa}
 html[data-theme="kagit"] body{background:radial-gradient(120% 80% at 50% 0%,#3d3428 0%,#241f18 60%)}
@@ -343,6 +353,10 @@ body.high-contrast .res-speedrun{background:#ffffff;border:2px solid #111111;col
 body.high-contrast .res-speedrun b{color:#111111}
 body.high-contrast .res-speedrun .pill{background:#111111;color:#ffffff;box-shadow:inset 0 0 0 1px #ffffff}
 body.high-contrast .res-speedrun .pill.best{background:#0f5132;color:#ffffff;box-shadow:inset 0 0 0 1px #ffffff}
+body.high-contrast .streak-pill{background:#101a20;color:#ffffff;border:2px solid #ffb703}
+body.high-contrast .streak-pill .fire-ico{fill:#ffb703}
+body.high-contrast .res-streak{color:#111111}
+body.high-contrast .res-streak .fire-ico{fill:#ff2a05}
 body.high-contrast .stat .par-tag{background:rgba(255,183,3,.2);color:#ffb703;border:1px solid #ffb703}
 body.high-contrast .stat .par-tag.over{background:transparent;color:#f5eedd;border:1px solid #f5eedd;opacity:1}
 </style>
@@ -350,7 +364,10 @@ body.high-contrast .stat .par-tag.over{background:transparent;color:#f5eedd;bord
 <body>
 <div id="app">
   <header id="hud">
-    <div class="brand"><b id="tTitle">Fay Hattı</b><span id="tMode">&nbsp;</span></div>
+    <div class="brand">
+      <div class="brand-title"><b id="tTitle">Fay Hattı</b><span id="hudStreak" class="streak-pill" aria-label="Streak"><svg class="fire-ico" viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M12 2c-.3 2.2-1.8 4.2-3.2 5.8C7 9.8 6 12 6 14.5a6 6 0 0 0 12 0c0-3.2-1.8-5.8-4-8-.3 2-1.7 3.5-3.5 3.5.8-2.6 1.5-5.3 1.5-8z"/></svg><span id="vStreak"></span></span></div>
+      <span id="tMode">&nbsp;</span>
+    </div>
     <div class="stats">
       <div class="stat"><span id="lMoves">Moves</span><b id="vMoves">0</b></div>
       <div class="stat"><span id="lPar">Par</span><b id="vPar">–</b></div>
@@ -466,6 +483,7 @@ body.high-contrast .stat .par-tag.over{background:transparent;color:#f5eedd;bord
     <div class="big-stars" id="rStars"></div>
     <div id="rMilestone" class="badge-banner" style="display:none" role="status" aria-live="polite"></div>
     <p class="res-line" id="rLine"></p>
+    <div id="rStreak" class="res-streak"><svg class="fire-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 2c-.3 2.2-1.8 4.2-3.2 5.8C7 9.8 6 12 6 14.5a6 6 0 0 0 12 0c0-3.2-1.8-5.8-4-8-.3 2-1.7 3.5-3.5 3.5.8-2.6 1.5-5.3 1.5-8z"/></svg><span id="rStreakText"></span></div>
     <div class="res-speedrun" id="rSpeedrun"></div>
     <div class="share-card-wrap" id="rCardWrap"><canvas id="rCard" class="share-card-cv" width="560" height="420" role="img" tabindex="0" aria-label="Fay Hattı Share Card"></canvas></div>
     <div class="share-prev" id="rShare" role="button" tabindex="0" title="Copy text"></div>
@@ -1113,6 +1131,17 @@ const CARDS = [
     },
     apply: () => {},
   },
+  {
+    id: 'streak',
+    type: 'gameplay',
+    implemented: true,
+    title: { en: 'Daily Streak Counter', tr: 'Günlük Seri Sayacı' },
+    desc: {
+      en: 'Persistent consecutive daily puzzle win tracking with header fire pill, celebration pop animation, and result modal counter.',
+      tr: 'Üstbilgi alev kapsülü, zafer animasyonu ve sonuç paneli sayacıyla art arda günlük bulmaca tamamlama serisi takibi.'
+    },
+    apply: () => updateStreakHud(),
+  },
 ];
 const STR = {
   en: {
@@ -1131,6 +1160,7 @@ const STR = {
     copied: 'Copied to clipboard', tomorrow: 'A new map tomorrow.', endlessNote: 'Level {n} done.', movesWord: 'moves',
     marathon: 'Endless Marathon', marathonTag: 'Marathon · {d} · Stage {s}', marathonStageDone: 'Stage {s} cleared in today’s marathon!', nextStage: 'Next stage',
     gotIt: 'Got it', solvedOn: 'Solved', playTag: 'same map for everyone', board: 'Puzzle board',
+    streak: '{n} day streak',
     badgesTitle: 'Endless Milestones', badgeUnlocked: 'Unlocked', badgeLocked: '{rem} levels left',
     badgeProgress: '{cur}/{tot}', badgeNew: 'Milestone Unlocked!', nextMilestone: 'Next: {name} ({rem} left)',
     allMilestonesDone: 'All milestones achieved!',
@@ -1173,6 +1203,7 @@ const STR = {
     copied: 'Panoya kopyalandı', tomorrow: 'Yarın yeni bir harita.', endlessNote: '{n}. bölüm tamam.', movesWord: 'hamle',
     marathon: 'Sonsuz Maraton', marathonTag: 'Maraton · {d} · {s}. Aşama', marathonStageDone: 'Günün maratonunda {s}. aşama tamamlandı!', nextStage: 'Sonraki aşama',
     gotIt: 'Anladım', solvedOn: 'Çözüldü', playTag: 'herkes için aynı harita', board: 'Bulmaca tahtası',
+    streak: '{n} gün seri',
     badgesTitle: 'Sonsuz Mod Aşamaları', badgeUnlocked: 'Kazanıldı', badgeLocked: '{rem} seviye kaldı',
     badgeProgress: '{cur}/{tot}', badgeNew: 'Yeni Aşama Rozeti!', nextMilestone: 'Sıradaki: {name} ({rem} seviye kaldı)',
     allMilestonesDone: 'Tüm aşamalar tamamlandı!',
@@ -1563,6 +1594,89 @@ function getDropOffReport() {
 
 // ---------------------------------------------------------------- game state & dynamic tutorial
 const G = { mode: 'daily', seed: '', level: 1, marathonStage: 1, marathonDate: '', pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], riv: [], bot: null, celebrateAt: 0, place: '', biome: 'bozkir', ferryActive: false, hintActive: false, hintUsed: false, hintPlan: null, hintStep: 0, newMilestone: null, parTime: null, timerStart: 0, timerOffset: 0, timerPaused: false, pauseTime: 0, finalTime: null, isUnderParTime: false, isNewBest: false };
+let streakIncreased = false;
+
+// streak counter (fayhatti.streak)
+function prevDateStr(s) {
+  const x = String(s);
+  if (!/^\d{8}$/.test(x)) return '';
+  const d = new Date(+x.slice(0, 4), +x.slice(4, 6) - 1, +x.slice(6, 8));
+  d.setDate(d.getDate() - 1);
+  return String(d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate());
+}
+function getStreakInfo() {
+  const v = store.get('streak', 0);
+  let count = 0, last = store.get('streakDate', '');
+  if (typeof v === 'number') {
+    count = v;
+  } else if (v && typeof v === 'object') {
+    if (typeof v.count === 'number') count = v.count;
+    else if (typeof v.streak === 'number') count = v.streak;
+    if (v.last) last = String(v.last);
+    else if (v.date) last = String(v.date);
+  }
+  return { count, last };
+}
+function checkStreak() {
+  const { count, last } = getStreakInfo();
+  if (!last || count <= 0) return count;
+  const ref = (G && G.mode === 'daily' && /^\d{8}$/.test(String(G.seed))) ? String(G.seed) : todaySeed();
+  const yest = prevDateStr(ref);
+  if (last !== ref && last !== yest) {
+    if (last > ref) return count;
+    const raw = store.get('streak', 0);
+    if (raw && typeof raw === 'object' && typeof raw.count === 'number') {
+      store.set('streak', { count: 0, last });
+    } else {
+      store.set('streak', 0);
+    }
+    return 0;
+  }
+  return count;
+}
+function recordDailyWin(seed) {
+  const sStr = String(seed);
+  const cur = checkStreak();
+  const { last } = getStreakInfo();
+  const yest = prevDateStr(sStr);
+  let next = cur;
+  let increased = false;
+  if (last === sStr) {
+    next = cur;
+  } else if (last === yest || !last) {
+    next = cur + 1;
+    increased = true;
+  } else {
+    next = 1;
+    increased = true;
+  }
+  const raw = store.get('streak', 0);
+  if (raw && typeof raw === 'object' && typeof raw.count === 'number') {
+    store.set('streak', { count: next, last: sStr });
+  } else {
+    store.set('streak', next);
+  }
+  store.set('streakDate', sStr);
+  trackEvent('streak_update', { streak: next, increased, seed: sStr });
+  updateStreakHud();
+  return increased;
+}
+function triggerStreakPop() {
+  const els = [$('hudStreak'), $('rStreak')];
+  els.forEach((el) => {
+    if (!el) return;
+    el.classList.remove('streak-pop');
+    void el.offsetWidth;
+    if (!RM) el.classList.add('streak-pop');
+  });
+}
+function updateStreakHud() {
+  const s = checkStreak();
+  const txt = t('streak', { n: s });
+  const el = $('vStreak'); if (el) el.textContent = txt;
+  const hEl = $('hudStreak'); if (hEl) hEl.setAttribute('aria-label', txt);
+  const rel = $('rStreakText'); if (rel) rel.textContent = txt;
+}
 // Gameplay card: par-speedrun (active in endless/level modes, never in daily)
 const isSpeedrunActive = () => G.mode !== 'daily' && (G.mode === 'endless' || G.mode === 'level');
 function getElapsed() {
@@ -1970,7 +2084,13 @@ function win() {
     bot: !!G.bot,
   });
   let newMilestone = null;
-  if (G.mode === 'daily') { if (!store.get('daily.' + G.seed, null)) store.set('daily.' + G.seed, { m: G.moves, s: G.stars }); }
+  streakIncreased = false;
+  if (G.mode === 'daily') {
+    if (!store.get('daily.' + G.seed, null)) {
+      store.set('daily.' + G.seed, { m: G.moves, s: G.stars });
+      streakIncreased = recordDailyWin(G.seed);
+    }
+  }
   else if (G.mode === 'marathon') store.set('marathon.' + G.marathonDate, Math.max(store.get('marathon.' + G.marathonDate, 1), G.marathonStage + 1));
   else {
     const curEndless = store.get('endless', 1);
@@ -2007,6 +2127,7 @@ function win() {
     vibe([30, 50, 40]);
   }
   if (!RM) for (const v of pz.villages) burst(v.cell);
+  if (streakIncreased) triggerStreakPop();
   setTimeout(showResult, AUTO || RM ? 500 : 1400);
   const msAnnounce = newMilestone ? ' · ' + t('badgeNew') + ' ' + (newMilestone[lang] || newMilestone.en).name : '';
   $('live').textContent = t('solvedT') + ' ' + t('resLine', { m: G.moves, p: pz.par }) + msAnnounce;
@@ -3722,6 +3843,7 @@ function updateHud() {
   $('vMoves').textContent = G.moves; $('vPar').textContent = G.pz ? G.pz.par : '–';
   const st = G.pz ? (G.won ? G.stars : ((G.hintUsed && G.mode !== 'daily') ? 1 : starsFor(G.moves, G.pz.par))) : 0;
   $('vStars').innerHTML = [0, 1, 2].map((i) => starSvg(i < st, 18)).join('');
+  updateStreakHud();
   const stTimer = $('statTimer');
   if (stTimer) {
     if (isSpeedrunActive()) {
@@ -4425,6 +4547,8 @@ function showResult() {
     }
   }
   $('rLine').textContent = t('resLine', { m: G.moves, p: G.pz.par }) + (G.hintUsed && G.mode !== 'daily' ? ' · ' + t('hintUsedTag') : '');
+  updateStreakHud();
+  if (streakIncreased) { triggerStreakPop(); streakIncreased = false; }
   const rSp = $('rSpeedrun');
   if (rSp) {
     if (isSpeedrunActive() && G.finalTime != null) {
@@ -4574,6 +4698,7 @@ const GLYPH = { 0: '..', 3: 'VV', 4: 'SS', 5: 'HH', 6: 'MM', 7: 'FF' };
 window.fayHatti = {
   get seed() { return G.seed; }, get moves() { return G.moves; }, get solved() { return G.won; }, get state() { return G.state; },
   get mode() { return G.mode; }, get level() { return G.level; }, get par() { return G.pz ? G.pz.par : null; }, get stars() { return G.stars; },
+  get streak() { return checkStreak(); },
   get marathon() { return G.mode === 'marathon' ? { date: G.marathonDate, stage: G.marathonStage } : null; },
   get marathonStage() { return G.mode === 'marathon' ? G.marathonStage : null; },
   get theme() { return (G.biome === 'karadeniz' && currentTheme === 'classic') ? 'karadeniz' : (G.biome === 'ege' && currentTheme === 'classic') ? 'ege' : currentTheme; }, setTheme: (t) => (t === 'karadeniz' || t === 'ege') ? applyBiome(t) : applyTheme(t),
