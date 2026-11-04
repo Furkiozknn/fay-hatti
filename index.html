@@ -594,6 +594,7 @@ const STR = {
     freezeRange: 'Range: {from} → {to}', freezeStatus: '{ok}/{total} daily seeds verified solvable',
     freezePar: 'Par range: {min}–{max} moves (avg {avg})', freezeSeal: 'CODE FREEZE LOCKED · SEED INTEGRITY VERIFIED',
     freezeRun: 'Re-verify Seeds', freezeRunning: 'Verifying seeds…',
+    telemetry: 'Telemetry', events: 'Events',
   },
   tr: {
     sub: 'Anadolu toprağını kaydır. Her köye su ve yol götür.',
@@ -614,6 +615,7 @@ const STR = {
     freezeRange: 'Aralık: {from} → {to}', freezeStatus: '{ok}/{total} günlük tohum çözülebilir',
     freezePar: 'Hedef hamle: {min}–{max} (ort. {avg})', freezeSeal: 'KOD DONDURULDU · TOHUM GÜVENLİĞİ ONAYLANDI',
     freezeRun: 'Tohumları Yeniden Test Et', freezeRunning: 'Tohumlar test ediliyor…',
+    telemetry: 'Telemetri', events: 'Olaylar',
   },
 };
 let lang = (QS.get('lang') || '').toLowerCase();
@@ -725,6 +727,60 @@ function toggleHaptic() {
   setHaptic(!haptic);
 }
 
+// ---------------------------------------------------------------- telemetry & analytics event hooks
+// Captures drop-off and engagement points (start, first move, quakes, undos, restarts, wins, drop-off exits)
+const telemetryLog = [];
+const telemetryListeners = new Set();
+let puzzleStartTime = 0, puzzleFirstMoveTime = 0, puzzleUndos = 0, puzzleRestarts = 0;
+let totalStarted = 0, totalWins = 0;
+
+function trackEvent(name, data = {}) {
+  const evt = {
+    event: name,
+    ts: Date.now(),
+    mode: G.mode,
+    seed: G.seed,
+    level: G.level,
+    moves: G.moves,
+    par: G.pz ? G.pz.par : null,
+    data,
+  };
+  telemetryLog.push(evt);
+  if (telemetryLog.length > 200) telemetryLog.shift();
+  try {
+    window.dispatchEvent(new CustomEvent('fayhatti:telemetry', { detail: evt }));
+    window.dispatchEvent(new CustomEvent('fayhatti:' + name, { detail: evt }));
+  } catch (e) {}
+  telemetryListeners.forEach((fn) => {
+    try { fn(evt); } catch (err) {}
+  });
+  return evt;
+}
+
+function getDropOffReport() {
+  const satCount = disp && disp.st && disp.st.sat ? disp.st.sat.filter(Boolean).length : 0;
+  const totalV = G.pz && G.pz.villages ? G.pz.villages.length : 0;
+  return {
+    totalStarted,
+    totalWins,
+    completionRate: totalStarted ? Math.round((totalWins / totalStarted) * 100) + '%' : '0%',
+    currentPuzzle: {
+      mode: G.mode,
+      seed: G.seed,
+      level: G.level,
+      state: G.state,
+      moves: G.moves,
+      par: G.pz ? G.pz.par : null,
+      undos: puzzleUndos,
+      restarts: puzzleRestarts,
+      villagesConnected: `${satCount}/${totalV}`,
+      elapsedSec: puzzleStartTime ? Math.round((performance.now() - puzzleStartTime) / 1000) : 0,
+      hadFirstMove: puzzleFirstMoveTime > 0,
+    },
+    recentEventsCount: telemetryLog.length,
+  };
+}
+
 // ---------------------------------------------------------------- game state
 const G = { mode: 'daily', seed: '', level: 1, pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], bot: null, celebrateAt: 0, place: '' };
 let anims = [], shake = 0, particles = [], botTimer = 0, disp = null;
@@ -748,7 +804,12 @@ function startPuzzle(mode, arg, firstHelp = true) {
     G.pz = pz; G.ids = pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.sat = [];
     G.place = PLACES[hashStr('p' + G.seed) % PLACES.length];
     G.state = 'play';
+    puzzleStartTime = performance.now();
+    puzzleFirstMoveTime = 0;
+    puzzleUndos = 0;
+    totalStarted++;
     buildCaches(); settle(true); updateHud();
+    trackEvent('puzzle_start', { mode: G.mode, seed: G.seed, level: G.level, par: pz.par, K: pz.K, villages: pz.villages.length, place: G.place, bot: !!BOT });
     if (BOT) startBot();
     else if (firstHelp && !NOSAVE && !store.get('help', false)) { store.set('help', true); openHelp(); }
   }, 30);
@@ -764,12 +825,19 @@ function doMove(m) {
   G.undo.push({ ids: G.ids, moves: G.moves });
   const before = G.ids, a = applyPerm(before, pz.perms[m]);
   G.moves++;
+  const moveElapsed = puzzleStartTime ? Math.round(performance.now() - puzzleStartTime) : 0;
+  if (!puzzleFirstMoveTime) {
+    puzzleFirstMoveTime = performance.now();
+    trackEvent('puzzle_first_move', { elapsedMs: moveElapsed, m, line, dir: moveDir(m) });
+  }
+  trackEvent('move', { move: G.moves, m, line, dir: moveDir(m), elapsedMs: moveElapsed });
   pushAnim('slide', before, a, m);
   let cur = a;
   if (isSolved(pz, toVals(pz, a), 0)) G.won = true; // solved by the move itself: the ground stays calm
   else {
     const q = pz.quakes[(G.moves - 1) % pz.quakes.length];
     cur = applyPerm(a, pz.perms[q]);
+    trackEvent('quake', { move: G.moves, q, row: q >> 1, dir: moveDir(q) });
     pushAnim('quake', a, cur, q);
     if (isSolved(pz, toVals(pz, cur), 0)) G.won = true;
   }
@@ -780,19 +848,38 @@ function doMove(m) {
 }
 function undo() {
   if (!G.pz || G.won || G.state !== 'play' || !G.undo.length || G.bot) return;
+  puzzleUndos++;
+  trackEvent('undo', { fromMove: G.moves, undosInPuzzle: puzzleUndos });
   flushAnims();
   const u = G.undo.pop(); G.ids = u.ids; G.moves = u.moves;
   sfx.undo(); vibe(12); settle(true); updateHud();
 }
 function restart() {
   if (!G.pz || G.bot) return;
+  puzzleRestarts++;
+  trackEvent('restart', { movesAtRestart: G.moves, restartsInPuzzle: puzzleRestarts });
   flushAnims(); closeAll();
   G.ids = G.pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.state = 'play'; particles = [];
+  puzzleStartTime = performance.now();
+  puzzleFirstMoveTime = 0;
   sfx.undo(); settle(true); updateHud();
 }
 function win() {
   const pz = G.pz;
   G.state = 'won';
+  totalWins++;
+  trackEvent('puzzle_win', {
+    mode: G.mode,
+    seed: G.seed,
+    level: G.level,
+    moves: G.moves,
+    par: pz.par,
+    stars: G.stars,
+    undos: puzzleUndos,
+    restarts: puzzleRestarts,
+    elapsedMs: puzzleStartTime ? Math.round(performance.now() - puzzleStartTime) : 0,
+    bot: !!G.bot,
+  });
   if (G.mode === 'daily') { if (!store.get('daily.' + G.seed, null)) store.set('daily.' + G.seed, { m: G.moves, s: G.stars }); }
   else store.set('endless', Math.max(store.get('endless', 1), G.level + 1));
   G.celebrateAt = performance.now();
@@ -827,7 +914,18 @@ function stepAnims(dt) {
 function settle(silent) {
   setDisp(G.ids);
   const st = disp.st, prev = G.sat;
-  if (!silent) st.sat.forEach((ok, i) => { if (ok && !prev[i]) sfx.ping(i); });
+  if (!silent) st.sat.forEach((ok, i) => {
+    if (ok && !prev[i]) {
+      sfx.ping(i);
+      trackEvent('village_connected', {
+        villageIndex: i,
+        cell: G.pz && G.pz.villages[i] ? G.pz.villages[i].cell : null,
+        need: G.pz && G.pz.villages[i] ? G.pz.villages[i].need : null,
+        moves: G.moves,
+        elapsedMs: puzzleStartTime ? Math.round(performance.now() - puzzleStartTime) : 0,
+      });
+    }
+  });
   G.sat = st.sat.slice();
   if (G.won && G.state === 'play') win();
 }
@@ -1362,10 +1460,12 @@ function fillMenu() {
 }
 function closeAll() { document.querySelectorAll('.ov').forEach((o) => o.classList.remove('on')); }
 const COARSE = matchMedia('(pointer:coarse)').matches;
-function openMenu() { fillMenu(); closeAll(); $('menu').classList.add('on'); if (!COARSE) setTimeout(() => $('bDaily').focus(), 30); }
+function openMenu() { trackEvent('menu_open', { currentMode: G.mode, state: G.state, moves: G.moves }); fillMenu(); closeAll(); $('menu').classList.add('on'); if (!COARSE) setTimeout(() => $('bDaily').focus(), 30); }
 let helpReturn = null;
 function openHelp() {
-  helpReturn = $('menu').classList.contains('on') ? 'menu' : null; closeAll();
+  helpReturn = $('menu').classList.contains('on') ? 'menu' : null;
+  trackEvent('help_open', { from: helpReturn || 'hud', moves: G.moves });
+  closeAll();
   $('hTitle').textContent = t('how');
   $('hList').innerHTML = ['h1', 'h2', 'h3', 'h4', 'h5'].map((k) => `<li>${t(k)}</li>`).join('');
   const rivCol = highContrast ? '#0077b6' : '#3d95cf', rodCol = highContrast ? '#ffb703' : '#c79a5e';
@@ -1373,7 +1473,7 @@ function openHelp() {
   $('bHelpOk').textContent = t('gotIt');
   $('help').classList.add('on'); if (!COARSE) setTimeout(() => $('bHelpOk').focus(), 30);
 }
-function closeHelp() { $('help').classList.remove('on'); if (helpReturn === 'menu') openMenu(); }
+function closeHelp() { trackEvent('help_close', { moves: G.moves }); $('help').classList.remove('on'); if (helpReturn === 'menu') openMenu(); }
 // ---------------------------------------------------------------- seed integrity & code freeze verification
 function renderSealSvg(verified = true) {
   const outer = highContrast ? '#8a200a' : '#a63f27';
@@ -1491,6 +1591,7 @@ function showResult() {
 let toastT = 0;
 function toast(msg) { const el = $('toast'); el.textContent = msg; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 1800); }
 async function share() {
+  trackEvent('share', { mode: G.mode, seed: G.seed, level: G.level, moves: G.moves, stars: G.stars });
   const text = shareText() + '\n' + shareUrl();
   if (navigator.share && matchMedia('(pointer:coarse)').matches) { try { await navigator.share({ text }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
   try { await navigator.clipboard.writeText(text); toast(t('copied')); }
@@ -1536,7 +1637,7 @@ function dbg() {
   if (!DEBUG) return;
   const el = $('debug'), pz = G.pz;
   el.style.display = 'block';
-  el.textContent = `fps ${fps}  dpr ${DPR}  cell ${cs}px\nseed ${G.seed}  K ${pz ? pz.K : '-'}  par ${pz ? pz.par : '-'}\ngen ${G.genMs} ms  nodes ${pz ? pz.solveNodes : '-'}\nmoves ${G.moves}  quake ${G.moves % 5}` + (G.bot ? `\nbot ${G.bot.strategy} plan ${G.bot.plan.length} (${G.bot.ms} ms)` : '');
+  el.textContent = `fps ${fps}  dpr ${DPR}  cell ${cs}px\nseed ${G.seed}  K ${pz ? pz.K : '-'}  par ${pz ? pz.par : '-'}\ngen ${G.genMs} ms  nodes ${pz ? pz.solveNodes : '-'}\nmoves ${G.moves}  quake ${G.moves % 5}\nevents ${telemetryLog.length}` + (G.bot ? `\nbot ${G.bot.strategy} plan ${G.bot.plan.length} (${G.bot.ms} ms)` : '');
 }
 const GLYPH = { 0: '..', 3: 'VV', 4: 'SS', 5: 'HH', 6: 'MM' };
 window.fayHatti = {
@@ -1550,8 +1651,38 @@ window.fayHatti = {
   get haptic() { return haptic; }, setHaptic, toggleHaptic, vibe,
   verifySeeds: (from, to) => runSeedVerification(from, to),
   get integrity() { return lastIntegrityReport || runSeedVerification('20261130', '20261231'); },
+  // Analytics / Telemetry hooks
+  get telemetry() { return telemetryLog.slice(); },
+  onTelemetry: (fn) => { telemetryListeners.add(fn); return () => telemetryListeners.delete(fn); },
+  onEvent: (fn) => { telemetryListeners.add(fn); return () => telemetryListeners.delete(fn); },
+  track: (name, data) => trackEvent(name, data),
+  get dropOffReport() { return getDropOffReport(); },
   move: (m) => doMove(m), undo, restart, start: (mode, arg) => startPuzzle(mode, arg, false),
 };
+document.addEventListener('visibilitychange', () => {
+  trackEvent(document.hidden ? 'session_hide' : 'session_show', {
+    state: G.state,
+    moves: G.moves,
+    elapsedSec: puzzleStartTime ? Math.round((performance.now() - puzzleStartTime) / 1000) : 0,
+  });
+});
+window.addEventListener('beforeunload', () => {
+  trackEvent('session_leave', {
+    state: G.state,
+    moves: G.moves,
+    solved: G.won,
+    elapsedSec: puzzleStartTime ? Math.round((performance.now() - puzzleStartTime) / 1000) : 0,
+  });
+});
+trackEvent('session_init', {
+  lang,
+  muted,
+  reducedMotion: RM,
+  coarsePointer: COARSE,
+  dpr: DPR,
+  w: window.innerWidth,
+  h: window.innerHeight,
+});
 addEventListener('resize', layout);
 applyContrast();
 layout();

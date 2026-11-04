@@ -7,3 +7,4 @@ One line per day: date, the one visible change, and any measured number (for exa
 - 2026-11-04: Ported high-contrast card as always-on accessibility mode: WCAG AAA contrast palette, distinct river/road styling, prefers-contrast OS sync, C hotkey, and menu toggle.
 - 2026-11-04: Ported haptics card as always-on tactile feedback: slide (22 ms), undo (12 ms), quake (35/45/30 ms), win pattern, reduced-motion suppression, and menu toggle.
 - 2026-11-04: Ported seed-integrity card as always-on verification: 32/32 daily seeds verified solvable through Dec 31, interactive seal report dialog, re-verify runner, and window.fayHatti.integrity API.
+- 2026-11-04: Ported analytics-hooks card as always-on telemetry: 10 event types (session, puzzle, moves, quakes, solves, drop-off), CustomEvent dispatching, ring buffer (200), and window.fayHatti telemetry API.
