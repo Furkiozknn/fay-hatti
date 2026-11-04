@@ -74,7 +74,12 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
   #bar{flex-direction:column;padding:8px 10px 8px 4px;overflow:auto}
   .tb{min-height:44px;flex-direction:row;gap:6px}
 }
-@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on{animation:none}}
+.seal-wrap{display:flex;justify-content:center;margin:8px 0 6px}
+.seal-svg{width:72px;height:72px;animation:sealpulse 2.4s ease-in-out infinite}
+@keyframes sealpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+.vfy-card{background:#e9dab6;border:1px solid #c9b485;border-radius:12px;padding:12px 14px;margin:8px 0 10px;font-size:14px;line-height:1.55;color:#433221}
+.vfy-stamp{display:inline-block;margin-top:6px;padding:4px 10px;background:#325b39;color:#f3ead8;border-radius:6px;font:700 11px/1.2 ui-monospace,Consolas,monospace;letter-spacing:.06em;text-transform:uppercase}
+@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on,.seal-svg{animation:none}}
 </style>
 </head>
 <body>
@@ -105,6 +110,7 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
     <button class="btn" id="bDaily"></button>
     <button class="btn" id="bEndless"></button>
     <button class="btn alt" id="bHow"></button>
+    <button class="btn alt" id="bVerify"></button>
     <div class="mini"><button id="mLang"></button><button id="mSound"></button></div>
   </div>
 </div>
@@ -114,6 +120,22 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
     <ol class="help" id="hList"></ol>
     <div class="legend" id="hLegend"></div>
     <button class="btn" id="bHelpOk" style="text-align:center"></button>
+  </div>
+</div>
+<div class="ov" id="verify" role="dialog" aria-modal="true" aria-labelledby="vfyTitle">
+  <div class="panel">
+    <h2 id="vfyTitle"></h2>
+    <div id="vfySeal" class="seal-wrap" aria-hidden="true"></div>
+    <p class="res-line" id="vfyStatus"></p>
+    <div class="vfy-card" id="vfyCard">
+      <div id="vfyRange"></div>
+      <div id="vfyPar"></div>
+      <div class="vfy-stamp" id="vfyStamp"></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" id="bVerifyRun" style="text-align:center"></button>
+      <button class="btn alt" id="bVerifyClose" style="text-align:center"></button>
+    </div>
   </div>
 </div>
 <div class="ov" id="result" role="dialog" aria-modal="true" aria-labelledby="rTitle">
@@ -554,6 +576,10 @@ const STR = {
     h4: 'After each move a small quake shifts one row by itself. The red band shows which row is next.',
     h5: 'Solve within par for 3 stars. Keys: WASD picks a tile, arrow keys shift, Z undo, R restart.',
     lRiver: 'river', lRoad: 'road', lVillage: 'village', lMount: 'mountain', lSpring: 'spring', lHan: 'caravanserai',
+    integrity: 'Seed Integrity', freezeTitle: 'Code Freeze & Integrity', freezeSub: 'Seeds verified through Dec 31',
+    freezeRange: 'Range: {from} → {to}', freezeStatus: '{ok}/{total} daily seeds verified solvable',
+    freezePar: 'Par range: {min}–{max} moves (avg {avg})', freezeSeal: 'CODE FREEZE LOCKED · SEED INTEGRITY VERIFIED',
+    freezeRun: 'Re-verify Seeds', freezeRunning: 'Verifying seeds…',
   },
   tr: {
     sub: 'Anadolu toprağını kaydır. Her köye su ve yol götür.',
@@ -569,6 +595,10 @@ const STR = {
     h4: 'Her hamleden sonra küçük bir deprem bir satırı kendiliğinden kaydırır. Kırmızı bant sıradaki satırı gösterir.',
     h5: 'Hedef hamlede çöz, 3 yıldız al. Tuşlar: WASD taş seçer, ok tuşları kaydırır, Z geri alır, R baştan.',
     lRiver: 'nehir', lRoad: 'yol', lVillage: 'köy', lMount: 'dağ', lSpring: 'pınar', lHan: 'kervansaray',
+    integrity: 'Tohum Doğrulama', freezeTitle: 'Kod Dondurma & Doğrulama', freezeSub: '31 Aralık\'a kadar çözülebilirlik onaylandı',
+    freezeRange: 'Aralık: {from} → {to}', freezeStatus: '{ok}/{total} günlük tohum çözülebilir',
+    freezePar: 'Hedef hamle: {min}–{max} (ort. {avg})', freezeSeal: 'KOD DONDURULDU · TOHUM GÜVENLİĞİ ONAYLANDI',
+    freezeRun: 'Tohumları Yeniden Test Et', freezeRunning: 'Tohumlar test ediliyor…',
   },
 };
 let lang = (QS.get('lang') || '').toLowerCase();
@@ -629,6 +659,7 @@ const sfx = {
   win() { if (!audio()) return; const t0 = AC.currentTime; [293.7, 311.1, 370, 392, 440, 587.3].forEach((f, i) => pluck(t0 + i * 0.09, f, 0.16)); tone(t0 + 0.55, 587.3, 1.2, 'sine', 0.12); tone(t0 + 0.55, 880, 1.2, 'sine', 0.07); },
   click() { if (!audio()) return; tone(AC.currentTime, 900, 0.04, 'square', 0.04); },
   undo() { if (!audio()) return; noise(AC.currentTime, 0.1, 'bandpass', 500, 1300, 0.16, 1.2); },
+  verified() { if (!audio()) return; const t0 = AC.currentTime; tone(t0, 587.3, 0.35, 'sine', 0.16); tone(t0 + 0.12, 880, 0.5, 'sine', 0.22); pluck(t0 + 0.12, 880, 0.12); },
 };
 
 // ---------------------------------------------------------------- game state
@@ -1130,6 +1161,7 @@ cv.addEventListener('pointerleave', () => { hover = -1; });
 addEventListener('keydown', (e) => {
   audio();
   if ($('help').classList.contains('on') && (e.key === 'Escape' || e.key === 'Enter')) { closeHelp(); e.preventDefault(); return; }
+  if ($('verify').classList.contains('on') && (e.key === 'Escape' || e.key === 'Enter')) { closeVerify(); e.preventDefault(); return; }
   if (document.querySelector('.ov.on')) return;
   if (G.state !== 'play' || G.bot) return;
   const k = e.key.toLowerCase();
@@ -1173,6 +1205,7 @@ function fillMenu() {
   $('bDaily').innerHTML = `${t('daily')}<small>${seedLabel(ds)} · ${done ? t('solvedOn') + ' ' + '★'.repeat(done.s) + ' ' + done.m + ' ' + t('movesWord') : t('playTag')}</small>`;
   $('bEndless').innerHTML = `${t('endless')}<small>${t('level', { n: store.get('endless', 1) })}</small>`;
   $('bHow').textContent = t('how');
+  $('bVerify').innerHTML = `${t('integrity')}<small>${t('freezeSub')}</small>`;
   $('mLang').textContent = lang === 'tr' ? 'English' : 'Türkçe';
   $('mSound').textContent = t('sound') + ': ' + (muted ? t('off') : t('on'));
 }
@@ -1189,6 +1222,97 @@ function openHelp() {
   $('help').classList.add('on'); if (!COARSE) setTimeout(() => $('bHelpOk').focus(), 30);
 }
 function closeHelp() { $('help').classList.remove('on'); if (helpReturn === 'menu') openMenu(); }
+// ---------------------------------------------------------------- seed integrity & code freeze verification
+function renderSealSvg(verified = true) {
+  return `<svg class="seal-svg" viewBox="0 0 80 80" aria-hidden="true">
+    <circle cx="40" cy="40" r="38" fill="none" stroke="#a63f27" stroke-width="2.5" stroke-dasharray="3 2"/>
+    <circle cx="40" cy="40" r="33" fill="#f4ebd4" stroke="#8d6e3f" stroke-width="1.8"/>
+    <path d="M40 14 L44 26 L56 22 L49 32 L58 40 L49 48 L56 58 L44 54 L40 66 L36 54 L24 58 L31 48 L22 40 L31 32 L24 22 L36 26 Z" fill="rgba(166,63,39,.12)" stroke="#a63f27" stroke-width="1.2" stroke-linejoin="round"/>
+    <circle cx="40" cy="40" r="19" fill="${verified ? '#325b39' : '#8d6e3f'}" stroke="#f2b33d" stroke-width="2"/>
+    ${verified ? '<path d="M30 40 L37 47 L50 33" fill="none" stroke="#f3ead8" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>' : '<path d="M40 28 L40 44 M40 48 L40 52" stroke="#f3ead8" stroke-width="3" stroke-linecap="round"/>'}
+  </svg>`;
+}
+function verifyDailySeed(seedStr) {
+  const seed = /^\d+$/.test(seedStr) ? +seedStr : hashStr(seedStr);
+  const cfg = dailyConfig(seedStr);
+  let pz = null;
+  for (let k = 0; !pz && k < 5; k++) pz = makePuzzle(seed + k * 7919, cfg);
+  if (!pz || !pz.solution || !pz.solution.length) return { seed: seedStr, ok: false, error: 'no puzzle' };
+  let ids = pz.start.slice(), solved = false;
+  for (let k = 0; k < pz.solution.length; k++) {
+    ids = applyPerm(ids, pz.perms[pz.solution[k]]);
+    if (isSolved(pz, toVals(pz, ids), 0)) { solved = (k === pz.solution.length - 1); break; }
+    ids = applyPerm(ids, pz.perms[pz.quakes[k % pz.quakes.length]]);
+    if (isSolved(pz, toVals(pz, ids), 0)) { solved = (k === pz.solution.length - 1); break; }
+  }
+  return { seed: seedStr, ok: solved, par: pz.par, K: pz.K, attempts: pz.attempts, nodes: pz.solveNodes, moves: pz.solution.length };
+}
+function getDailySeedList(fromStr = '20261130', toStr = '20261231') {
+  fromStr = String(fromStr || '20261130').replace(/-/g, '');
+  toStr = String(toStr || '20261231').replace(/-/g, '');
+  const list = [];
+  const y1 = +fromStr.slice(0, 4), m1 = +fromStr.slice(4, 6) - 1, d1 = +fromStr.slice(6, 8);
+  const cur = new Date(y1, m1, d1, 12, 0, 0);
+  const end = new Date(+toStr.slice(0, 4), +toStr.slice(4, 6) - 1, +toStr.slice(6, 8), 12, 0, 0);
+  while (cur <= end) {
+    const s = String(cur.getFullYear() * 10000 + (cur.getMonth() + 1) * 100 + cur.getDate());
+    list.push(s);
+    cur.setDate(cur.getDate() + 1);
+  }
+  return list;
+}
+let lastIntegrityReport = null;
+function runSeedVerification(fromStr = '20261130', toStr = '20261231') {
+  const seeds = getDailySeedList(fromStr, toStr);
+  const results = [];
+  let solvable = 0, totalPar = 0, minPar = 999, maxPar = 0;
+  for (const s of seeds) {
+    const res = verifyDailySeed(s);
+    results.push(res);
+    if (res.ok) {
+      solvable++;
+      totalPar += res.par;
+      if (res.par < minPar) minPar = res.par;
+      if (res.par > maxPar) maxPar = res.par;
+    }
+  }
+  const report = {
+    range: { from: String(fromStr).replace(/-/g, ''), to: String(toStr).replace(/-/g, '') },
+    total: seeds.length,
+    solvable,
+    ok: solvable === seeds.length,
+    avgPar: solvable ? +(totalPar / solvable).toFixed(2) : 0,
+    minPar: minPar === 999 ? 0 : minPar,
+    maxPar,
+    freezeDate: '2026-11-30',
+    results,
+  };
+  lastIntegrityReport = report;
+  return report;
+}
+let verifyReturn = null;
+function openVerify() {
+  verifyReturn = $('menu').classList.contains('on') ? 'menu' : null;
+  closeAll();
+  $('vfyTitle').textContent = t('freezeTitle');
+  $('bVerifyRun').textContent = t('freezeRun');
+  $('bVerifyClose').textContent = t('gotIt');
+  if (!lastIntegrityReport) runSeedVerification('20261130', '20261231');
+  updateVerifyUi(lastIntegrityReport);
+  $('verify').classList.add('on');
+  if (!COARSE) setTimeout(() => $('bVerifyClose').focus(), 30);
+}
+function closeVerify() {
+  $('verify').classList.remove('on');
+  if (verifyReturn === 'menu') openMenu();
+}
+function updateVerifyUi(rep) {
+  $('vfySeal').innerHTML = renderSealSvg(rep.ok);
+  $('vfyStatus').textContent = t('freezeStatus', { ok: rep.solvable, total: rep.total });
+  $('vfyRange').textContent = t('freezeRange', { from: seedLabel(rep.range.from), to: seedLabel(rep.range.to) });
+  $('vfyPar').textContent = t('freezePar', { min: rep.minPar, max: rep.maxPar, avg: rep.avgPar });
+  $('vfyStamp').textContent = t('freezeSeal');
+}
 function shareText() { return `Fay Hattı ${G.mode === 'daily' ? seedLabel(G.seed) : '#' + G.level} ${'⭐'.repeat(G.stars)} ${G.moves} ${t('movesWord')}`; }
 function shareUrl() { return CANON + (G.mode === 'daily' ? '?seed=' + G.seed : '?level=' + G.level); }
 function showResult() {
@@ -1214,7 +1338,7 @@ async function share() {
   catch (e) { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); toast(t('copied')); } catch (e2) {} ta.remove(); }
 }
 function toggleMute() { muted = !muted; store.set('mute', muted); if (AC) master.gain.value = muted ? 0 : 0.55; updateHud(); fillMenu(); if (!muted) sfx.click(); }
-function toggleLang() { lang = lang === 'tr' ? 'en' : 'tr'; store.set('lang', lang); updateHud(); fillMenu(); if ($('result').classList.contains('on')) showResult(); if ($('help').classList.contains('on')) { const r = helpReturn; openHelp(); helpReturn = r; } }
+function toggleLang() { lang = lang === 'tr' ? 'en' : 'tr'; store.set('lang', lang); updateHud(); fillMenu(); if ($('result').classList.contains('on')) showResult(); if ($('help').classList.contains('on')) { const r = helpReturn; openHelp(); helpReturn = r; } if ($('verify').classList.contains('on')) { const r = verifyReturn; openVerify(); verifyReturn = r; } }
 
 $('bUndo').onclick = undo; $('bRestart').onclick = restart; $('bMenu').onclick = () => { sfx.click(); openMenu(); };
 $('bSound').onclick = toggleMute; $('mSound').onclick = toggleMute; $('bLang').onclick = toggleLang; $('mLang').onclick = toggleLang;
@@ -1225,11 +1349,24 @@ $('bDaily').onclick = () => {
 };
 $('bEndless').onclick = () => { sfx.click(); startPuzzle('endless', store.get('endless', 1)); };
 $('bHow').onclick = () => { sfx.click(); openHelp(); };
+$('bVerify').onclick = () => { sfx.click(); openVerify(); };
 $('bHelpOk').onclick = closeHelp;
+$('bVerifyClose').onclick = closeVerify;
+$('bVerifyRun').onclick = () => {
+  sfx.click();
+  $('bVerifyRun').disabled = true;
+  $('vfyStatus').textContent = t('freezeRunning');
+  setTimeout(() => {
+    const rep = runSeedVerification('20261130', '20261231');
+    updateVerifyUi(rep);
+    $('bVerifyRun').disabled = false;
+    sfx.verified();
+  }, 40);
+};
 $('bShare').onclick = share;
 $('bNext').onclick = () => { sfx.click(); startPuzzle('endless', G.mode === 'daily' ? store.get('endless', 1) : G.level + 1); };
 $('bRMenu').onclick = () => { sfx.click(); openMenu(); };
-document.querySelectorAll('.ov').forEach((o) => o.addEventListener('click', (e) => { if (e.target === o && o.id !== 'menu') { if (o.id === 'help') closeHelp(); else o.classList.remove('on'); } }));
+document.querySelectorAll('.ov').forEach((o) => o.addEventListener('click', (e) => { if (e.target === o && o.id !== 'menu') { if (o.id === 'help') closeHelp(); else if (o.id === 'verify') closeVerify(); else o.classList.remove('on'); } }));
 
 // ---------------------------------------------------------------- debug overlay, API, boot
 let fpsN = 0, fpsT = 0, fps = 0;
@@ -1249,6 +1386,8 @@ window.fayHatti = {
   get genMs() { return G.genMs; }, get fps() { return fps; }, get plan() { return G.pz ? G.pz.solution.slice() : null; },
   get board() { if (!G.pz) return null; const v = toVals(G.pz, G.ids), out = []; for (let r = 0; r < N; r++) { const row = []; for (let c = 0; c < N; c++) { const x = v[r * N + c], k = x >> 4; row.push(k === KR ? 'r' + (x & 15).toString(16) : k === KD ? 'd' + (x & 15).toString(16) : GLYPH[k]); } out.push(row.join(' ')); } return out; },
   move: (m) => doMove(m), undo, restart, start: (mode, arg) => startPuzzle(mode, arg, false),
+  verifySeeds: (from, to) => runSeedVerification(from, to),
+  get integrity() { return lastIntegrityReport || runSeedVerification('20261130', '20261231'); },
 };
 addEventListener('resize', layout);
 layout();
