@@ -554,6 +554,7 @@ const STR = {
     h4: 'After each move a small quake shifts one row by itself. The red band shows which row is next.',
     h5: 'Solve within par for 3 stars. Keys: WASD picks a tile, arrow keys shift, Z undo, R restart.',
     lRiver: 'river', lRoad: 'road', lVillage: 'village', lMount: 'mountain', lSpring: 'spring', lHan: 'caravanserai',
+    waterConnected: 'Water reached village!',
   },
   tr: {
     sub: 'Anadolu toprağını kaydır. Her köye su ve yol götür.',
@@ -569,6 +570,7 @@ const STR = {
     h4: 'Her hamleden sonra küçük bir deprem bir satırı kendiliğinden kaydırır. Kırmızı bant sıradaki satırı gösterir.',
     h5: 'Hedef hamlede çöz, 3 yıldız al. Tuşlar: WASD taş seçer, ok tuşları kaydırır, Z geri alır, R baştan.',
     lRiver: 'nehir', lRoad: 'yol', lVillage: 'köy', lMount: 'dağ', lSpring: 'pınar', lHan: 'kervansaray',
+    waterConnected: 'Köye su ulaştı!',
   },
 };
 let lang = (QS.get('lang') || '').toLowerCase();
@@ -625,6 +627,13 @@ const sfx = {
   slide() { if (!audio()) return; const t0 = AC.currentTime; noise(t0, 0.13, 'bandpass', 1400, 500, 0.22, 1.2); tone(t0 + 0.1, 180, 0.06, 'triangle', 0.12); },
   quake() { if (!audio()) return; const t0 = AC.currentTime; noise(t0, 0.7, 'lowpass', 220, 60, 0.75, 0.8); tone(t0, 52, 0.6, 'sine', 0.45, 34); noise(t0 + 0.12, 0.25, 'bandpass', 600, 300, 0.12, 2); },
   ping(i) { if (!audio()) return; const t0 = AC.currentTime, f = [587.3, 740, 880, 1174.7][i % 4]; tone(t0, f, 0.5, 'sine', 0.2); tone(t0, f * 2.01, 0.25, 'sine', 0.06); },
+  // 20 Nov: Juice: Water droplet chirp and ripple chime for village water connection
+  ripple(i = 0) {
+    if (!audio()) return;
+    const t0 = AC.currentTime, f = [880, 1046.5, 1174.7, 1318.5][i % 4];
+    tone(t0, f * 0.72, 0.12, 'sine', 0.18, f * 1.35); // water droplet pitch chirp
+    tone(t0 + 0.04, f * 1.5, 0.18, 'sine', 0.08, f * 0.9); // resonant water dissipation
+  },
   // Hicaz-flavoured run on D: D Eb F# G A D
   win() { if (!audio()) return; const t0 = AC.currentTime; [293.7, 311.1, 370, 392, 440, 587.3].forEach((f, i) => pluck(t0 + i * 0.09, f, 0.16)); tone(t0 + 0.55, 587.3, 1.2, 'sine', 0.12); tone(t0 + 0.55, 880, 1.2, 'sine', 0.07); },
   click() { if (!audio()) return; tone(AC.currentTime, 900, 0.04, 'square', 0.04); },
@@ -632,15 +641,15 @@ const sfx = {
 };
 
 // ---------------------------------------------------------------- game state
-const G = { mode: 'daily', seed: '', level: 1, pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], bot: null, celebrateAt: 0, place: '' };
-let anims = [], shake = 0, particles = [], botTimer = 0, disp = null;
+const G = { mode: 'daily', seed: '', level: 1, pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], riv: [], bot: null, celebrateAt: 0, place: '' };
+let anims = [], shake = 0, particles = [], ripples = [], botTimer = 0, disp = null;
 
 function starsFor(moves, par) { return moves <= par ? 3 : moves <= par + 2 ? 2 : 1; }
 function nextQuake() { return G.pz && !G.won ? G.pz.quakes[G.moves % G.pz.quakes.length] : -1; }
 
 function startPuzzle(mode, arg, firstHelp = true) {
   clearTimeout(botTimer); G.bot = null;
-  G.mode = mode; G.state = 'loading'; G.pz = null; disp = null; anims = []; particles = []; closeAll();
+  G.mode = mode; G.state = 'loading'; G.pz = null; disp = null; anims = []; particles = []; ripples = []; closeAll();
   if (mode === 'daily') G.seed = String(arg); else { G.level = arg; G.seed = 'L' + arg; }
   updateHud();
   setTimeout(() => {
@@ -651,7 +660,7 @@ function startPuzzle(mode, arg, firstHelp = true) {
     let pz = null;
     for (let k = 0; !pz && k < 5; k++) pz = makePuzzle(seed + k * 7919, cfg);
     G.genMs = Math.round(performance.now() - t0);
-    G.pz = pz; G.ids = pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.sat = [];
+    G.pz = pz; G.ids = pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.sat = []; G.riv = [];
     G.place = PLACES[hashStr('p' + G.seed) % PLACES.length];
     G.state = 'play';
     buildCaches(); settle(true); updateHud();
@@ -693,7 +702,7 @@ function undo() {
 function restart() {
   if (!G.pz || G.bot) return;
   flushAnims(); closeAll();
-  G.ids = G.pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.state = 'play'; particles = [];
+  G.ids = G.pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.state = 'play'; particles = []; ripples = [];
   sfx.undo(); settle(true); updateHud();
 }
 function win() {
@@ -732,9 +741,22 @@ function stepAnims(dt) {
 // the board came to rest: recompute connections, ping newly happy villages, start the celebration
 function settle(silent) {
   setDisp(G.ids);
-  const st = disp.st, prev = G.sat;
-  if (!silent) st.sat.forEach((ok, i) => { if (ok && !prev[i]) sfx.ping(i); });
+  const st = disp.st, prevSat = G.sat, prevRiv = G.riv || [];
+  const curRiv = G.pz ? G.pz.villages.map((v) => !!((v.need & NEED_RIVER) && ((st.rr >> v.cell) & 1))) : [];
+  if (!silent) {
+    curRiv.forEach((ok, i) => {
+      // 20 Nov: Juice: Ripple Particles on Water Connection
+      if (ok && !prevRiv[i]) {
+        spawnWaterRipple(G.pz.villages[i].cell);
+        sfx.ripple(i);
+        const liveEl = $('live');
+        if (liveEl) liveEl.textContent = t('waterConnected');
+      }
+    });
+    st.sat.forEach((ok, i) => { if (ok && !prevSat[i]) sfx.ping(i); });
+  }
   G.sat = st.sat.slice();
+  G.riv = curRiv.slice();
   if (G.won && G.state === 'play') win();
 }
 function setDisp(ids) {
@@ -1066,12 +1088,92 @@ function frame(now) {
     ctx.strokeRect(ox + 1, oy + qRow * cs + 1, BW - 2, cs - 2); ctx.setLineDash([]);
   }
   if (cursor >= 0 && G.state === 'play' && !G.bot) { ctx.strokeStyle = '#7cc4f0'; ctx.lineWidth = 3; rr(ctx, ox + (cursor % N) * cs + 3, oy + ((cursor / N) | 0) * cs + 3, cs - 6, cs - 6, cs * 0.14); ctx.stroke(); }
+  drawRipples(dt);
   drawParticles(dt);
   ctx.restore();
 }
 function drawLoading(now) {
   ctx.fillStyle = 'rgba(243,234,216,.5)';
   for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(W / 2 + (i - 1) * 18, H / 2, 4 + 2 * Math.sin(now / 200 + i), 0, 7); ctx.fill(); }
+}
+// 20 Nov: Juice: Ripple Particles on Water Connection
+function spawnWaterRipple(cell) {
+  const rings = RM ? [{ rMax: cs * 0.42, dur: 0.4, delay: 0 }] : [
+    { rMax: cs * 0.76, dur: 0.68, delay: 0 },
+    { rMax: cs * 0.60, dur: 0.60, delay: 0.12 },
+    { rMax: cs * 0.44, dur: 0.52, delay: 0.24 },
+  ];
+  const drops = [];
+  if (!RM) {
+    const cols = ['#9fe3ea', '#3d95cf', '#7cc4f0', '#ffffff', '#2fa3b6', '#e2f7ff'];
+    const count = 10;
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
+      const sp = cs * (0.8 + Math.random() * 1.3);
+      drops.push({
+        dx: 0, dy: 0,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp * 0.8 - cs * 0.65,
+        r: cs * (0.024 + Math.random() * 0.018),
+        life: 0.52 + Math.random() * 0.22,
+        t: 0,
+        col: cols[i % cols.length],
+      });
+    }
+  }
+  ripples.push({ cell, rings, drops, t: 0, dur: 0.88 });
+}
+function drawRipples(dt) {
+  if (!ripples.length) return;
+  const s = dt / 1000;
+  ripples = ripples.filter((rp) => rp.t < rp.dur);
+  for (const rp of ripples) {
+    rp.t += s;
+    const cx = ox + (rp.cell % N) * cs + cs / 2;
+    const cy = oy + ((rp.cell / N) | 0) * cs + cs / 2;
+    // Radial water shimmer glow at the village
+    const glowProgress = Math.min(1, rp.t / 0.45);
+    const glowAlpha = Math.max(0, (1 - glowProgress) * (RM ? 0.25 : 0.42));
+    if (glowAlpha > 0) {
+      const gl = ctx.createRadialGradient(cx, cy, 2, cx, cy, cs * 0.62);
+      gl.addColorStop(0, `rgba(159,227,234,${glowAlpha})`);
+      gl.addColorStop(0.5, `rgba(61,149,207,${glowAlpha * 0.35})`);
+      gl.addColorStop(1, 'rgba(61,149,207,0)');
+      ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(cx, cy, cs * 0.62, 0, 7); ctx.fill();
+    }
+    // Concentric expanding ripple rings
+    for (const rg of rp.rings) {
+      if (rp.t < rg.delay) continue;
+      const u = Math.min(1, (rp.t - rg.delay) / rg.dur);
+      if (u >= 1) continue;
+      const ease = 1 - Math.pow(1 - u, 2.4);
+      const r = rg.rMax * ease;
+      const alpha = (1 - u) * 0.85;
+      ctx.save();
+      // Outer river blue ripple line
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7);
+      ctx.lineWidth = Math.max(1.2, cs * 0.036 * (1 - u * 0.6));
+      ctx.strokeStyle = `rgba(61,149,207,${alpha * 0.85})`; ctx.stroke();
+      // Inner crest highlight (bright water foam/sheen)
+      ctx.beginPath(); ctx.arc(cx, cy, Math.max(0, r - 1.2), 0, 7);
+      ctx.lineWidth = Math.max(0.8, cs * 0.02 * (1 - u));
+      ctx.strokeStyle = `rgba(226,247,255,${alpha * 0.95})`; ctx.stroke();
+      ctx.restore();
+    }
+    // Splash droplet particles (respects prefers-reduced-motion)
+    for (const d of rp.drops) {
+      d.t += s;
+      if (d.t >= d.life) continue;
+      const u = d.t / d.life;
+      d.vy += cs * 4.5 * s;
+      d.vx *= 0.96; d.vy *= 0.96;
+      d.dx += d.vx * s; d.dy += d.vy * s;
+      const alpha = Math.max(0, (1 - u) * 0.92);
+      const curR = Math.max(0.5, d.r * (1 - u * 0.35));
+      ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = d.col;
+      ctx.beginPath(); ctx.arc(cx + d.dx, cy + d.dy, curR, 0, 7); ctx.fill(); ctx.restore();
+    }
+  }
 }
 function burst(cell) {
   const cx = ox + (cell % N) * cs + cs / 2, cy = oy + ((cell / N) | 0) * cs + cs / 2;
@@ -1248,6 +1350,7 @@ window.fayHatti = {
   get bot() { return G.bot ? { strategy: G.bot.strategy, planned: G.bot.plan.length, played: G.bot.i } : null; },
   get genMs() { return G.genMs; }, get fps() { return fps; }, get plan() { return G.pz ? G.pz.solution.slice() : null; },
   get board() { if (!G.pz) return null; const v = toVals(G.pz, G.ids), out = []; for (let r = 0; r < N; r++) { const row = []; for (let c = 0; c < N; c++) { const x = v[r * N + c], k = x >> 4; row.push(k === KR ? 'r' + (x & 15).toString(16) : k === KD ? 'd' + (x & 15).toString(16) : GLYPH[k]); } out.push(row.join(' ')); } return out; },
+  get ripples() { return ripples.length; }, ripple: (cell) => spawnWaterRipple(cell),
   move: (m) => doMove(m), undo, restart, start: (mode, arg) => startPuzzle(mode, arg, false),
 };
 addEventListener('resize', layout);
