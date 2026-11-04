@@ -741,16 +741,16 @@ function audio() {
   } catch (e) { return null; }
 }
 function env(g, t0, a, peak, dec) { g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(peak, t0 + a); g.gain.exponentialRampToValueAtTime(0.0001, t0 + a + dec); }
-function noise(t0, dur, type, f0, f1, peak, q = 1) {
-  const s = AC.createBufferSource(); s.buffer = noiseBuf;
+function noise(t0, dur, type, f0, f1, peak, q = 1, att = 0.01) {
+  const s = AC.createBufferSource(); s.buffer = noiseBuf; s.loop = true;
   const f = AC.createBiquadFilter(); f.type = type; f.Q.value = q; f.frequency.setValueAtTime(f0, t0); f.frequency.exponentialRampToValueAtTime(f1, t0 + dur);
-  const g = AC.createGain(); env(g, t0, 0.01, peak, dur);
-  s.connect(f); f.connect(g); g.connect(master); s.start(t0, Math.random() * 0.5); s.stop(t0 + dur + 0.05);
+  const g = AC.createGain(); env(g, t0, att, peak, dur);
+  s.connect(f); f.connect(g); g.connect(master); s.start(t0, Math.random() * 0.5); s.stop(t0 + att + dur + 0.05);
 }
-function tone(t0, freq, dur, type, peak, f1) {
+function tone(t0, freq, dur, type, peak, f1, att = 0.005) {
   const o = AC.createOscillator(); o.type = type; o.frequency.setValueAtTime(freq, t0); if (f1) o.frequency.exponentialRampToValueAtTime(f1, t0 + dur);
-  const g = AC.createGain(); env(g, t0, 0.005, peak, dur);
-  o.connect(g); g.connect(master); o.start(t0); o.stop(t0 + dur + 0.05);
+  const g = AC.createGain(); env(g, t0, att, peak, dur);
+  o.connect(g); g.connect(master); o.start(t0); o.stop(t0 + att + dur + 0.05);
 }
 function pluck(t0, freq, peak) {
   const o = AC.createOscillator(); o.type = 'sawtooth'; o.frequency.value = freq;
@@ -760,11 +760,36 @@ function pluck(t0, freq, peak) {
 }
 const sfx = {
   slide() { if (!audio()) return; const t0 = AC.currentTime; noise(t0, 0.13, 'bandpass', 1400, 500, 0.22, 1.2); tone(t0 + 0.1, 180, 0.06, 'triangle', 0.12); },
-  quake() { if (!audio()) return; const t0 = AC.currentTime; noise(t0, 0.7, 'lowpass', 220, 60, 0.75, 0.8); tone(t0, 52, 0.6, 'sine', 0.45, 34); noise(t0 + 0.12, 0.25, 'bandpass', 600, 300, 0.12, 2); },
+  // Audio Polish: Tectonic quake rumble with virtual-bass harmonics and rock-fracture crunch
+  quake() {
+    if (!audio()) return;
+    const t0 = AC.currentTime;
+    const dur = RM ? 0.28 : 0.65;
+    const hitDelay = RM ? 0.05 : 0.15;
+    // Subterranean rolling bass: detuned 54Hz/47Hz waves yield a ~7Hz rolling acoustic beat
+    // Triangle wave provides odd harmonics (162Hz/270Hz) for full depth on phone speakers
+    tone(t0, 54, dur, 'triangle', 0.38, 36);
+    tone(t0, 47, dur * 0.85, 'sine', 0.28, 30);
+    // Deep ground roar: lowpass filtered noise floor
+    noise(t0, dur, 'lowpass', 180, 55, 0.44, 0.9);
+    // Tectonic rupture snap & rock friction grind (synced to the fault displacement & screen shake)
+    noise(t0 + hitDelay, RM ? 0.14 : 0.24, 'bandpass', 480, 160, 0.32, 1.4, 0.004);
+    // Sub-bass rupture impact thud
+    tone(t0 + hitDelay, 95, RM ? 0.1 : 0.16, 'sine', 0.28, 36, 0.003);
+  },
   ping(i) { if (!audio()) return; const t0 = AC.currentTime, f = [587.3, 740, 880, 1174.7][i % 4]; tone(t0, f, 0.5, 'sine', 0.2); tone(t0, f * 2.01, 0.25, 'sine', 0.06); },
   // Hicaz-flavoured run on D: D Eb F# G A D
   win() { if (!audio()) return; const t0 = AC.currentTime; [293.7, 311.1, 370, 392, 440, 587.3].forEach((f, i) => pluck(t0 + i * 0.09, f, 0.16)); tone(t0 + 0.55, 587.3, 1.2, 'sine', 0.12); tone(t0 + 0.55, 880, 1.2, 'sine', 0.07); },
-  click() { if (!audio()) return; tone(AC.currentTime, 900, 0.04, 'square', 0.04); },
+  // Audio Polish: Tactile ceramic/stone mechanical click (crisp snap transient + warm resonant clack)
+  click(style) {
+    if (!audio()) return;
+    const t0 = AC.currentTime;
+    const soft = style === 'soft';
+    // Crisp transient snap: 2.4-3.6 kHz bandpass impulse for immediate tactile finger feel
+    noise(t0, soft ? 0.012 : 0.016, 'bandpass', soft ? 3600 : 3000, 2400, soft ? 0.05 : 0.09, 2.5, 0.002);
+    // Resonant body clack: fast downward pitch sweep evoking terracotta/stone game tiles
+    tone(t0, soft ? 420 : 340, soft ? 0.022 : 0.032, 'triangle', soft ? 0.09 : 0.16, soft ? 210 : 160, 0.001);
+  },
   undo() { if (!audio()) return; noise(AC.currentTime, 0.1, 'bandpass', 500, 1300, 0.16, 1.2); },
   verified() { if (!audio()) return; const t0 = AC.currentTime; tone(t0, 587.3, 0.35, 'sine', 0.16); tone(t0 + 0.12, 880, 0.5, 'sine', 0.22); pluck(t0 + 0.12, 880, 0.12); },
 };
@@ -1534,8 +1559,8 @@ addEventListener('keydown', (e) => {
   const k = e.key.toLowerCase();
   if (cursor < 0 && /^(w|a|s|d|arrow)/.test(k)) cursor = 12;
   const r = (cursor / N) | 0, c = cursor % N;
-  if (k === 'a' || k === 'd') { cursor = r * N + ((c + (k === 'd' ? 1 : -1) + N) % N); e.preventDefault(); return; }
-  if (k === 'w' || k === 's') { cursor = ((r + (k === 's' ? 1 : -1) + N) % N) * N + c; e.preventDefault(); return; }
+  if (k === 'a' || k === 'd') { cursor = r * N + ((c + (k === 'd' ? 1 : -1) + N) % N); sfx.click('soft'); e.preventDefault(); return; }
+  if (k === 'w' || k === 's') { cursor = ((r + (k === 's' ? 1 : -1) + N) % N) * N + c; sfx.click('soft'); e.preventDefault(); return; }
   const am = { arrowright: r * 2, arrowleft: r * 2 + 1, arrowdown: (N + c) * 2, arrowup: (N + c) * 2 + 1 }[k];
   if (am != null) { doMove(am); e.preventDefault(); return; }
   if (k === 'z' || k === 'backspace') { undo(); e.preventDefault(); }
@@ -1598,6 +1623,7 @@ function openHelp() {
   $('help').classList.add('on'); if (!COARSE) setTimeout(() => $('bHelpOk').focus(), 30);
 }
 function closeHelp() {
+  sfx.click();
   trackEvent('help_close', { moves: G.moves });
   $('help').classList.remove('on');
   if (helpReturn === 'menu') openMenu();
@@ -1691,6 +1717,7 @@ function openVerify() {
   if (!COARSE) setTimeout(() => $('bVerifyClose').focus(), 30);
 }
 function closeVerify() {
+  sfx.click();
   $('verify').classList.remove('on');
   if (verifyReturn === 'menu') openMenu();
 }
@@ -1720,6 +1747,7 @@ function showResult() {
 let toastT = 0;
 function toast(msg) { const el = $('toast'); el.textContent = msg; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 1800); }
 async function share() {
+  sfx.click();
   trackEvent('share', { mode: G.mode, seed: G.seed, level: G.level, moves: G.moves, stars: G.stars });
   const text = shareText() + '\n' + shareUrl();
   if (navigator.share && matchMedia('(pointer:coarse)').matches) { try { await navigator.share({ text }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
@@ -1727,7 +1755,7 @@ async function share() {
   catch (e) { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); toast(t('copied')); } catch (e2) {} ta.remove(); }
 }
 function toggleMute() { muted = !muted; store.set('mute', muted); if (AC) master.gain.value = muted ? 0 : 0.55; updateHud(); fillMenu(); if (!muted) sfx.click(); }
-function toggleLang() { lang = lang === 'tr' ? 'en' : 'tr'; store.set('lang', lang); updateHud(); fillMenu(); if ($('result').classList.contains('on')) showResult(); if ($('help').classList.contains('on')) { const r = helpReturn; openHelp(); helpReturn = r; } if ($('verify').classList.contains('on')) { const r = verifyReturn; openVerify(); verifyReturn = r; } if (tutActive) setTutStep(tutStep); }
+function toggleLang() { sfx.click(); lang = lang === 'tr' ? 'en' : 'tr'; store.set('lang', lang); updateHud(); fillMenu(); if ($('result').classList.contains('on')) showResult(); if ($('help').classList.contains('on')) { const r = helpReturn; openHelp(); helpReturn = r; } if ($('verify').classList.contains('on')) { const r = verifyReturn; openVerify(); verifyReturn = r; } if (tutActive) setTutStep(tutStep); }
 
 $('bUndo').onclick = undo; $('bRestart').onclick = restart; $('bMenu').onclick = () => { sfx.click(); openMenu(); };
 $('bSound').onclick = toggleMute; $('mSound').onclick = toggleMute; $('mHaptic').onclick = toggleHaptic; $('bLang').onclick = toggleLang; $('mLang').onclick = toggleLang;
@@ -1795,7 +1823,7 @@ window.fayHatti = {
   track: (name, data) => trackEvent(name, data),
   get dropOffReport() { return getDropOffReport(); },
   tutorial: { get step() { return tutStep; }, get active() { return tutActive; }, show: (s) => showTut(s || 1), hide: () => hideTut(true), next: () => setTutStep(tutStep + 1), prev: () => setTutStep(tutStep - 1) },
-  move: (m) => doMove(m), undo, restart, start: (mode, arg) => startPuzzle(mode, arg, false),
+  move: (m) => doMove(m), undo, restart, start: (mode, arg) => startPuzzle(mode, arg, false), sfx,
 };
 document.addEventListener('visibilitychange', () => {
   trackEvent(document.hidden ? 'session_hide' : 'session_show', {

@@ -9,3 +9,4 @@ One line per day: date, the one visible change, and any measured number (for exa
 - 2026-11-04: Ported seed-integrity card as always-on verification: 32/32 daily seeds verified solvable through Dec 31, interactive seal report dialog, re-verify runner, and window.fayHatti.integrity API.
 - 2026-11-04: Ported analytics-hooks card as always-on telemetry: 10 event types (session, puzzle, moves, quakes, solves, drop-off), CustomEvent dispatching, ring buffer (200), and window.fayHatti telemetry API.
 - 2026-11-04: Ported tutorial card as always-on interactive onboarding: 3-step dynamic parchment tooltip (shifts, quake, village needs), canvas highlighting, Help replay button, and window.fayHatti tutorial API.
+- 2026-11-04: Ported audio-polish card as always-on sound synthesis: ceramic tile mechanical clicks with soft cursor navigation, tectonic quake rumble with virtual-bass harmonics, and window.fayHatti.sfx API.
