@@ -49,6 +49,9 @@ button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 .btn:hover{background:#b9472c}
 .btn.alt{background:#e6d3a8;color:var(--paper-ink);box-shadow:inset 0 0 0 1px #b8935a}
 .btn.alt:hover{background:#ecdcb6}
+.btn.marathon{background:#23404d;color:#f3ead8;box-shadow:inset 0 0 0 1px #466778,0 4px 12px rgba(14,22,27,.35)}
+.btn.marathon:hover{background:#2a4c5c}
+.btn.marathon small{color:#b6d2df}
 .row{display:flex;gap:8px}.row .btn{text-align:center}
 .mini{display:flex;gap:8px;margin-top:10px}
 .mini button{flex:1;min-height:44px;border-radius:10px;border:1px solid #b8935a;background:transparent;color:var(--paper-ink);font-size:15px}
@@ -104,6 +107,7 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
     <p class="sub" id="mSub"></p>
     <button class="btn" id="bDaily"></button>
     <button class="btn" id="bEndless"></button>
+    <button class="btn marathon" id="bMarathon"></button>
     <button class="btn alt" id="bHow"></button>
     <div class="mini"><button id="mLang"></button><button id="mSound"></button></div>
   </div>
@@ -547,6 +551,7 @@ const STR = {
     quakeNext: 'Next quake: row {r} {a}', calm: 'The ground is calm', loading: 'Drawing the map…', solvedT: 'Connected!',
     resLine: '{m} moves · par {p}', share: 'Share result', next: 'Next level', toEndless: 'Play endless', back: 'Menu',
     copied: 'Copied to clipboard', tomorrow: 'A new map tomorrow.', endlessNote: 'Level {n} done.', movesWord: 'moves',
+    marathon: 'Endless Marathon', marathonTag: 'Marathon · {d} · Stage {s}', marathonStageDone: 'Stage {s} cleared in today’s marathon!', nextStage: 'Next stage',
     gotIt: 'Got it', solvedOn: 'Solved', playTag: 'same map for everyone', board: 'Puzzle board',
     h1: 'Drag a row sideways or a column up or down (or tap the arrows). Tiles wrap around the edge.',
     h2: 'Villages, mountains, the spring and the caravanserai never move: tiles slide past them.',
@@ -562,6 +567,7 @@ const STR = {
     quakeNext: 'Sıradaki deprem: {r}. satır {a}', calm: 'Yer sakin', loading: 'Harita çiziliyor…', solvedT: 'Bağlandı!',
     resLine: '{m} hamle · hedef {p}', share: 'Sonucu paylaş', next: 'Sonraki bölüm', toEndless: 'Sonsuz moda geç', back: 'Menü',
     copied: 'Panoya kopyalandı', tomorrow: 'Yarın yeni bir harita.', endlessNote: '{n}. bölüm tamam.', movesWord: 'hamle',
+    marathon: 'Sonsuz Maraton', marathonTag: 'Maraton · {d} · {s}. Aşama', marathonStageDone: 'Günün maratonunda {s}. aşama tamamlandı!', nextStage: 'Sonraki aşama',
     gotIt: 'Anladım', solvedOn: 'Çözüldü', playTag: 'herkes için aynı harita', board: 'Bulmaca tahtası',
     h1: 'Bir satırı yana, bir sütunu yukarı ya da aşağı sürükle (ya da oklara dokun). Taşlar kenardan dolanır.',
     h2: 'Köyler, dağlar, pınar ve kervansaray yerinden oynamaz: taşlar onların yanından kayar.',
@@ -627,27 +633,42 @@ const sfx = {
   ping(i) { if (!audio()) return; const t0 = AC.currentTime, f = [587.3, 740, 880, 1174.7][i % 4]; tone(t0, f, 0.5, 'sine', 0.2); tone(t0, f * 2.01, 0.25, 'sine', 0.06); },
   // Hicaz-flavoured run on D: D Eb F# G A D
   win() { if (!audio()) return; const t0 = AC.currentTime; [293.7, 311.1, 370, 392, 440, 587.3].forEach((f, i) => pluck(t0 + i * 0.09, f, 0.16)); tone(t0 + 0.55, 587.3, 1.2, 'sine', 0.12); tone(t0 + 0.55, 880, 1.2, 'sine', 0.07); },
+  marathon() { if (!audio()) return; const t0 = AC.currentTime; [293.7, 367, 440, 587.3, 734.2].forEach((f, i) => pluck(t0 + i * 0.08, f, 0.18)); tone(t0 + 0.42, 587.3, 0.8, 'sine', 0.12, 880); },
   click() { if (!audio()) return; tone(AC.currentTime, 900, 0.04, 'square', 0.04); },
   undo() { if (!audio()) return; noise(AC.currentTime, 0.1, 'bandpass', 500, 1300, 0.16, 1.2); },
 };
 
 // ---------------------------------------------------------------- game state
-const G = { mode: 'daily', seed: '', level: 1, pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], bot: null, celebrateAt: 0, place: '' };
+const G = { mode: 'daily', seed: '', level: 1, marathonStage: 1, marathonDate: '', pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], bot: null, celebrateAt: 0, place: '' };
 let anims = [], shake = 0, particles = [], botTimer = 0, disp = null;
 
 function starsFor(moves, par) { return moves <= par ? 3 : moves <= par + 2 ? 2 : 1; }
 function nextQuake() { return G.pz && !G.won ? G.pz.quakes[G.moves % G.pz.quakes.length] : -1; }
 
-function startPuzzle(mode, arg, firstHelp = true) {
+function startPuzzle(mode, arg, opt = true) {
   clearTimeout(botTimer); G.bot = null;
+  const firstHelp = typeof opt === 'boolean' ? opt : true;
   G.mode = mode; G.state = 'loading'; G.pz = null; disp = null; anims = []; particles = []; closeAll();
-  if (mode === 'daily') G.seed = String(arg); else { G.level = arg; G.seed = 'L' + arg; }
+  if (mode === 'daily') {
+    G.seed = String(arg);
+  } else if (mode === 'marathon') {
+    // Endless Marathon: Stage progression seeded by date
+    G.marathonStage = Math.max(1, parseInt(arg, 10) || 1);
+    G.marathonDate = typeof opt === 'string' ? opt : todaySeed();
+    G.seed = 'M' + G.marathonDate + '-' + G.marathonStage;
+  } else {
+    G.level = arg; G.seed = 'L' + arg;
+  }
   updateHud();
   setTimeout(() => {
     const t0 = performance.now();
     let seed, cfg;
     if (mode === 'daily') { seed = /^\d+$/.test(G.seed) ? +G.seed : hashStr(G.seed); cfg = dailyConfig(G.seed); }
-    else { seed = hashStr('endless' + arg); cfg = endlessConfig(arg); }
+    else if (mode === 'marathon') {
+      // Endless Marathon: daily seed per stage using endlessConfig progression for hardcore challenge
+      seed = hashStr('marathon_' + G.marathonDate + '_' + G.marathonStage);
+      cfg = endlessConfig(G.marathonStage);
+    } else { seed = hashStr('endless' + arg); cfg = endlessConfig(arg); }
     let pz = null;
     for (let k = 0; !pz && k < 5; k++) pz = makePuzzle(seed + k * 7919, cfg);
     G.genMs = Math.round(performance.now() - t0);
@@ -700,9 +721,10 @@ function win() {
   const pz = G.pz;
   G.state = 'won';
   if (G.mode === 'daily') { if (!store.get('daily.' + G.seed, null)) store.set('daily.' + G.seed, { m: G.moves, s: G.stars }); }
+  else if (G.mode === 'marathon') store.set('marathon.' + G.marathonDate, Math.max(store.get('marathon.' + G.marathonDate, 1), G.marathonStage + 1));
   else store.set('endless', Math.max(store.get('endless', 1), G.level + 1));
   G.celebrateAt = performance.now();
-  sfx.win();
+  if (G.mode === 'marathon') sfx.marathon(); else sfx.win();
   if (!RM) for (const v of pz.villages) burst(v.cell);
   setTimeout(showResult, AUTO || RM ? 500 : 1400);
   $('live').textContent = t('solvedT') + ' ' + t('resLine', { m: G.moves, p: pz.par });
@@ -896,6 +918,16 @@ function buildCaches() {
   x.restore();
   x.lineWidth = 2; x.strokeStyle = '#9f7742'; rr(x, 1, 1, S - 2, S - 2, pad * 0.9); x.stroke();
   x.lineWidth = 1; x.strokeStyle = 'rgba(120,85,45,.5)'; rr(x, pad * 0.42, pad * 0.42, S - pad * 0.84, S - pad * 0.84, pad * 0.5); x.stroke();
+  // Endless Marathon: Seljuk geometric rosette watermark drawn in code on parchment
+  if (G.mode === 'marathon') {
+    x.save();
+    const mx = pad * 0.45, my = pad * 0.45, mr = Math.max(6, pad * 0.35);
+    x.translate(mx, my);
+    x.strokeStyle = 'rgba(120,68,28,.45)'; x.lineWidth = 1.2;
+    for (let rot = 0; rot < 2; rot++) { x.strokeRect(-mr, -mr, mr * 2, mr * 2); x.rotate(Math.PI / 4); }
+    x.beginPath(); x.arc(0, 0, mr * 0.45, 0, 7); x.fillStyle = 'rgba(166,63,39,.35)'; x.fill(); x.stroke();
+    x.restore();
+  }
   for (let i = 0; i < NN; i++) {
     const X = pad + (i % N) * cs, Y = pad + ((i / N) | 0) * cs;
     x.fillStyle = 'rgba(105,72,34,.13)'; rr(x, X + 2, Y + 2, cs - 4, cs - 4, cs * 0.14); x.fill();
@@ -1147,7 +1179,12 @@ addEventListener('keydown', (e) => {
 
 // ---------------------------------------------------------------- UI
 function updateHud() {
-  $('tMode').textContent = G.mode === 'daily' ? t('dailyTag', { d: seedLabel(G.seed) }) + (G.place && G.pz ? ' · ' + G.place : '') : t('endless') + ' · ' + t('level', { n: G.level });
+  const modeLabel = G.mode === 'daily'
+    ? t('dailyTag', { d: seedLabel(G.seed) }) + (G.place && G.pz ? ' · ' + G.place : '')
+    : G.mode === 'marathon'
+    ? t('marathonTag', { d: seedLabel(G.marathonDate), s: G.marathonStage }) + (G.place && G.pz ? ' · ' + G.place : '')
+    : t('endless') + ' · ' + t('level', { n: G.level });
+  $('tMode').textContent = modeLabel;
   $('lMoves').textContent = t('moves'); $('lPar').textContent = t('par');
   $('vMoves').textContent = G.moves; $('vPar').textContent = G.pz ? G.pz.par : '–';
   const st = G.pz ? (G.won ? G.stars : starsFor(G.moves, G.pz.par)) : 0;
@@ -1172,6 +1209,8 @@ function fillMenu() {
   const ds = todaySeed(), done = store.get('daily.' + ds, null);
   $('bDaily').innerHTML = `${t('daily')}<small>${seedLabel(ds)} · ${done ? t('solvedOn') + ' ' + '★'.repeat(done.s) + ' ' + done.m + ' ' + t('movesWord') : t('playTag')}</small>`;
   $('bEndless').innerHTML = `${t('endless')}<small>${t('level', { n: store.get('endless', 1) })}</small>`;
+  const mStage = store.get('marathon.' + ds, 1);
+  $('bMarathon').innerHTML = `${t('marathon')}<small>${t('marathonTag', { d: seedLabel(ds), s: mStage })}</small>`;
   $('bHow').textContent = t('how');
   $('mLang').textContent = lang === 'tr' ? 'English' : 'Türkçe';
   $('mSound').textContent = t('sound') + ': ' + (muted ? t('off') : t('on'));
@@ -1189,8 +1228,14 @@ function openHelp() {
   $('help').classList.add('on'); if (!COARSE) setTimeout(() => $('bHelpOk').focus(), 30);
 }
 function closeHelp() { $('help').classList.remove('on'); if (helpReturn === 'menu') openMenu(); }
-function shareText() { return `Fay Hattı ${G.mode === 'daily' ? seedLabel(G.seed) : '#' + G.level} ${'⭐'.repeat(G.stars)} ${G.moves} ${t('movesWord')}`; }
-function shareUrl() { return CANON + (G.mode === 'daily' ? '?seed=' + G.seed : '?level=' + G.level); }
+function shareText() {
+  if (G.mode === 'marathon') return `Fay Hattı ${t('marathon')} ${seedLabel(G.marathonDate)} #${G.marathonStage} ${'⭐'.repeat(G.stars)} ${G.moves} ${t('movesWord')}`;
+  return `Fay Hattı ${G.mode === 'daily' ? seedLabel(G.seed) : '#' + G.level} ${'⭐'.repeat(G.stars)} ${G.moves} ${t('movesWord')}`;
+}
+function shareUrl() {
+  if (G.mode === 'marathon') return CANON + '?marathon=' + G.marathonDate;
+  return CANON + (G.mode === 'daily' ? '?seed=' + G.seed : '?level=' + G.level);
+}
 function showResult() {
   if (!G.won) return;
   closeAll();
@@ -1199,9 +1244,9 @@ function showResult() {
   $('rLine').textContent = t('resLine', { m: G.moves, p: G.pz.par });
   $('rShare').textContent = shareText() + '\n' + shareUrl();
   $('bShare').textContent = t('share');
-  $('bNext').textContent = G.mode === 'daily' ? t('toEndless') : t('next');
+  $('bNext').textContent = G.mode === 'marathon' ? t('nextStage') : G.mode === 'daily' ? t('toEndless') : t('next');
   $('bRMenu').textContent = t('back');
-  $('rNote').textContent = G.mode === 'daily' ? t('tomorrow') : t('endlessNote', { n: G.level });
+  $('rNote').textContent = G.mode === 'marathon' ? t('marathonStageDone', { s: G.marathonStage }) : G.mode === 'daily' ? t('tomorrow') : t('endlessNote', { n: G.level });
   $('result').classList.add('on');
   if (!BOT && !COARSE) setTimeout(() => $('bShare').focus(), 30);
 }
@@ -1224,10 +1269,16 @@ $('bDaily').onclick = () => {
   else startPuzzle('daily', todaySeed());
 };
 $('bEndless').onclick = () => { sfx.click(); startPuzzle('endless', store.get('endless', 1)); };
+$('bMarathon').onclick = () => { sfx.click(); startPuzzle('marathon', store.get('marathon.' + todaySeed(), 1)); };
 $('bHow').onclick = () => { sfx.click(); openHelp(); };
 $('bHelpOk').onclick = closeHelp;
 $('bShare').onclick = share;
-$('bNext').onclick = () => { sfx.click(); startPuzzle('endless', G.mode === 'daily' ? store.get('endless', 1) : G.level + 1); };
+$('bNext').onclick = () => {
+  sfx.click();
+  if (G.mode === 'marathon') startPuzzle('marathon', G.marathonStage + 1, G.marathonDate);
+  else if (G.mode === 'daily') startPuzzle('endless', store.get('endless', 1));
+  else startPuzzle('endless', G.level + 1);
+};
 $('bRMenu').onclick = () => { sfx.click(); openMenu(); };
 document.querySelectorAll('.ov').forEach((o) => o.addEventListener('click', (e) => { if (e.target === o && o.id !== 'menu') { if (o.id === 'help') closeHelp(); else o.classList.remove('on'); } }));
 
@@ -1244,20 +1295,27 @@ const GLYPH = { 0: '..', 3: 'VV', 4: 'SS', 5: 'HH', 6: 'MM' };
 window.fayHatti = {
   get seed() { return G.seed; }, get moves() { return G.moves; }, get solved() { return G.won; }, get state() { return G.state; },
   get mode() { return G.mode; }, get level() { return G.level; }, get par() { return G.pz ? G.pz.par : null; }, get stars() { return G.stars; },
+  get marathon() { return G.mode === 'marathon' ? { date: G.marathonDate, stage: G.marathonStage } : null; },
+  get marathonStage() { return G.mode === 'marathon' ? G.marathonStage : null; },
   get nextQuake() { const q = nextQuake(); return q < 0 ? null : { row: q >> 1, dir: moveDir(q) }; },
   get bot() { return G.bot ? { strategy: G.bot.strategy, planned: G.bot.plan.length, played: G.bot.i } : null; },
   get genMs() { return G.genMs; }, get fps() { return fps; }, get plan() { return G.pz ? G.pz.solution.slice() : null; },
   get board() { if (!G.pz) return null; const v = toVals(G.pz, G.ids), out = []; for (let r = 0; r < N; r++) { const row = []; for (let c = 0; c < N; c++) { const x = v[r * N + c], k = x >> 4; row.push(k === KR ? 'r' + (x & 15).toString(16) : k === KD ? 'd' + (x & 15).toString(16) : GLYPH[k]); } out.push(row.join(' ')); } return out; },
-  move: (m) => doMove(m), undo, restart, start: (mode, arg) => startPuzzle(mode, arg, false),
+  move: (m) => doMove(m), undo, restart, start: (mode, arg, opt) => startPuzzle(mode, arg, opt ?? false),
 };
 addEventListener('resize', layout);
 layout();
 updateHud();
 requestAnimationFrame(frame);
 {
-  const seedQ = (QS.get('seed') || '').replace(/-/g, ''), levelQ = parseInt(QS.get('level'), 10);
+  const seedQ = (QS.get('seed') || '').replace(/-/g, ''), levelQ = parseInt(QS.get('level'), 10), marathonQ = QS.get('marathon');
   if (levelQ > 0) startPuzzle('endless', levelQ);
   else if (seedQ && /^\w{1,24}$/.test(seedQ)) startPuzzle('daily', seedQ);
+  else if (marathonQ != null) {
+    const md = /^\d{8}$/.test(marathonQ) ? marathonQ : todaySeed();
+    const stg = parseInt(QS.get('stage'), 10) || 1;
+    startPuzzle('marathon', stg, md);
+  }
   else if (BOT) startPuzzle('daily', todaySeed());
   else { startPuzzle('daily', todaySeed(), false); setTimeout(openMenu, 0); }
 }
