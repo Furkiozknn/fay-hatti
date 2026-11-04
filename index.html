@@ -11,6 +11,7 @@
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.4 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent}
 body{background:radial-gradient(120% 80% at 50% 0%,#2a3f49 0%,var(--bg) 60%)}
+body.biome-kapadokya{background:radial-gradient(120% 80% at 50% 0%,#35262c 0%,#1f161a 60%);--bg:#1f161a;--bg2:#2a1e24;--ink:#f6ede2;--ink2:#cdbdae;--paper:#f5ebd8;--paper-ink:#2d1e16;--terra:#b54c30;--gold:#e8a436;--quake:#e45838}
 button{font:inherit;color:inherit;cursor:pointer}
 button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 body.high-contrast{--bg:#081014;--bg2:#101a20;--ink:#ffffff;--ink2:#f5eedd;--paper:#ffffff;--paper-ink:#111111;--terra:#8a200a;--gold:#ffb703;--quake:#ff2a05;--focus:#00e5ff;background:#081014}
@@ -700,7 +701,7 @@ if (currentTheme !== 'gece' && currentTheme !== 'kagit') currentTheme = 'classic
 document.documentElement.dataset.theme = currentTheme;
 
 // --- Cards Registry ---
-// Cosmetic cards: theme-night + theme-paper (one branch, two cards)
+// Cosmetic cards: theme-night, theme-paper, region-kapadokya
 // Cosmetic cards apply in every mode (including daily) and never modify moves, par, stars or score.
 const CARDS = [
   {
@@ -727,6 +728,18 @@ const CARDS = [
     },
     apply: () => applyTheme('kagit'),
   },
+  {
+    id: 'region-kapadokya',
+    type: 'cosmetic',
+    implemented: true,
+    biome: 'kapadokya',
+    title: { en: 'Kapadokya Region', tr: 'Kapadokya Bölgesi' },
+    desc: {
+      en: 'Volcanic tuff landscape with fairy chimneys, rock-hewn cisterns, Seljuk caravanserai and cave dwellings.',
+      tr: 'Peri bacaları, kaya sarnıcı, Selçuklu kervansarayı ve kaya evleriyle volkanik tüf Kapadokya manzarası.'
+    },
+    apply: () => applyBiome('kapadokya'),
+  },
 ];
 const STR = {
   en: {
@@ -737,6 +750,7 @@ const STR = {
     resLine: '{m} moves · par {p}', share: 'Share result', next: 'Next level', toEndless: 'Play endless', back: 'Menu',
     copied: 'Copied to clipboard', tomorrow: 'A new map tomorrow.', endlessNote: 'Level {n} done.', movesWord: 'moves',
     gotIt: 'Got it', solvedOn: 'Solved', playTag: 'same map for everyone', board: 'Puzzle board',
+    biomeKapadokya: 'Cappadocia', biomeBozkir: 'Steppe',
     contrast: 'High contrast', contrastSub: 'Distinguish rivers from roads',
     theme: 'Theme', thClassic: 'Classic', thGece: 'Gece', thKagit: 'Kâğıt',
     h1: 'Drag a row sideways or a column up or down (or tap the arrows). Tiles wrap around the edge.',
@@ -763,6 +777,7 @@ const STR = {
     resLine: '{m} hamle · hedef {p}', share: 'Sonucu paylaş', next: 'Sonraki bölüm', toEndless: 'Sonsuz moda geç', back: 'Menü',
     copied: 'Panoya kopyalandı', tomorrow: 'Yarın yeni bir harita.', endlessNote: '{n}. bölüm tamam.', movesWord: 'hamle',
     gotIt: 'Anladım', solvedOn: 'Çözüldü', playTag: 'herkes için aynı harita', board: 'Bulmaca tahtası',
+    biomeKapadokya: 'Kapadokya', biomeBozkir: 'Bozkır',
     contrast: 'Yüksek kontrast', contrastSub: 'Nehir ve yolları belirginleştir',
     theme: 'Tema', thClassic: 'Klasik', thGece: 'Gece', thKagit: 'Kâğıt',
     h1: 'Bir satırı yana, bir sütunu yukarı ya da aşağı sürükle (ya da oklara dokun). Taşlar kenardan dolanır.',
@@ -817,6 +832,45 @@ try {
 const PLACES = ['Göreme', 'Assos', 'Safranbolu', 'Şirince', 'Uzungöl', 'Mardin', 'Beypazarı', 'Adatepe', 'Kayaköy', 'Taraklı',
   'Uçhisar', 'Mustafapaşa', 'Harput', 'Zelve', 'Avanos', 'Kemaliye', 'Sille', 'Trilye', 'Birgi', 'Eğirdir', 'Selçuk', 'Ahlat',
   'Mudurnu', 'Gerze', 'Tire', 'Hasankeyf', 'Ani', 'Midyat', 'Cumalıkızık', 'Ürgüp', 'Datça'];
+const CAPPADOCIA_PLACES = ['Göreme', 'Uçhisar', 'Avanos', 'Ürgüp', 'Zelve', 'Ortahisar', 'Mustafapaşa', 'Çavuşin', 'Ihlara', 'Derinkuyu'];
+
+// Regional biome rotation: Kapadokya debuts week of Nov 9-15 2026 (Nov 12). Alternates weekly.
+let biomeOverride = store.get('biome', null);
+function getBiome(mode, seed, level) {
+  if (biomeOverride) return biomeOverride;
+  const q = (QS.get('theme') || QS.get('biome') || '').toLowerCase();
+  if (q === 'kapadokya' || q === 'cappadocia') return 'kapadokya';
+  if (q === 'bozkir' || q === 'steppe') return 'bozkir';
+  if (mode === 'daily') {
+    const s = String(seed);
+    if (/^\d{8}$/.test(s)) {
+      const d = new Date(+s.slice(0, 4), +s.slice(4, 6) - 1, +s.slice(6, 8));
+      const t0 = new Date(2026, 10, 2).getTime(); // Launch week base (Nov 2, 2026)
+      const w = Math.floor((d.getTime() - t0) / (7 * 864e5));
+      return ((w % 2) + 2) % 2 === 1 ? 'kapadokya' : 'bozkir';
+    }
+    const sl = s.toLowerCase();
+    if (sl.includes('kapadokya') || sl.includes('cappadocia') || sl.includes('goreme') || sl.includes('urgup') || sl.includes('avanos')) return 'kapadokya';
+    return (hashStr('b' + s) % 2) === 1 ? 'kapadokya' : 'bozkir';
+  }
+  return Math.floor((level - 1) / 3) % 2 === 1 ? 'kapadokya' : 'bozkir';
+}
+function applyBiome(b, save = true) {
+  biomeOverride = (b === 'kapadokya' || b === 'bozkir') ? b : null;
+  if (save && !NOSAVE) {
+    if (biomeOverride) store.set('biome', biomeOverride);
+    else try { localStorage.removeItem('fayhatti.biome'); } catch (e) {}
+  }
+  G.biome = biomeOverride || getBiome(G.mode, G.seed, G.level);
+  document.body.classList.toggle('biome-kapadokya', G.biome === 'kapadokya' && currentTheme === 'classic');
+  const tc = $('metaThemeColor');
+  if (tc) tc.setAttribute('content', currentTheme === 'gece' ? '#0b111a' : currentTheme === 'kagit' ? '#2e2820' : (G.biome === 'kapadokya' ? '#1f161a' : '#1b2830'));
+  if (G.pz) {
+    G.place = G.biome === 'kapadokya' ? CAPPADOCIA_PLACES[hashStr('p' + G.seed) % CAPPADOCIA_PLACES.length] : PLACES[hashStr('p' + G.seed) % PLACES.length];
+    buildCaches();
+    updateHud();
+  }
+}
 
 const $ = (id) => document.getElementById(id);
 const todaySeed = () => { const d = new Date(); return String(d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()); };
@@ -860,27 +914,75 @@ function pluck(t0, freq, peak) {
   o.connect(f); f.connect(g); g.connect(master); o.start(t0); o.stop(t0 + 0.8);
 }
 const sfx = {
-  slide() { if (!audio()) return; const t0 = AC.currentTime; noise(t0, 0.13, 'bandpass', 1400, 500, 0.22, 1.2); tone(t0 + 0.1, 180, 0.06, 'triangle', 0.12); },
+  slide() {
+    if (!audio()) return; const t0 = AC.currentTime;
+    if (G.biome === 'kapadokya') {
+      noise(t0, 0.14, 'bandpass', 1100, 380, 0.24, 1.4);
+      tone(t0 + 0.09, 155, 0.07, 'triangle', 0.13);
+    } else {
+      noise(t0, 0.13, 'bandpass', 1400, 500, 0.22, 1.2);
+      tone(t0 + 0.1, 180, 0.06, 'triangle', 0.12);
+    }
+  },
   // Audio Polish: Tectonic quake rumble with virtual-bass harmonics and rock-fracture crunch
   quake() {
     if (!audio()) return;
     const t0 = AC.currentTime;
     const dur = RM ? 0.28 : 0.65;
     const hitDelay = RM ? 0.05 : 0.15;
-    // Subterranean rolling bass: detuned 54Hz/47Hz waves yield a ~7Hz rolling acoustic beat
-    // Triangle wave provides odd harmonics (162Hz/270Hz) for full depth on phone speakers
-    tone(t0, 54, dur, 'triangle', 0.38, 36);
-    tone(t0, 47, dur * 0.85, 'sine', 0.28, 30);
-    // Deep ground roar: lowpass filtered noise floor
-    noise(t0, dur, 'lowpass', 180, 55, 0.44, 0.9);
-    // Tectonic rupture snap & rock friction grind (synced to the fault displacement & screen shake)
-    noise(t0 + hitDelay, RM ? 0.14 : 0.24, 'bandpass', 480, 160, 0.32, 1.4, 0.004);
-    // Sub-bass rupture impact thud
-    tone(t0 + hitDelay, 95, RM ? 0.1 : 0.16, 'sine', 0.28, 36, 0.003);
+    if (G.biome === 'kapadokya') {
+      // Kapadokya volcanic rumble: deeper subterranean tones & volcanic tuff fracture
+      tone(t0, 48, dur, 'triangle', 0.42, 30);
+      tone(t0, 42, dur * 0.85, 'sine', 0.32, 26);
+      noise(t0, dur, 'lowpass', 160, 45, 0.48, 1.0);
+      noise(t0 + hitDelay, RM ? 0.15 : 0.26, 'bandpass', 420, 140, 0.34, 1.5, 0.004);
+      tone(t0 + hitDelay, 85, RM ? 0.1 : 0.16, 'sine', 0.3, 30, 0.003);
+    } else {
+      // Subterranean rolling bass: detuned 54Hz/47Hz waves yield a ~7Hz rolling acoustic beat
+      // Triangle wave provides odd harmonics (162Hz/270Hz) for full depth on phone speakers
+      tone(t0, 54, dur, 'triangle', 0.38, 36);
+      tone(t0, 47, dur * 0.85, 'sine', 0.28, 30);
+      // Deep ground roar: lowpass filtered noise floor
+      noise(t0, dur, 'lowpass', 180, 55, 0.44, 0.9);
+      // Tectonic rupture snap & rock friction grind (synced to the fault displacement & screen shake)
+      noise(t0 + hitDelay, RM ? 0.14 : 0.24, 'bandpass', 480, 160, 0.32, 1.4, 0.004);
+      // Sub-bass rupture impact thud
+      tone(t0 + hitDelay, 95, RM ? 0.1 : 0.16, 'sine', 0.28, 36, 0.003);
+    }
   },
-  ping(i) { if (!audio()) return; const t0 = AC.currentTime, f = [587.3, 740, 880, 1174.7][i % 4]; tone(t0, f, 0.5, 'sine', 0.2); tone(t0, f * 2.01, 0.25, 'sine', 0.06); },
-  // Hicaz-flavoured run on D: D Eb F# G A D
-  win() { if (!audio()) return; const t0 = AC.currentTime; [293.7, 311.1, 370, 392, 440, 587.3].forEach((f, i) => pluck(t0 + i * 0.09, f, 0.16)); tone(t0 + 0.55, 587.3, 1.2, 'sine', 0.12); tone(t0 + 0.55, 880, 1.2, 'sine', 0.07); },
+  ping(i) {
+    if (!audio()) return; const t0 = AC.currentTime;
+    if (G.biome === 'kapadokya') {
+      // Avanos terracotta ceramic chime
+      const f = [587.3, 698.5, 880, 1046.5][i % 4];
+      tone(t0, f, 0.45, 'triangle', 0.18);
+      tone(t0, f * 2.76, 0.18, 'sine', 0.06);
+      noise(t0, 0.03, 'highpass', 2400, 3600, 0.04, 2);
+    } else {
+      const f = [587.3, 740, 880, 1174.7][i % 4];
+      tone(t0, f, 0.5, 'sine', 0.2);
+      tone(t0, f * 2.01, 0.25, 'sine', 0.06);
+    }
+  },
+  // Cappadocia victory on Central Anatolian cadence or Steppe Hicaz-flavoured run on D
+  win() {
+    if (!audio()) return; const t0 = AC.currentTime;
+    if (G.biome === 'kapadokya') {
+      // Central Anatolian cadence on D with airy Ney breath
+      [293.7, 349.2, 392, 440, 523.3, 587.3].forEach((f, i) => {
+        pluck(t0 + i * 0.095, f, 0.16);
+        tone(t0 + i * 0.095 + 0.02, f, 0.2, 'sine', 0.05);
+      });
+      noise(t0, 0.7, 'bandpass', 850, 1150, 0.04, 3.5);
+      tone(t0 + 0.6, 587.3, 1.3, 'sine', 0.14);
+      tone(t0 + 0.6, 880, 1.1, 'sine', 0.07);
+    } else {
+      // Hicaz-flavoured run on D: D Eb F# G A D
+      [293.7, 311.1, 370, 392, 440, 587.3].forEach((f, i) => pluck(t0 + i * 0.09, f, 0.16));
+      tone(t0 + 0.55, 587.3, 1.2, 'sine', 0.12);
+      tone(t0 + 0.55, 880, 1.2, 'sine', 0.07);
+    }
+  },
   // Audio Polish: Tactile ceramic/stone mechanical click (crisp snap transient + warm resonant clack)
   click(style) {
     if (!audio()) return;
@@ -971,7 +1073,7 @@ function getDropOffReport() {
 }
 
 // ---------------------------------------------------------------- game state & dynamic tutorial
-const G = { mode: 'daily', seed: '', level: 1, pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], bot: null, celebrateAt: 0, place: '' };
+const G = { mode: 'daily', seed: '', level: 1, pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], bot: null, celebrateAt: 0, place: '', biome: 'bozkir' };
 let anims = [], shake = 0, particles = [], botTimer = 0, disp = null;
 
 // Dynamic tutorial tooltips (onboarding for first-time players on mobile/desktop)
@@ -1043,14 +1145,16 @@ function startPuzzle(mode, arg, firstHelp = true) {
     for (let k = 0; !pz && k < 5; k++) pz = makePuzzle(seed + k * 7919, cfg);
     G.genMs = Math.round(performance.now() - t0);
     G.pz = pz; G.ids = pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.sat = [];
-    G.place = PLACES[hashStr('p' + G.seed) % PLACES.length];
+    G.biome = biomeOverride || getBiome(mode, G.seed, G.level);
+    document.body.classList.toggle('biome-kapadokya', G.biome === 'kapadokya' && currentTheme === 'classic');
+    G.place = G.biome === 'kapadokya' ? CAPPADOCIA_PLACES[hashStr('p' + G.seed) % CAPPADOCIA_PLACES.length] : PLACES[hashStr('p' + G.seed) % PLACES.length];
     G.state = 'play';
     puzzleStartTime = performance.now();
     puzzleFirstMoveTime = 0;
     puzzleUndos = 0;
     totalStarted++;
     buildCaches(); settle(true); updateHud();
-    trackEvent('puzzle_start', { mode: G.mode, seed: G.seed, level: G.level, par: pz.par, K: pz.K, villages: pz.villages.length, place: G.place, bot: !!BOT });
+    trackEvent('puzzle_start', { mode: G.mode, seed: G.seed, level: G.level, biome: G.biome, par: pz.par, K: pz.K, villages: pz.villages.length, place: G.place, bot: !!BOT });
     if (BOT) startBot();
     else if (firstHelp && !NOSAVE && !store.get('help', false)) { store.set('help', true); openHelp(); }
     else if (!store.get('tutDone', false)) { showTut(1); }
@@ -1319,25 +1423,33 @@ function drawPlate(c, v, id) {
     }
   } else {
     // Classic default
-    c.fillStyle = 'rgba(70,42,18,.38)'; rr(c, ins, ins + s * 0.035, s - 2 * ins, s - 2 * ins, r); c.fill();
+    const isK = G.biome === 'kapadokya';
+    c.fillStyle = isK ? 'rgba(75,32,18,.36)' : 'rgba(70,42,18,.38)'; rr(c, ins, ins + s * 0.035, s - 2 * ins, s - 2 * ins, r); c.fill();
     const g = c.createLinearGradient(0, 0, 0, s);
-    g.addColorStop(0, '#f1e0b3'); g.addColorStop(1, '#d6bb83');
+    if (isK) { g.addColorStop(0, '#f6e4d4'); g.addColorStop(1, '#dcba9e'); }
+    else { g.addColorStop(0, '#f1e0b3'); g.addColorStop(1, '#d6bb83'); }
     c.fillStyle = g; rr(c, ins, ins, s - 2 * ins, s - 2 * ins - s * 0.02, r); c.fill();
-    c.strokeStyle = 'rgba(255,251,236,.7)'; c.lineWidth = 1.2; rr(c, ins + 1, ins + 1, s - 2 * ins - 2, s - 2 * ins - s * 0.02 - 2, r * 0.9); c.stroke();
+    c.strokeStyle = isK ? 'rgba(255,250,245,.75)' : 'rgba(255,251,236,.7)'; c.lineWidth = 1.2; rr(c, ins + 1, ins + 1, s - 2 * ins - 2, s - 2 * ins - s * 0.02 - 2, r * 0.9); c.stroke();
+    // terrain details travel with the tile
     for (let i = 0; i < 6; i++) {
       const x = s * (0.16 + R() * 0.68), y = s * (0.16 + R() * 0.64);
-      if (R() < 0.6) { c.strokeStyle = `rgba(${(110 + R() * 30) | 0},${(125 + R() * 25) | 0},60,.55)`; c.lineWidth = 1.2; c.beginPath(); c.moveTo(x - 2, y); c.lineTo(x, y - s * 0.05); c.lineTo(x + 2, y); c.stroke(); }
-      else { c.fillStyle = 'rgba(140,110,75,.35)'; c.beginPath(); c.ellipse(x, y, s * 0.02, s * 0.014, 0, 0, 7); c.fill(); }
+      if (isK) {
+        if (R() < 0.5) { c.strokeStyle = `rgba(${(140 + R() * 25) | 0},${(120 + R() * 20) | 0},75,.5)`; c.lineWidth = 1.2; c.beginPath(); c.moveTo(x - 2, y); c.lineTo(x, y - s * 0.04); c.lineTo(x + 2, y); c.stroke(); }
+        else { c.fillStyle = 'rgba(165,95,65,.35)'; c.beginPath(); c.ellipse(x, y, s * 0.022, s * 0.015, 0, 0, 7); c.fill(); }
+      } else {
+        if (R() < 0.6) { c.strokeStyle = `rgba(${(110 + R() * 30) | 0},${(125 + R() * 25) | 0},60,.55)`; c.lineWidth = 1.2; c.beginPath(); c.moveTo(x - 2, y); c.lineTo(x, y - s * 0.05); c.lineTo(x + 2, y); c.stroke(); }
+        else { c.fillStyle = 'rgba(140,110,75,.35)'; c.beginPath(); c.ellipse(x, y, s * 0.02, s * 0.014, 0, 0, 7); c.fill(); }
+      }
     }
     if (k === KR) {
-      strokePath(c, m, s, s * 0.44, 'rgba(105,140,62,.40)');
-      strokePath(c, m, s, s * 0.3, '#2a6c99');
-      strokePath(c, m, s, s * 0.22, '#3d95cf');
-      c.save(); c.translate(-s * 0.03, -s * 0.03); strokePath(c, m, s, s * 0.05, 'rgba(255,255,255,.22)'); c.restore();
+      strokePath(c, m, s, s * 0.44, isK ? 'rgba(185,92,62,.36)' : 'rgba(105,140,62,.40)');
+      strokePath(c, m, s, s * 0.3, isK ? '#226b96' : '#2a6c99');
+      strokePath(c, m, s, s * 0.22, isK ? '#3ca6d8' : '#3d95cf');
+      c.save(); c.translate(-s * 0.03, -s * 0.03); strokePath(c, m, s, s * 0.05, isK ? 'rgba(255,255,255,.24)' : 'rgba(255,255,255,.22)'); c.restore();
     } else if (k === KD) {
-      strokePath(c, m, s, s * 0.3, 'rgba(122,82,48,.32)');
-      strokePath(c, m, s, s * 0.21, '#c79a5e');
-      c.setLineDash([s * 0.07, s * 0.07]); strokePath(c, m, s, s * 0.03, 'rgba(248,234,200,.9)'); c.setLineDash([]);
+      strokePath(c, m, s, s * 0.3, isK ? 'rgba(150,85,50,.28)' : 'rgba(122,82,48,.32)');
+      strokePath(c, m, s, s * 0.21, isK ? '#caa16a' : '#c79a5e');
+      c.setLineDash([s * 0.07, s * 0.07]); strokePath(c, m, s, s * 0.03, isK ? 'rgba(255,246,228,.92)' : 'rgba(248,234,200,.9)'); c.setLineDash([]);
     }
   }
 }
@@ -1376,6 +1488,22 @@ function drawMountain(x, X, Y, s) {
     };
     peak(X + s * 0.66, s * 0.26, s * 0.46, '#86725e', '#5a4a3c');
     peak(X + s * 0.4, s * 0.32, s * 0.64, '#96816c', '#685646');
+  } else if (G.biome === 'kapadokya') {
+    // Kapadokya: Fairy chimneys (peri bacaları) with dark basalt caps & distant volcanic Erciyes
+    x.fillStyle = 'rgba(65,30,15,.22)'; x.beginPath(); x.ellipse(X + s / 2, Y + s * 0.82, s * 0.44, s * 0.1, 0, 0, 7); x.fill();
+    // Distant volcanic peak (Erciyes Dağı)
+    x.fillStyle = 'rgba(195,160,140,.55)'; x.beginPath(); x.moveTo(X + s * 0.1, Y + s * 0.82); x.lineTo(X + s * 0.48, Y + s * 0.38); x.lineTo(X + s * 0.86, Y + s * 0.82); x.closePath(); x.fill();
+    x.fillStyle = 'rgba(255,250,246,.75)'; x.beginPath(); x.moveTo(X + s * 0.48, Y + s * 0.38); x.lineTo(X + s * 0.42, Y + s * 0.48); x.lineTo(X + s * 0.48, Y + s * 0.45); x.lineTo(X + s * 0.54, Y + s * 0.48); x.closePath(); x.fill();
+    const base = Y + s * 0.82;
+    const chimney = (cx, topY, wBase, wNeck, capW, capH) => {
+      x.fillStyle = '#e4c8aa'; x.beginPath(); x.moveTo(cx - wBase, base); x.lineTo(cx - wNeck, topY); x.lineTo(cx, topY); x.lineTo(cx, base); x.closePath(); x.fill();
+      x.fillStyle = '#c49f7e'; x.beginPath(); x.moveTo(cx, topY); x.lineTo(cx + wNeck, topY); x.lineTo(cx + wBase, base); x.lineTo(cx, base); x.closePath(); x.fill();
+      x.fillStyle = '#422a1d'; x.beginPath(); x.arc(cx - wNeck * 0.3, base - (base - topY) * 0.45, s * 0.035, Math.PI, 0); x.lineTo(cx + wNeck * 0.2, base - (base - topY) * 0.35); x.lineTo(cx - wNeck * 0.7, base - (base - topY) * 0.35); x.closePath(); x.fill();
+      x.fillStyle = '#3c2e28'; x.beginPath(); x.ellipse(cx, topY - capH * 0.4, capW, capH, -0.05, 0, 7); x.fill();
+      x.fillStyle = '#5c4840'; x.beginPath(); x.ellipse(cx - capW * 0.2, topY - capH * 0.65, capW * 0.75, capH * 0.5, -0.05, 0, 7); x.fill();
+    };
+    chimney(X + s * 0.38, Y + s * 0.24, s * 0.19, s * 0.08, s * 0.12, s * 0.055);
+    chimney(X + s * 0.72, Y + s * 0.38, s * 0.15, s * 0.065, s * 0.095, s * 0.045);
   } else {
     x.fillStyle = 'rgba(70,45,25,.25)'; x.beginPath(); x.ellipse(X + s / 2, Y + s * 0.8, s * 0.42, s * 0.1, 0, 0, 7); x.fill();
     const base = Y + s * 0.82;
@@ -1419,6 +1547,17 @@ function drawSpring(x, X, Y, s) {
     x.fillStyle = '#269ab0'; x.beginPath(); x.arc(cx, cy, s * 0.23, 0, 7); x.fill();
     x.fillStyle = '#48c5d9'; x.beginPath(); x.arc(cx, cy, s * 0.16, 0, 7); x.fill();
     x.strokeStyle = 'rgba(255,255,255,.7)'; x.lineWidth = 1.2; x.beginPath(); x.arc(cx, cy, s * 0.09, 0.5, 2.5); x.stroke();
+  } else if (G.biome === 'kapadokya') {
+    // Kapadokya: Rock-hewn cistern & tuff fountain basin (Kaya Sarnıcı) with clay jugs
+    x.fillStyle = 'rgba(165,95,65,.32)'; x.beginPath(); x.arc(cx, cy, s * 0.37, 0, 7); x.fill();
+    x.fillStyle = '#d2ad8c'; x.beginPath(); x.arc(cx, cy, s * 0.3, 0, 7); x.fill();
+    x.strokeStyle = '#9c7352'; x.lineWidth = 1.3; x.stroke();
+    const g = x.createRadialGradient(cx - s * 0.05, cy - s * 0.05, 2, cx, cy, s * 0.24);
+    g.addColorStop(0, '#98eaf5'); g.addColorStop(1, '#208596');
+    x.fillStyle = g; x.beginPath(); x.arc(cx, cy, s * 0.23, 0, 7); x.fill();
+    x.strokeStyle = 'rgba(255,255,255,.6)'; x.lineWidth = 1.3; x.beginPath(); x.arc(cx, cy, s * 0.11, 0.4, 2.7); x.stroke();
+    x.fillStyle = '#c65636'; x.beginPath(); x.ellipse(cx - s * 0.25, cy + s * 0.18, s * 0.045, s * 0.06, -0.2, 0, 7); x.fill();
+    x.fillStyle = '#a64225'; x.fillRect(cx - s * 0.27, cy + s * 0.11, s * 0.04, s * 0.02);
   } else {
     x.fillStyle = 'rgba(105,140,62,.45)'; x.beginPath(); x.arc(cx, cy, s * 0.36, 0, 7); x.fill();
     x.fillStyle = '#1d6f7e'; x.beginPath(); x.arc(cx, cy, s * 0.27, 0, 7); x.fill();
@@ -1479,6 +1618,23 @@ function drawHan(x, X, Y, s) {
     x.fillStyle = '#3a2b1f';
     x.beginPath(); x.moveTo(gx, y0 + h); x.lineTo(gx, gy + gw / 2); x.arc(X + s / 2, gy + gw / 2, gw / 2, Math.PI, 0); x.lineTo(gx + gw, y0 + h); x.closePath(); x.fill();
     x.fillStyle = '#cf3f2a'; x.beginPath(); x.moveTo(x0 + w * 0.85, y0 - s * 0.06); x.lineTo(x0 + w * 0.85, y0 - s * 0.2); x.lineTo(x0 + w * 1.02, y0 - s * 0.16); x.lineTo(x0 + w * 0.85, y0 - s * 0.12); x.fill();
+  } else if (G.biome === 'kapadokya') {
+    // Kapadokya: Sarıhan style Seljuk caravanserai (two-tone yellow & red volcanic ashlar masonry)
+    x.fillStyle = 'rgba(65,30,15,.28)'; x.fillRect(x0 + 3, y0 + 4, w, h);
+    x.fillStyle = '#dfb877'; x.fillRect(x0, y0, w, h);
+    x.fillStyle = '#b85d43';
+    x.fillRect(x0, y0 + h * 0.25, w, h * 0.2);
+    x.fillRect(x0, y0 + h * 0.65, w, h * 0.2);
+    for (let i = 0; i < 5; i++) {
+      x.fillStyle = i % 2 ? '#b85d43' : '#dfb877';
+      x.fillRect(x0 + (i * w) / 4.5, y0 - s * 0.06, w / 9, s * 0.07);
+    }
+    const gw = w * 0.34, gx = X + s / 2 - gw / 2, gy = y0 + h * 0.44;
+    x.fillStyle = '#e8cca7'; x.fillRect(gx - s * 0.02, gy - s * 0.08, gw + s * 0.04, h - (gy - y0) + s * 0.08);
+    x.fillStyle = '#362118';
+    x.beginPath(); x.moveTo(gx, y0 + h); x.lineTo(gx, gy + gw * 0.3); x.lineTo(X + s / 2, gy - s * 0.04); x.lineTo(gx + gw, gy + gw * 0.3); x.lineTo(gx + gw, y0 + h); x.closePath(); x.fill();
+    x.strokeStyle = '#6f4a32'; x.lineWidth = 1.4; x.strokeRect(x0, y0, w, h);
+    x.fillStyle = '#c63d28'; x.beginPath(); x.moveTo(x0 + w * 0.85, y0 - s * 0.06); x.lineTo(x0 + w * 0.85, y0 - s * 0.2); x.lineTo(x0 + w * 1.03, y0 - s * 0.16); x.lineTo(x0 + w * 0.85, y0 - s * 0.12); x.fill();
   } else {
     x.fillStyle = 'rgba(60,40,20,.3)'; x.fillRect(x0 + 3, y0 + 4, w, h);
     x.fillStyle = '#b8a07a'; x.fillRect(x0, y0, w, h);
@@ -1548,6 +1704,30 @@ function drawVillage(x, X, Y, s, seed) {
     house(X + s * 0.34, Y + s * 0.62, s * 0.24, s * 0.18);
     house(X + s * 0.6, Y + s * 0.8, s * 0.26, s * 0.2);
     house(X + s * 0.28, Y + s * 0.86, s * 0.2, s * 0.15);
+  } else if (G.biome === 'kapadokya') {
+    // Kapadokya: Troglodyte cave dwellings (Kaya Evleri) with whitewashed niches & Avanos pottery
+    x.fillStyle = 'rgba(65,30,15,.22)'; x.beginPath(); x.ellipse(X + s / 2, Y + s * 0.66, s * 0.42, s * 0.26, 0, 0, 7); x.fill();
+    const caveTier = (cx, by, w, h, isTop) => {
+      x.fillStyle = 'rgba(60,35,20,.25)'; x.fillRect(cx - w / 2 + 2, by - h + 2, w, h);
+      x.fillStyle = isTop ? '#e8cca7' : '#ddba96'; x.fillRect(cx - w / 2, by - h, w, h);
+      x.fillStyle = '#caa17d'; x.fillRect(cx - w / 2 - s * 0.02, by - h - s * 0.025, w + s * 0.04, s * 0.035);
+      const dw = w * 0.32, dh = h * 0.62;
+      x.fillStyle = '#fff9f0';
+      x.beginPath(); x.arc(cx, by - dh + dw / 2, dw / 2 + 1.5, Math.PI, 0); x.lineTo(cx + dw / 2 + 1.5, by); x.lineTo(cx - dw / 2 - 1.5, by); x.closePath(); x.fill();
+      x.fillStyle = '#3c2419';
+      x.beginPath(); x.arc(cx, by - dh + dw / 2, dw / 2, Math.PI, 0); x.lineTo(cx + dw / 2, by); x.lineTo(cx - dw / 2, by); x.closePath(); x.fill();
+    };
+    caveTier(X + s * 0.48, Y + s * 0.54, s * 0.36, s * 0.22, true);
+    caveTier(X + s * 0.36, Y + s * 0.82, s * 0.38, s * 0.26, false);
+    for (let p = 0; p < 3; p++) {
+      const px = X + s * 0.72 + (p % 2) * s * 0.08, py = Y + s * 0.62 + Math.floor(p / 2) * s * 0.08;
+      x.fillStyle = 'rgba(255,250,240,.9)'; x.beginPath(); x.arc(px, py, s * 0.024, 0, 7); x.fill();
+      x.fillStyle = '#3c2419'; x.beginPath(); x.arc(px, py, s * 0.015, 0, 7); x.fill();
+    }
+    x.fillStyle = '#c65636'; x.beginPath(); x.ellipse(X + s * 0.6, Y + s * 0.8, s * 0.03, s * 0.04, 0, 0, 7); x.fill();
+    x.fillStyle = '#e27552'; x.fillRect(X + s * 0.585, Y + s * 0.75, s * 0.03, s * 0.016);
+    x.fillStyle = '#7a9443'; x.beginPath(); x.arc(X + s * (0.18 + R() * 0.05), Y + s * 0.66, s * 0.09, 0, 7); x.fill();
+    x.fillStyle = '#5c4228'; x.fillRect(X + s * 0.19, Y + s * 0.72, s * 0.022, s * 0.1);
   } else {
     x.fillStyle = 'rgba(105,140,62,.32)'; x.beginPath(); x.ellipse(X + s / 2, Y + s * 0.62, s * 0.4, s * 0.26, 0, 0, 7); x.fill();
     const house = (cx, by, w, h) => {
@@ -1637,23 +1817,29 @@ function buildCaches() {
       if (k === KM) drawMountain(x, X, Y, cs); else if (k === KS) drawSpring(x, X, Y, cs); else if (k === KH) drawHan(x, X, Y, cs); else if (k === KV) drawVillage(x, X, Y, cs, i * 31 + 5);
     }
   } else {
+    const isK = G.biome === 'kapadokya';
     const g = x.createLinearGradient(0, 0, S, S);
-    g.addColorStop(0, '#f0dfb3'); g.addColorStop(1, '#d8bf8b');
+    if (isK) { g.addColorStop(0, '#f4e3d0'); g.addColorStop(1, '#dbb598'); }
+    else { g.addColorStop(0, '#f0dfb3'); g.addColorStop(1, '#d8bf8b'); }
     rr(x, 0, 0, S, S, pad * 0.9); x.fillStyle = g; x.fill();
     x.save(); rr(x, 0, 0, S, S, pad * 0.9); x.clip();
-    for (let i = 0; i < (S * S) / 70; i++) { x.fillStyle = R() < 0.5 ? `rgba(120,84,40,${0.04 + R() * 0.07})` : `rgba(255,250,232,${0.06 + R() * 0.1})`; x.fillRect(R() * S, R() * S, 1 + R() * 1.6, 1 + R() * 1.6); }
-    x.strokeStyle = 'rgba(150,108,58,.2)'; x.lineWidth = 1;
-    for (let k = 0; k < 9; k++) {
+    for (let i = 0; i < (S * S) / 70; i++) {
+      if (isK) x.fillStyle = R() < 0.5 ? `rgba(155,80,50,${0.04 + R() * 0.07})` : `rgba(255,248,238,${0.06 + R() * 0.1})`;
+      else x.fillStyle = R() < 0.5 ? `rgba(120,84,40,${0.04 + R() * 0.07})` : `rgba(255,250,232,${0.06 + R() * 0.1})`;
+      x.fillRect(R() * S, R() * S, 1 + R() * 1.6, 1 + R() * 1.6);
+    }
+    x.strokeStyle = isK ? 'rgba(165,95,65,.22)' : 'rgba(150,108,58,.2)'; x.lineWidth = 1;
+    for (let k = 0; k < 9; k++) { // faint contour / valley strata lines
       x.beginPath(); const y0 = R() * S, f1 = 3 + R() * 4, f2 = 9 + R() * 6, p1 = R() * 6, p2 = R() * 6;
       for (let px = 0; px <= S; px += 6) { const y = y0 + Math.sin((px / S) * f1 + p1) * cs * 0.3 + Math.sin((px / S) * f2 + p2) * cs * 0.07; px ? x.lineTo(px, y) : x.moveTo(px, y); }
       x.stroke();
     }
     x.restore();
-    x.lineWidth = 2; x.strokeStyle = '#9f7742'; rr(x, 1, 1, S - 2, S - 2, pad * 0.9); x.stroke();
-    x.lineWidth = 1; x.strokeStyle = 'rgba(120,85,45,.5)'; rr(x, pad * 0.42, pad * 0.42, S - pad * 0.84, S - pad * 0.84, pad * 0.5); x.stroke();
+    x.lineWidth = 2; x.strokeStyle = isK ? '#a46342' : '#9f7742'; rr(x, 1, 1, S - 2, S - 2, pad * 0.9); x.stroke();
+    x.lineWidth = 1; x.strokeStyle = isK ? 'rgba(150,75,45,.45)' : 'rgba(120,85,45,.5)'; rr(x, pad * 0.42, pad * 0.42, S - pad * 0.84, S - pad * 0.84, pad * 0.5); x.stroke();
     for (let i = 0; i < NN; i++) {
       const X = pad + (i % N) * cs, Y = pad + ((i / N) | 0) * cs;
-      x.fillStyle = 'rgba(105,72,34,.13)'; rr(x, X + 2, Y + 2, cs - 4, cs - 4, cs * 0.14); x.fill();
+      x.fillStyle = isK ? 'rgba(120,55,30,.13)' : 'rgba(105,72,34,.13)'; rr(x, X + 2, Y + 2, cs - 4, cs - 4, cs * 0.14); x.fill();
       if (!pz.fixed[i]) continue;
       const k = pz.tiles[i] >> 4;
       if (k === KM) drawMountain(x, X, Y, cs); else if (k === KS) drawSpring(x, X, Y, cs); else if (k === KH) drawHan(x, X, Y, cs); else if (k === KV) drawVillage(x, X, Y, cs, i * 31 + 5);
@@ -1783,7 +1969,7 @@ function frame(now) {
     ctx.fillStyle = `rgba(214,70,40,${a})`; ctx.fillRect(ox, oy + r * cs, BW, cs);
   }
   if (hover >= 0 && !anims.length && G.state === 'play' && !G.bot) {
-    ctx.fillStyle = currentTheme === 'gece' ? 'rgba(120,180,255,.12)' : currentTheme === 'kagit' ? 'rgba(100,75,45,.08)' : 'rgba(255,255,255,.1)';
+    ctx.fillStyle = currentTheme === 'gece' ? 'rgba(120,180,255,.12)' : currentTheme === 'kagit' ? 'rgba(100,75,45,.08)' : (G.biome === 'kapadokya' ? 'rgba(246,237,226,.12)' : 'rgba(255,255,255,.1)');
     ctx.fillRect(ox, oy + ((hover / N) | 0) * cs, BW, cs); ctx.fillRect(ox + (hover % N) * cs, oy, cs, BW);
   }
   // movable tiles
@@ -1838,8 +2024,8 @@ function frame(now) {
           ctx.beginPath(); ctx.moveTo(X + p[0], Y + p[1]); ctx.lineTo(ix, iy); ctx.stroke();
         } else {
           ctx.lineWidth = cs * (inR ? 0.2 : 0.18);
-          const inRCol = currentTheme === 'gece' ? '#30bde2' : currentTheme === 'kagit' ? '#268ec7' : '#3d95cf';
-          const inDCol = currentTheme === 'gece' ? '#3b4555' : currentTheme === 'kagit' ? '#bca27c' : '#c79a5e';
+          const inRCol = currentTheme === 'gece' ? '#30bde2' : currentTheme === 'kagit' ? '#268ec7' : (G.biome === 'kapadokya' ? '#3ca6d8' : '#3d95cf');
+          const inDCol = currentTheme === 'gece' ? '#3b4555' : currentTheme === 'kagit' ? '#bca27c' : (G.biome === 'kapadokya' ? '#caa16a' : '#c79a5e');
           ctx.strokeStyle = inR ? inRCol : inDCol;
           ctx.beginPath(); ctx.moveTo(X + p[0], Y + p[1]); ctx.lineTo(ix, iy); ctx.stroke();
         }
@@ -1855,6 +2041,7 @@ function frame(now) {
       const gl = ctx.createRadialGradient(X + cs / 2, Y + cs * 0.65, 2, X + cs / 2, Y + cs * 0.65, cs * 0.5);
       if (currentTheme === 'gece') { gl.addColorStop(0, 'rgba(255,200,60,.65)'); gl.addColorStop(1, 'rgba(255,180,40,0)'); }
       else if (currentTheme === 'kagit') { gl.addColorStop(0, 'rgba(255,225,140,.5)'); gl.addColorStop(1, 'rgba(255,225,140,0)'); }
+      else if (G.biome === 'kapadokya') { gl.addColorStop(0, 'rgba(232,164,54,.55)'); gl.addColorStop(1, 'rgba(232,164,54,0)'); }
       else { gl.addColorStop(0, 'rgba(255,214,120,.55)'); gl.addColorStop(1, 'rgba(255,214,120,0)'); }
       ctx.fillStyle = gl; ctx.fillRect(X, Y, cs, cs);
     }
@@ -1872,6 +2059,8 @@ function frame(now) {
       ? (hot ? 'rgba(220,238,255,.95)' : 'rgba(160,195,235,.45)')
       : currentTheme === 'kagit'
       ? (hot ? 'rgba(255,255,255,.98)' : 'rgba(245,240,230,.5)')
+      : G.biome === 'kapadokya'
+      ? (hot ? 'rgba(246,237,226,.95)' : 'rgba(246,237,226,.45)')
       : (hot ? 'rgba(243,234,216,.95)' : 'rgba(243,234,216,.42)');
     const col = l === qRow
       ? (highContrast ? '#ff5533' : 'rgba(255,140,110,.95)')
@@ -1981,7 +2170,8 @@ addEventListener('keydown', (e) => {
 
 // ---------------------------------------------------------------- UI
 function updateHud() {
-  $('tMode').textContent = G.mode === 'daily' ? t('dailyTag', { d: seedLabel(G.seed) }) + (G.place && G.pz ? ' · ' + G.place : '') : t('endless') + ' · ' + t('level', { n: G.level });
+  const regionTag = G.biome === 'kapadokya' ? ' (' + t('biomeKapadokya') + ')' : '';
+  $('tMode').textContent = G.mode === 'daily' ? t('dailyTag', { d: seedLabel(G.seed) }) + (G.place && G.pz ? ' · ' + G.place : '') + regionTag : t('endless') + ' · ' + t('level', { n: G.level }) + regionTag;
   $('lMoves').textContent = t('moves'); $('lPar').textContent = t('par');
   $('vMoves').textContent = G.moves; $('vPar').textContent = G.pz ? G.pz.par : '–';
   const st = G.pz ? (G.won ? G.stars : starsFor(G.moves, G.pz.par)) : 0;
@@ -2006,8 +2196,9 @@ function applyTheme(th, save = true) {
   currentTheme = th;
   if (save && !NOSAVE) store.set('theme', th);
   document.documentElement.dataset.theme = th;
+  document.body.classList.toggle('biome-kapadokya', G.biome === 'kapadokya' && currentTheme === 'classic');
   const tc = $('metaThemeColor');
-  if (tc) tc.setAttribute('content', th === 'gece' ? '#0b111a' : th === 'kagit' ? '#2e2820' : '#1b2830');
+  if (tc) tc.setAttribute('content', th === 'gece' ? '#0b111a' : th === 'kagit' ? '#2e2820' : (G.biome === 'kapadokya' ? '#1f161a' : '#1b2830'));
   buildCaches();
   fillMenu();
 }
@@ -2245,6 +2436,7 @@ window.fayHatti = {
   get seed() { return G.seed; }, get moves() { return G.moves; }, get solved() { return G.won; }, get state() { return G.state; },
   get mode() { return G.mode; }, get level() { return G.level; }, get par() { return G.pz ? G.pz.par : null; }, get stars() { return G.stars; },
   get theme() { return currentTheme; }, setTheme: (t) => applyTheme(t),
+  get biome() { return G.biome || 'bozkir'; }, setBiome: (b) => applyBiome(b),
   get cards() { return CARDS; }, get cardRegistry() { return CARDS; },
   get nextQuake() { const q = nextQuake(); return q < 0 ? null : { row: q >> 1, dir: moveDir(q) }; },
   get bot() { return G.bot ? { strategy: G.bot.strategy, planned: G.bot.plan.length, played: G.bot.i } : null; },
@@ -2287,10 +2479,8 @@ trackEvent('session_init', {
   w: window.innerWidth,
   h: window.innerHeight,
 });
-if (currentTheme !== 'classic') {
-  const tc = $('metaThemeColor');
-  if (tc) tc.setAttribute('content', currentTheme === 'gece' ? '#0b111a' : '#2e2820');
-}
+const tc = $('metaThemeColor');
+if (tc) tc.setAttribute('content', currentTheme === 'gece' ? '#0b111a' : currentTheme === 'kagit' ? '#2e2820' : (G.biome === 'kapadokya' ? '#1f161a' : '#1b2830'));
 addEventListener('resize', layout);
 applyContrast();
 layout();
