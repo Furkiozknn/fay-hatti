@@ -24,6 +24,8 @@ body.biome-karadeniz .mini button,body.theme-karadeniz .mini button{border-color
 body.biome-karadeniz .share-card-wrap,body.theme-karadeniz .share-card-wrap{background:#d2e8cc}
 body.biome-karadeniz .share-prev,body.theme-karadeniz .share-prev{background:#d2e8cc}
 body.biome-karadeniz .share-prev:hover,body.theme-karadeniz .share-prev:hover{background:#c6dec0}
+body.biome-karadeniz .res-speedrun,body.theme-karadeniz .res-speedrun{background:#d2e8cc;color:#1b2d20}
+body.biome-karadeniz .res-speedrun b,body.theme-karadeniz .res-speedrun b{color:#1b2d20}
 body.biome-karadeniz .tb,body.theme-karadeniz .tb{border-color:#2a4a3c}
 body.biome-karadeniz .tb:hover,body.theme-karadeniz .tb:hover{background:#234234}
 /* Ege Region Theme: olive oil greens, terracotta, whitewashed stone */
@@ -40,6 +42,8 @@ body.biome-ege .mini button,body.theme-ege .mini button{border-color:#9c844f}
 body.biome-ege .share-card-wrap,body.theme-ege .share-card-wrap{background:#e6ddc5}
 body.biome-ege .share-prev,body.theme-ege .share-prev{background:#e6ddc5}
 body.biome-ege .share-prev:hover,body.theme-ege .share-prev:hover{background:#ded5bd}
+body.biome-ege .res-speedrun,body.theme-ege .res-speedrun{background:#e6ddc5;color:#2a2016}
+body.biome-ege .res-speedrun b,body.theme-ege .res-speedrun b{color:#2a2016}
 body.biome-ege .tb,body.theme-ege .tb{border-color:#384f3c;background:var(--bg2)}
 body.biome-ege .tb:hover,body.theme-ege .tb:hover{background:#2f4233}
 body.biome-ege #bot,body.theme-ege #bot{background:#3a543e;color:#e8f4ea}
@@ -64,10 +68,14 @@ body.high-contrast button:focus-visible{outline:3px solid var(--focus);outline-o
 .brand{min-width:0}
 .brand b{display:block;font:700 22px/1.1 "Palatino Linotype",Palatino,Georgia,serif;letter-spacing:.02em}
 .brand span{display:block;font-size:14px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.stats{display:flex;align-items:center;gap:14px}
-.stat{text-align:center;min-width:44px}
+.stats{display:flex;align-items:center;gap:10px}
+.stat{text-align:center;min-width:40px}
+.stat.timer{min-width:52px;display:none}
 .stat span{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2)}
 .stat b{display:block;font-size:22px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat .par-tag{display:inline-flex;align-items:center;justify-content:center;gap:2px;font-size:11px;font-weight:600;padding:1px 5px;border-radius:4px;background:rgba(242,179,61,.18);color:var(--gold);margin-top:1px;font-variant-numeric:tabular-nums;line-height:1.2;transition:background .2s,color .2s}
+.stat .par-tag.over{background:rgba(201,189,164,.12);color:var(--ink2);opacity:.75}
+.stat .par-tag svg{width:11px;height:11px;flex:none}
 .stars{display:flex;gap:2px}
 .stars svg{width:18px;height:18px}
 #quake{grid-area:quake;display:flex;align-items:center;justify-content:center;gap:8px;min-height:30px;padding:2px 16px;font-size:15px;color:#ffd9cf}
@@ -113,6 +121,11 @@ body.high-contrast .btn.marathon small{color:#f5eedd}
 .big-stars svg:nth-child(2){animation-delay:.12s}.big-stars svg:nth-child(3){animation-delay:.24s}
 @keyframes starpop{from{transform:scale(0) rotate(-30deg)}to{transform:none}}
 .res-line{text-align:center;font-size:17px;margin:2px 0 8px}
+.res-speedrun{display:none;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 10px;padding:6px 12px;margin:2px 0 8px;background:#e8d8b2;border-radius:10px;font-size:14px;color:#5a2a18}
+.res-speedrun b{font-size:16px;font-variant-numeric:tabular-nums;color:#351a0e}
+.res-speedrun .pill{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:700;padding:2px 7px;border-radius:999px;background:#965c19;color:#fffaf0}
+.res-speedrun .pill.best{background:#2a6332;color:#f4fbf4}
+.res-speedrun svg{width:13px;height:13px;flex:none}
 .share-card-wrap{width:100%;max-width:340px;margin:6px auto;border-radius:12px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.28);background:#eadebe;line-height:0}
 .share-card-cv{width:100%;height:auto;display:block;aspect-ratio:560/420;cursor:pointer;transition:opacity .15s}
 .share-card-cv:hover{opacity:.96}
@@ -218,7 +231,7 @@ body.high-contrast .tut-badge{box-shadow:inset 0 0 0 1px #ffffff}
 .badge-banner .bb-info{flex:1;min-width:0;text-align:left}
 .badge-banner .bb-info b{display:block;font-size:14px;color:#5a2a18;line-height:1.2}
 .badge-banner .bb-info span{display:block;font-size:12px;color:#7a5638;line-height:1.2;margin-top:2px}
-@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on,.seal-svg,#tutTip,.badge-banner{animation:none}.badge-btn{transition:none}.tut-dot{transition:none}#quake.quaking{transition:background .2s}.tb.active{box-shadow:none}.hint-hud{box-shadow:0 2px 6px rgba(0,0,0,.5)}}
+@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on,.seal-svg,#tutTip,.badge-banner{animation:none}.badge-btn{transition:none}.tut-dot{transition:none}#quake.quaking{transition:background .2s}.tb.active{box-shadow:none}.hint-hud{box-shadow:0 2px 6px rgba(0,0,0,.5)}.stat .par-tag{transition:none}}
 /* Themes: Gece (night) and Kâğıt (paper-cut) */
 :root[data-theme="gece"]{--bg:#0b111a;--bg2:#141f2e;--ink:#e5eef8;--ink2:#8ea4be;--paper:#162234;--paper-ink:#e8f0fa;--terra:#2a6ab0;--gold:#f5be47;--quake:#ff6247;--focus:#64b5f6}
 html[data-theme="gece"] body{background:radial-gradient(120% 80% at 50% 0%,#16253c 0%,#0b111a 60%)}
@@ -265,6 +278,10 @@ html[data-theme="gece"] .badge-detail b{color:#7cb7ff}
 html[data-theme="gece"] .badge-banner{background:#1a273b;border-color:#ff6247;box-shadow:0 4px 12px rgba(0,0,0,.4)}
 html[data-theme="gece"] .badge-banner .bb-info b{color:#7cb7ff}
 html[data-theme="gece"] .badge-banner .bb-info span{color:#9ec2ea}
+html[data-theme="gece"] .res-speedrun{background:#101826;color:#c0d5ec}
+html[data-theme="gece"] .res-speedrun b{color:#7cb7ff}
+html[data-theme="gece"] .res-speedrun .pill{background:#1e4d79;color:#e8f0fa}
+html[data-theme="gece"] .res-speedrun .pill.best{background:#1d6b38;color:#f4fbf4}
 
 :root[data-theme="kagit"]{--bg:#2e2820;--bg2:#3c342b;--ink:#f8f2e4;--ink2:#c8bcab;--paper:#faf5e8;--paper-ink:#2e241c;--terra:#b5442b;--gold:#e09c30;--quake:#d94830;--focus:#60a5fa}
 html[data-theme="kagit"] body{background:radial-gradient(120% 80% at 50% 0%,#3d3428 0%,#241f18 60%)}
@@ -284,6 +301,10 @@ html[data-theme="kagit"] .tut-btn.alt:hover{background:#f5ebcf}
 html[data-theme="kagit"] .badges-box{background:#f0e8d6;border-color:#c9bda5}
 html[data-theme="kagit"] .badge-btn{background:#fbf7ef;border-color:#d4c7b2}
 html[data-theme="kagit"] .badge-banner{background:#fffdf7;border-color:#b5442b}
+html[data-theme="kagit"] .res-speedrun{background:#f0e7d5;color:#3d3024}
+html[data-theme="kagit"] .res-speedrun b{color:#2e241c}
+html[data-theme="kagit"] .res-speedrun .pill{background:#8c531b;color:#fdfaf2}
+html[data-theme="kagit"] .res-speedrun .pill.best{background:#2d6335;color:#f4fbf4}
 
 .theme-box{margin-top:12px;padding-top:10px;border-top:1px solid rgba(184,147,90,.35)}
 html[data-theme="gece"] .theme-box{border-top-color:#263852}
@@ -318,6 +339,12 @@ body.high-contrast .badge-detail b{color:#111111}
 body.high-contrast .badge-banner{background:#ffffff;border:2px solid #ff2a05;box-shadow:none}
 body.high-contrast .badge-banner .bb-info b{color:#111111}
 body.high-contrast .badge-banner .bb-info span{color:#333333}
+body.high-contrast .res-speedrun{background:#ffffff;border:2px solid #111111;color:#111111}
+body.high-contrast .res-speedrun b{color:#111111}
+body.high-contrast .res-speedrun .pill{background:#111111;color:#ffffff;box-shadow:inset 0 0 0 1px #ffffff}
+body.high-contrast .res-speedrun .pill.best{background:#0f5132;color:#ffffff;box-shadow:inset 0 0 0 1px #ffffff}
+body.high-contrast .stat .par-tag{background:rgba(255,183,3,.2);color:#ffb703;border:1px solid #ffb703}
+body.high-contrast .stat .par-tag.over{background:transparent;color:#f5eedd;border:1px solid #f5eedd;opacity:1}
 </style>
 </head>
 <body>
@@ -327,6 +354,13 @@ body.high-contrast .badge-banner .bb-info span{color:#333333}
     <div class="stats">
       <div class="stat"><span id="lMoves">Moves</span><b id="vMoves">0</b></div>
       <div class="stat"><span id="lPar">Par</span><b id="vPar">–</b></div>
+      <div class="stat timer" id="statTimer" aria-label="Speedrun timer">
+        <span id="lTimer">Time</span><b id="vTimer">0.0s</b>
+        <span class="par-tag" id="tParTag" title="Par Time">
+          <svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="9" r="5.5"/><path d="M8 6.2v2.8l1.8 1M6 2h4M8 2v1.5"/></svg>
+          <span id="vParTime">–</span>
+        </span>
+      </div>
       <div class="stars" id="vStars" aria-hidden="true"></div>
     </div>
   </header>
@@ -432,6 +466,7 @@ body.high-contrast .badge-banner .bb-info span{color:#333333}
     <div class="big-stars" id="rStars"></div>
     <div id="rMilestone" class="badge-banner" style="display:none" role="status" aria-live="polite"></div>
     <p class="res-line" id="rLine"></p>
+    <div class="res-speedrun" id="rSpeedrun"></div>
     <div class="share-card-wrap" id="rCardWrap"><canvas id="rCard" class="share-card-cv" width="560" height="420" role="img" tabindex="0" aria-label="Fay Hattı Share Card"></canvas></div>
     <div class="share-prev" id="rShare" role="button" tabindex="0" title="Copy text"></div>
     <div class="row"><button class="btn" id="bShare" style="text-align:center"></button><button class="btn alt" id="bSaveCard" style="text-align:center"></button></div>
@@ -1067,6 +1102,17 @@ const CARDS = [
     },
     apply: () => {},
   },
+  {
+    id: 'par-speedrun',
+    type: 'gameplay',
+    implemented: true,
+    title: { en: 'Par Speedrun', tr: 'Hedef Süre Hız Koşusu' },
+    desc: {
+      en: 'Real-time speedrun timer and par time targets for endless levels with personal best tracking (never in daily puzzle).',
+      tr: 'Sonsuz mod seviyeleri için gerçek zamanlı süre sayacı, hedef süreler ve en iyi derece takibi (asla günün bulmacasında yer almaz).'
+    },
+    apply: () => {},
+  },
 ];
 const STR = {
   en: {
@@ -1098,6 +1144,7 @@ const STR = {
     h5: 'Solve within par for 3 stars. Keys: WASD picks tile, arrows shift, H hint, Z undo, R restart, C contrast.',
     hFerry: 'Ferry tiles teleport river water across the map to connected ferry ports.',
     lRiver: 'river', lRoad: 'road', lHanStop: 'caravan stop', lVillage: 'village', lMount: 'mountain', lSpring: 'spring', lHan: 'caravanserai', lFerry: 'ferry',
+    time: 'Time', parTime: 'Par time', parTimeTag: 'par {s}s', parTimeBeat: 'Under par time!', bestTime: 'Best: {s}s', newBestTime: 'New best!',
     waterConnected: 'Water reached village!',
     motes: 'Dust motes',
     integrity: 'Seed Integrity', freezeTitle: 'Code Freeze & Integrity', freezeSub: 'Seeds verified through Dec 31',
@@ -1139,6 +1186,7 @@ const STR = {
     h5: 'Hedef hamlede çöz, 3 yıldız al. Tuşlar: WASD taş seçer, oklar kaydırır, H ipucu, Z geri alır, R baştan, C kontrast.',
     hFerry: 'Feribot karoları nehir suyunu haritanın öbür ucundaki bağlı feribota taşır.',
     lRiver: 'nehir', lRoad: 'yol', lHanStop: 'kervansaray durağı', lVillage: 'köy', lMount: 'dağ', lSpring: 'pınar', lHan: 'kervansaray', lFerry: 'feribot',
+    time: 'Süre', parTime: 'Hedef süre', parTimeTag: 'hedef {s} sn', parTimeBeat: 'Hedef sürenin altında!', bestTime: 'En iyi: {s} sn', newBestTime: 'Yeni rekor!',
     waterConnected: 'Köye su ulaştı!',
     motes: 'Toz zerrecikleri',
     integrity: 'Tohum Doğrulama', freezeTitle: 'Kod Dondurma & Doğrulama', freezeSub: '31 Aralık\'a kadar çözülebilirlik onaylandı',
@@ -1382,6 +1430,7 @@ const sfx = {
       tone(t0 + 0.55, 880, 1.2, 'sine', 0.07);
     }
   },
+  speedrun() { if (!audio()) return; const t0 = AC.currentTime; tone(t0 + 0.35, 784, 0.15, 'sine', 0.14); tone(t0 + 0.48, 1046.5, 0.3, 'sine', 0.18); },
   // Endless Marathon: Hicaz-flavoured victory run on D
   marathon() { if (!audio()) return; const t0 = AC.currentTime; [293.7, 367, 440, 587.3, 734.2].forEach((f, i) => pluck(t0 + i * 0.08, f, 0.18)); tone(t0 + 0.42, 587.3, 0.8, 'sine', 0.12, 880); },
   // Milestone fanfare: grounding drone, ascending Anatolian modal cadence and harmonic chime
@@ -1513,7 +1562,28 @@ function getDropOffReport() {
 }
 
 // ---------------------------------------------------------------- game state & dynamic tutorial
-const G = { mode: 'daily', seed: '', level: 1, marathonStage: 1, marathonDate: '', pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], riv: [], bot: null, celebrateAt: 0, place: '', biome: 'bozkir', ferryActive: false, hintActive: false, hintUsed: false, hintPlan: null, hintStep: 0, newMilestone: null };
+const G = { mode: 'daily', seed: '', level: 1, marathonStage: 1, marathonDate: '', pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], riv: [], bot: null, celebrateAt: 0, place: '', biome: 'bozkir', ferryActive: false, hintActive: false, hintUsed: false, hintPlan: null, hintStep: 0, newMilestone: null, parTime: null, timerStart: 0, timerOffset: 0, timerPaused: false, pauseTime: 0, finalTime: null, isUnderParTime: false, isNewBest: false };
+// Gameplay card: par-speedrun (active in endless/level modes, never in daily)
+const isSpeedrunActive = () => G.mode !== 'daily' && (G.mode === 'endless' || G.mode === 'level');
+function getElapsed() {
+  if (!G.timerStart) return 0;
+  if (G.finalTime != null) return G.finalTime;
+  const now = G.timerPaused ? (G.pauseTime || performance.now()) : performance.now();
+  return Math.max(0, (now - G.timerStart - G.timerOffset) / 1000);
+}
+function pauseTimer() {
+  if (isSpeedrunActive() && G.state === 'play' && !G.timerPaused && G.timerStart) {
+    G.timerPaused = true;
+    G.pauseTime = performance.now();
+  }
+}
+function resumeTimer() {
+  if (document.querySelector('.ov.on')) return;
+  if (isSpeedrunActive() && G.state === 'play' && G.timerPaused) {
+    G.timerOffset += performance.now() - (G.pauseTime || performance.now());
+    G.timerPaused = false;
+  }
+}
 const isKervansarayActive = () => G.mode !== 'daily' && (G.mode === 'endless' || !!(G.pz && G.pz.cfg && G.pz.cfg.kervansaray));
 let prevConnectedStops = 0;
 let anims = [], shake = 0, quakeTrauma = 0, quakeDir = 1, quakeRow = 0, particles = [], ripples = [], botTimer = 0, disp = null;
@@ -1601,7 +1671,8 @@ function getSolutionPath() {
 }
 function openHint() {
   if (G.mode === 'daily' || !G.pz || G.won || !!G.bot) return;
-  sfx.click(); closeAll();
+  pauseTimer();
+  sfx.click(); closeAll(false);
   const plan = getSolutionPath();
   $('hiTitle').textContent = t('hintTitle');
   $('tHiCost').textContent = t('hintCostWarn');
@@ -1623,7 +1694,7 @@ function openHint() {
       G.hintUsed = true;
       G.hintPlan = plan;
       G.hintStep = curIdx;
-      closeAll();
+      closeAll(true);
       updateHintHud();
       updateHud();
       const desc = formatMove(plan[G.hintStep]);
@@ -1635,7 +1706,7 @@ function openHint() {
     $('hiSteps').innerHTML = '';
     $('bHiShow').textContent = t('gotIt');
     $('bHiShow').style.display = 'block';
-    $('bHiShow').onclick = closeAll;
+    $('bHiShow').onclick = () => { closeAll(true); };
   } else {
     $('hiSub').textContent = t('hintTangled');
     $('hiSteps').innerHTML = '';
@@ -1646,7 +1717,7 @@ function openHint() {
   $('hint').classList.add('on');
   if (!COARSE) setTimeout(() => $('bHiShow').focus(), 30);
 }
-function closeHint() { $('hint').classList.remove('on'); }
+function closeHint() { $('hint').classList.remove('on'); resumeTimer(); }
 function stepHint() {
   if (G.mode === 'daily' || !G.pz || G.state !== 'play' || G.won || !G.hintPlan) return;
   if (G.hintStep >= G.hintPlan.length) return;
@@ -1765,6 +1836,23 @@ function startPuzzle(mode, arg, opt = true) {
     if (tc) tc.setAttribute('content', currentTheme === 'gece' ? '#0b111a' : currentTheme === 'kagit' ? '#2e2820' : (G.biome === 'kapadokya' ? '#1f161a' : G.biome === 'karadeniz' ? '#12241d' : G.biome === 'ege' ? '#1c261e' : '#1b2830'));
     G.place = G.biome === 'kapadokya' ? CAPPADOCIA_PLACES[hashStr('p' + G.seed) % CAPPADOCIA_PLACES.length] : G.biome === 'karadeniz' ? KARADENIZ_PLACES[hashStr('p' + G.seed) % KARADENIZ_PLACES.length] : G.biome === 'ege' ? EGE_PLACES[hashStr('p' + G.seed) % EGE_PLACES.length] : PLACES[hashStr('p' + G.seed) % PLACES.length];
     G.state = 'play';
+    if (isSpeedrunActive()) {
+      G.parTime = Math.max(8, pz.par * 4);
+      G.timerStart = performance.now();
+      G.timerOffset = 0;
+      G.timerPaused = false;
+      G.finalTime = null;
+      G.isUnderParTime = false;
+      G.isNewBest = false;
+    } else {
+      G.parTime = null;
+      G.timerStart = 0;
+      G.timerOffset = 0;
+      G.timerPaused = false;
+      G.finalTime = null;
+      G.isUnderParTime = false;
+      G.isNewBest = false;
+    }
     puzzleStartTime = performance.now();
     puzzleFirstMoveTime = 0;
     puzzleUndos = 0;
@@ -1847,6 +1935,14 @@ function restart() {
   G.ids = G.pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.state = 'play'; particles = []; ripples = []; G.riv = []; G.ferryActive = false; prevConnectedStops = 0; G.newMilestone = null;
   G.hintActive = false; G.hintUsed = false; G.hintPlan = null; G.hintStep = 0;
   updateHintHud();
+  if (isSpeedrunActive()) {
+    G.timerStart = performance.now();
+    G.timerOffset = 0;
+    G.timerPaused = false;
+    G.finalTime = null;
+    G.isUnderParTime = false;
+    G.isNewBest = false;
+  }
   puzzleStartTime = performance.now();
   puzzleFirstMoveTime = 0;
   sfx.undo(); settle(true); updateHud();
@@ -1882,6 +1978,20 @@ function win() {
     store.set('endless', nextEndless);
     const ms = MILESTONES.find((m) => m.level === G.level);
     if (ms && curEndless <= ms.level && nextEndless > ms.level) newMilestone = ms;
+    if (isSpeedrunActive()) {
+      G.finalTime = getElapsed();
+      G.timerPaused = true;
+      G.isUnderParTime = G.parTime != null && G.finalTime <= G.parTime;
+      const bestKey = 'time.L' + G.level;
+      const prevBest = store.get(bestKey, null);
+      if (prevBest == null || G.finalTime < prevBest) {
+        store.set(bestKey, Math.round(G.finalTime * 10) / 10);
+        G.isNewBest = true;
+      } else {
+        G.isNewBest = false;
+      }
+      if (G.isUnderParTime) sfx.speedrun();
+    }
   }
   G.celebrateAt = performance.now();
   G.newMilestone = newMilestone;
@@ -3032,10 +3142,29 @@ function chevron(cx, cy, dir, vertical, size, col) {
   ctx.beginPath(); ctx.moveTo(-size * 0.35, -size * 0.6); ctx.lineTo(size * 0.35, 0); ctx.lineTo(-size * 0.35, size * 0.6); ctx.stroke(); ctx.restore();
 }
 
+let lastTimerDom = 0;
+function updateTimerHud(now) {
+  if (!isSpeedrunActive() || G.state !== 'play' || G.timerPaused) return;
+  if (now - lastTimerDom < 95) return;
+  lastTimerDom = now;
+  const elapsed = getElapsed();
+  const el = $('vTimer');
+  if (el) el.textContent = elapsed.toFixed(1) + 's';
+  const tag = $('tParTag');
+  if (tag && G.parTime != null) {
+    if (elapsed > G.parTime) {
+      if (!tag.classList.contains('over')) tag.classList.add('over');
+    } else {
+      if (tag.classList.contains('over')) tag.classList.remove('over');
+    }
+  }
+}
+
 function frame(now) {
   requestAnimationFrame(frame);
   const dt = Math.min(64, now - (lastNow || now)); lastNow = now;
   fpsTick(now);
+  updateTimerHud(now);
   stepAnims(dt);
   if (hint && now >= hint.until) { hint = null; updateHud(); }
   // Directional screen shake decay and transform (cosmetic card: juice-quake-shake)
@@ -3593,6 +3722,24 @@ function updateHud() {
   $('vMoves').textContent = G.moves; $('vPar').textContent = G.pz ? G.pz.par : '–';
   const st = G.pz ? (G.won ? G.stars : ((G.hintUsed && G.mode !== 'daily') ? 1 : starsFor(G.moves, G.pz.par))) : 0;
   $('vStars').innerHTML = [0, 1, 2].map((i) => starSvg(i < st, 18)).join('');
+  const stTimer = $('statTimer');
+  if (stTimer) {
+    if (isSpeedrunActive()) {
+      stTimer.style.display = 'block';
+      $('lTimer').textContent = t('time');
+      const elVal = G.finalTime != null ? G.finalTime : getElapsed();
+      $('vTimer').textContent = elVal.toFixed(1) + 's';
+      $('vParTime').textContent = (G.parTime || '–') + 's';
+      const tag = $('tParTag');
+      if (tag) {
+        tag.title = t('parTimeTag', { s: G.parTime || '–' });
+        if (G.parTime && elVal > G.parTime) tag.classList.add('over');
+        else tag.classList.remove('over');
+      }
+    } else {
+      stTimer.style.display = 'none';
+    }
+  }
   const q = $('quake'), nq = nextQuake();
   if (G.state === 'loading') { q.className = 'calm'; $('tQuake').textContent = t('loading'); }
   else if (nq < 0) { q.className = 'calm'; $('tQuake').textContent = t('calm'); }
@@ -3753,14 +3900,15 @@ function fillMenu() {
     el.setAttribute('aria-checked', String(on));
   });
 }
-function closeAll() { document.querySelectorAll('.ov').forEach((o) => o.classList.remove('on')); }
+function closeAll(resume = true) { document.querySelectorAll('.ov').forEach((o) => o.classList.remove('on')); if (resume) resumeTimer(); }
 const COARSE = matchMedia('(pointer:coarse)').matches;
-function openMenu() { trackEvent('menu_open', { currentMode: G.mode, state: G.state, moves: G.moves }); fillMenu(); closeAll(); $('menu').classList.add('on'); if (!COARSE) setTimeout(() => $('bDaily').focus(), 30); }
+function openMenu() { pauseTimer(); trackEvent('menu_open', { currentMode: G.mode, state: G.state, moves: G.moves }); fillMenu(); closeAll(false); $('menu').classList.add('on'); if (!COARSE) setTimeout(() => $('bDaily').focus(), 30); }
 let helpReturn = null;
 function openHelp() {
+  pauseTimer();
   helpReturn = $('menu').classList.contains('on') ? 'menu' : null;
   trackEvent('help_open', { from: helpReturn || 'hud', moves: G.moves });
-  closeAll();
+  closeAll(false);
   $('hTitle').textContent = t('how');
   const hKeys = ['h1', 'h2', 'h3', 'h4', 'h5'];
   if (G.pz && G.pz.cfg && G.pz.cfg.ferry) hKeys.push('hFerry');
@@ -3786,7 +3934,10 @@ function closeHelp() {
   trackEvent('help_close', { moves: G.moves });
   $('help').classList.remove('on');
   if (helpReturn === 'menu') openMenu();
-  else if (!store.get('tutDone', false) && !BOT && G.state === 'play' && !G.won) showTut(1);
+  else {
+    resumeTimer();
+    if (!store.get('tutDone', false) && !BOT && G.state === 'play' && !G.won) showTut(1);
+  }
 }
 // ---------------------------------------------------------------- seed integrity & code freeze verification
 function renderSealSvg(verified = true) {
@@ -3865,8 +4016,9 @@ function runSeedVerification(fromStr = '20261130', toStr = '20261231') {
 }
 let verifyReturn = null;
 function openVerify() {
+  pauseTimer();
   verifyReturn = $('menu').classList.contains('on') ? 'menu' : null;
-  closeAll();
+  closeAll(false);
   $('vfyTitle').textContent = t('freezeTitle');
   $('bVerifyRun').textContent = t('freezeRun');
   $('bVerifyClose').textContent = t('gotIt');
@@ -3879,6 +4031,7 @@ function closeVerify() {
   sfx.click();
   $('verify').classList.remove('on');
   if (verifyReturn === 'menu') openMenu();
+  else resumeTimer();
 }
 function updateVerifyUi(rep) {
   $('vfySeal').innerHTML = renderSealSvg(rep.ok);
@@ -3889,7 +4042,8 @@ function updateVerifyUi(rep) {
 }
 function shareText() {
   if (G.mode === 'marathon') return `Fay Hattı ${t('marathon')} ${seedLabel(G.marathonDate)} #${G.marathonStage} ${'⭐'.repeat(G.stars)} ${G.moves} ${t('movesWord')}` + (G.hintUsed && G.mode !== 'daily' ? ' 💡' : '');
-  return `Fay Hattı ${G.mode === 'daily' ? seedLabel(G.seed) : '#' + G.level} ${'⭐'.repeat(G.stars)} ${G.moves} ${t('movesWord')}` + (G.hintUsed && G.mode !== 'daily' ? ' 💡' : '');
+  const tStr = (isSpeedrunActive() && G.finalTime != null) ? ` · ${G.finalTime.toFixed(1)}s` : '';
+  return `Fay Hattı ${G.mode === 'daily' ? seedLabel(G.seed) : '#' + G.level} ${'⭐'.repeat(G.stars)} ${G.moves} ${t('movesWord')}` + (G.hintUsed && G.mode !== 'daily' ? ' 💡' : '') + tStr;
 }
 function shareUrl() {
   if (G.mode === 'marathon') return CANON + '?marathon=' + G.marathonDate;
@@ -4256,7 +4410,7 @@ function saveShareCard() {
 
 function showResult() {
   if (!G.won) return;
-  closeAll();
+  closeAll(false);
   $('rTitle').textContent = t('solvedT');
   $('rStars').innerHTML = [0, 1, 2].map((i) => starSvg(i < G.stars, 46)).join('');
   const mb = $('rMilestone');
@@ -4271,6 +4425,21 @@ function showResult() {
     }
   }
   $('rLine').textContent = t('resLine', { m: G.moves, p: G.pz.par }) + (G.hintUsed && G.mode !== 'daily' ? ' · ' + t('hintUsedTag') : '');
+  const rSp = $('rSpeedrun');
+  if (rSp) {
+    if (isSpeedrunActive() && G.finalTime != null) {
+      rSp.style.display = 'flex';
+      const best = store.get('time.L' + G.level, null);
+      const icon = '<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="9" r="5.5"/><path d="M8 6.2v2.8l1.8 1M6 2h4M8 2v1.5"/></svg>';
+      let extra = '';
+      if (G.isUnderParTime) extra += `<span class="pill">${t('parTimeBeat')}</span>`;
+      if (G.isNewBest) extra += `<span class="pill best">${t('newBestTime')}</span>`;
+      else if (best != null) extra += `<span style="font-size:12px;opacity:.8">${t('bestTime', { s: best.toFixed(1) })}</span>`;
+      rSp.innerHTML = `${icon}<span><b>${G.finalTime.toFixed(1)}s</b> · ${t('parTimeTag', { s: G.parTime })}</span>${extra}`;
+    } else {
+      rSp.style.display = 'none';
+    }
+  }
   if (shareCardArtEnabled) renderShareCard($('rCard'));
   $('rShare').textContent = shareText() + '\n' + shareUrl();
   $('rShare').title = lang === 'tr' ? 'Metni kopyala' : 'Copy text';
@@ -4390,7 +4559,7 @@ $('bRMenu').onclick = () => { sfx.click(); openMenu(); };
 $('thClassic').onclick = () => { sfx.click(); applyTheme('classic'); };
 $('thGece').onclick = () => { sfx.click(); applyTheme('gece'); };
 $('thKagit').onclick = () => { sfx.click(); applyTheme('kagit'); };
-document.querySelectorAll('.ov').forEach((o) => o.addEventListener('click', (e) => { if (e.target === o && o.id !== 'menu') { if (o.id === 'help') closeHelp(); else if (o.id === 'verify') closeVerify(); else if (o.id === 'hint') closeHint(); else o.classList.remove('on'); } }));
+document.querySelectorAll('.ov').forEach((o) => o.addEventListener('click', (e) => { if (e.target === o && o.id !== 'menu') { if (o.id === 'help') closeHelp(); else if (o.id === 'verify') closeVerify(); else if (o.id === 'hint') closeHint(); else { o.classList.remove('on'); resumeTimer(); } } }));
 
 // ---------------------------------------------------------------- debug overlay, API, boot
 let fpsN = 0, fpsT = 0, fps = 0;
@@ -4427,6 +4596,10 @@ window.fayHatti = {
   quakeShake: (m) => triggerQuakeHit(m != null ? m : (nextQuake() >= 0 ? nextQuake() : 0)),
   get bot() { return G.bot ? { strategy: G.bot.strategy, planned: G.bot.plan.length, played: G.bot.i } : null; },
   get genMs() { return G.genMs; }, get fps() { return fps; }, get plan() { return G.pz ? G.pz.solution.slice() : null; },
+  get time() { return isSpeedrunActive() ? (G.finalTime != null ? Math.round(G.finalTime * 10) / 10 : Math.round(getElapsed() * 10) / 10) : null; },
+  get parTime() { return isSpeedrunActive() && G.pz ? G.parTime : null; },
+  get bestTime() { return isSpeedrunActive() ? store.get('time.L' + G.level, null) : null; },
+  get underParTime() { return isSpeedrunActive() && G.parTime != null ? (G.finalTime != null ? G.finalTime : getElapsed()) <= G.parTime : null; },
   get ferryActive() { return !!G.ferryActive; },
   get kervansarayStops() {
     if (!isKervansarayActive() || !G.pz || !disp) return [];
@@ -4462,6 +4635,7 @@ window.fayHatti = {
   get hintActive() { return G.hintActive || (hint && performance.now() < hint.until); },
 };
 document.addEventListener('visibilitychange', () => {
+  if (document.hidden) pauseTimer(); else if (!document.querySelector('.ov.on')) resumeTimer();
   trackEvent(document.hidden ? 'session_hide' : 'session_show', {
     state: G.state,
     moves: G.moves,

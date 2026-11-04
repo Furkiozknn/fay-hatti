@@ -24,3 +24,4 @@ One line per day: date, the one visible change, and any measured number (for exa
 - 2026-11-04: Ported gameplay card hint-solution-path: step-by-step solution path modal, stage HUD guidance, canvas chevron and ring preview, single-step play, 1-star penalty, and card registry (implemented: true).
 - 2026-11-04: Ported gameplay card endless-marathon: daily-seeded multi-stage progression, Seljuk rosette watermark, stage victory fanfare, and card registry (implemented: true).
 - 2026-11-04: Ported gameplay card milestone-badges: endless mode level milestone badges (Wayfarer, Caravaneer, Cartographer, Fault Sage) with Anatolian motifs, fanfare chime, result modal banner, and card registry (implemented: true).
+- 2026-11-04: Ported gameplay card par-speedrun: real-time speedrun timer with par time targets for endless levels, personal best tracking, under-par victory chime, accessible HUD tag, and card registry (implemented: true).
