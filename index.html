@@ -60,6 +60,7 @@ body.high-contrast button:focus-visible{outline:3px solid var(--focus);outline-o
 .row{display:flex;gap:8px}.row .btn{text-align:center}
 .mini{display:flex;gap:8px;margin-top:10px}
 .mini button{flex:1;min-height:44px;border-radius:10px;border:1px solid #b8935a;background:transparent;color:var(--paper-ink);font-size:15px}
+.mini button:hover{background:#ecdcb6}
 .big-stars{display:flex;justify-content:center;gap:6px;margin:6px 0 4px}
 .big-stars svg{width:46px;height:46px}
 .big-stars svg.on{animation:starpop .45s cubic-bezier(.3,1.6,.5,1) both}
@@ -114,7 +115,8 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
     <button class="btn" id="bEndless"></button>
     <button class="btn alt" id="bHow"></button>
     <button class="btn alt" id="bContrast" aria-pressed="false"></button>
-    <div class="mini"><button id="mLang"></button><button id="mSound"></button></div>
+    <div class="mini"><button id="mSound"></button><button id="mHaptic" aria-pressed="false"></button></div>
+    <div class="mini"><button id="mLang"></button></div>
   </div>
 </div>
 <div class="ov" id="help" role="dialog" aria-modal="true" aria-labelledby="hTitle">
@@ -552,7 +554,7 @@ const STR = {
   en: {
     sub: 'Shift the land of Anatolia. Bring water and roads to every village.',
     daily: 'Daily puzzle', endless: 'Endless', how: 'How to play', moves: 'Moves', par: 'Par', undo: 'Undo', restart: 'Restart',
-    menu: 'Menu', sound: 'Sound', on: 'on', off: 'off', level: 'Level {n}', dailyTag: 'Daily · {d}',
+    menu: 'Menu', sound: 'Sound', haptic: 'Haptic', on: 'on', off: 'off', level: 'Level {n}', dailyTag: 'Daily · {d}',
     quakeNext: 'Next quake: row {r} {a}', calm: 'The ground is calm', loading: 'Drawing the map…', solvedT: 'Connected!',
     resLine: '{m} moves · par {p}', share: 'Share result', next: 'Next level', toEndless: 'Play endless', back: 'Menu',
     copied: 'Copied to clipboard', tomorrow: 'A new map tomorrow.', endlessNote: 'Level {n} done.', movesWord: 'moves',
@@ -568,7 +570,7 @@ const STR = {
   tr: {
     sub: 'Anadolu toprağını kaydır. Her köye su ve yol götür.',
     daily: 'Günün bulmacası', endless: 'Sonsuz mod', how: 'Nasıl oynanır', moves: 'Hamle', par: 'Hedef', undo: 'Geri al', restart: 'Baştan',
-    menu: 'Menü', sound: 'Ses', on: 'açık', off: 'kapalı', level: 'Bölüm {n}', dailyTag: 'Günlük · {d}',
+    menu: 'Menü', sound: 'Ses', haptic: 'Titreşim', on: 'açık', off: 'kapalı', level: 'Bölüm {n}', dailyTag: 'Günlük · {d}',
     quakeNext: 'Sıradaki deprem: {r}. satır {a}', calm: 'Yer sakin', loading: 'Harita çiziliyor…', solvedT: 'Bağlandı!',
     resLine: '{m} hamle · hedef {p}', share: 'Sonucu paylaş', next: 'Sonraki bölüm', toEndless: 'Sonsuz moda geç', back: 'Menü',
     copied: 'Panoya kopyalandı', tomorrow: 'Yarın yeni bir harita.', endlessNote: '{n}. bölüm tamam.', movesWord: 'hamle',
@@ -668,6 +670,27 @@ const sfx = {
   undo() { if (!audio()) return; noise(AC.currentTime, 0.1, 'bandpass', 500, 1300, 0.16, 1.2); },
 };
 
+// ---------------------------------------------------------------- haptics (Vibration API)
+// Accessible tactile feedback: respects prefers-reduced-motion, bot autoplay, and user toggle
+let haptic = !RM && !!store.get('haptic', true);
+function vibe(pattern) {
+  if (!haptic || RM || G.bot) return;
+  try {
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      navigator.vibrate(pattern);
+    }
+  } catch (e) {}
+}
+function setHaptic(v) {
+  haptic = !!v;
+  store.set('haptic', haptic);
+  fillMenu();
+  if (haptic) vibe(22);
+}
+function toggleHaptic() {
+  setHaptic(!haptic);
+}
+
 // ---------------------------------------------------------------- game state
 const G = { mode: 'daily', seed: '', level: 1, pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], bot: null, celebrateAt: 0, place: '' };
 let anims = [], shake = 0, particles = [], botTimer = 0, disp = null;
@@ -718,14 +741,14 @@ function doMove(m) {
   }
   G.ids = cur;
   if (G.won) G.stars = starsFor(G.moves, pz.par);
-  sfx.slide(); updateHud();
+  sfx.slide(); vibe(22); updateHud();
   return true;
 }
 function undo() {
   if (!G.pz || G.won || G.state !== 'play' || !G.undo.length || G.bot) return;
   flushAnims();
   const u = G.undo.pop(); G.ids = u.ids; G.moves = u.moves;
-  sfx.undo(); settle(true); updateHud();
+  sfx.undo(); vibe(12); settle(true); updateHud();
 }
 function restart() {
   if (!G.pz || G.bot) return;
@@ -739,7 +762,7 @@ function win() {
   if (G.mode === 'daily') { if (!store.get('daily.' + G.seed, null)) store.set('daily.' + G.seed, { m: G.moves, s: G.stars }); }
   else store.set('endless', Math.max(store.get('endless', 1), G.level + 1));
   G.celebrateAt = performance.now();
-  sfx.win();
+  sfx.win(); vibe([30, 50, 40]);
   if (!RM) for (const v of pz.villages) burst(v.cell);
   setTimeout(showResult, AUTO || RM ? 500 : 1400);
   $('live').textContent = t('solvedT') + ' ' + t('resLine', { m: G.moves, p: pz.par });
@@ -759,7 +782,7 @@ function stepAnims(dt) {
     const A = anims[0];
     if (!A.started) { A.started = true; setDisp(A.from); if (A.kind === 'quake') sfx.quake(); }
     A.t += dt;
-    if (A.kind === 'quake' && !A.hit && A.t >= A.delay) { A.hit = true; if (!RM) shake = cs * 0.07; }
+    if (A.kind === 'quake' && !A.hit && A.t >= A.delay) { A.hit = true; if (!RM) { shake = cs * 0.07; vibe([35, 25, 45, 25, 30]); } }
     if (A.t < A.delay + A.dur) return;
     anims.shift();
     if (!anims.length) settle(false);
@@ -1298,6 +1321,8 @@ function fillMenu() {
   $('bContrast').setAttribute('aria-pressed', String(highContrast));
   $('mLang').textContent = lang === 'tr' ? 'English' : 'Türkçe';
   $('mSound').textContent = t('sound') + ': ' + (muted ? t('off') : t('on'));
+  $('mHaptic').textContent = t('haptic') + ': ' + (haptic ? t('on') : t('off'));
+  $('mHaptic').setAttribute('aria-pressed', String(haptic));
 }
 function closeAll() { document.querySelectorAll('.ov').forEach((o) => o.classList.remove('on')); }
 const COARSE = matchMedia('(pointer:coarse)').matches;
@@ -1341,7 +1366,7 @@ function toggleMute() { muted = !muted; store.set('mute', muted); if (AC) master
 function toggleLang() { lang = lang === 'tr' ? 'en' : 'tr'; store.set('lang', lang); updateHud(); fillMenu(); if ($('result').classList.contains('on')) showResult(); if ($('help').classList.contains('on')) { const r = helpReturn; openHelp(); helpReturn = r; } }
 
 $('bUndo').onclick = undo; $('bRestart').onclick = restart; $('bMenu').onclick = () => { sfx.click(); openMenu(); };
-$('bSound').onclick = toggleMute; $('mSound').onclick = toggleMute; $('bLang').onclick = toggleLang; $('mLang').onclick = toggleLang;
+$('bSound').onclick = toggleMute; $('mSound').onclick = toggleMute; $('mHaptic').onclick = toggleHaptic; $('bLang').onclick = toggleLang; $('mLang').onclick = toggleLang;
 $('bContrast').onclick = () => { toggleContrast(); sfx.click(); };
 $('bDaily').onclick = () => {
   sfx.click();
@@ -1374,6 +1399,7 @@ window.fayHatti = {
   get genMs() { return G.genMs; }, get fps() { return fps; }, get plan() { return G.pz ? G.pz.solution.slice() : null; },
   get board() { if (!G.pz) return null; const v = toVals(G.pz, G.ids), out = []; for (let r = 0; r < N; r++) { const row = []; for (let c = 0; c < N; c++) { const x = v[r * N + c], k = x >> 4; row.push(k === KR ? 'r' + (x & 15).toString(16) : k === KD ? 'd' + (x & 15).toString(16) : GLYPH[k]); } out.push(row.join(' ')); } return out; },
   get highContrast() { return highContrast; }, setContrast, toggleContrast,
+  get haptic() { return haptic; }, setHaptic, toggleHaptic, vibe,
   move: (m) => doMove(m), undo, restart, start: (mode, arg) => startPuzzle(mode, arg, false),
 };
 addEventListener('resize', layout);
