@@ -15,3 +15,4 @@ One line per day: date, the one visible change, and any measured number (for exa
 - 2026-11-04: Ported cosmetic card region-karadeniz: mist-tinted deep greens, Kaçkar alpine peaks, tea sprigs, Serander chalets, horon cadence, and card registry (implemented: true).
 - 2026-11-04: Ported cosmetic card region-ege: Aegean olive oil greens, terracotta amphorae, whitewashed stone houses, sunny folk melody, weekly rotation (debut Nov 23), and card registry (implemented: true).
 - 2026-11-04: Ported cosmetic card juice-dust: 22 floating sand and dust motes with wind sway, quake agitation, theme-adaptive palettes, and card registry (implemented: true).
+- 2026-11-04: Ported cosmetic card juice-ripples: concentric water ripple rings, shimmer glow, splash droplets on village water connection, synthesized chirp/chime sfx, and card registry (implemented: true).

@@ -802,6 +802,17 @@ const CARDS = [
     },
     apply: () => setMotes(true),
   },
+  {
+    id: 'juice-ripples',
+    type: 'cosmetic',
+    implemented: true,
+    title: { en: 'Water Ripple Particles', tr: 'Su Halka Tanecikleri' },
+    desc: {
+      en: 'Concentric water ripple rings, radial shimmer glow, and splash droplets when river water reaches a village.',
+      tr: 'Nehir suyu köye ulaştığında eşmerkezli su halkaları, ışıltı parıltısı ve sıçrayan su damlacıkları.'
+    },
+    apply: () => setRipples(true),
+  },
 ];
 const STR = {
   en: {
@@ -821,6 +832,7 @@ const STR = {
     h4: 'After each move a small quake shifts one row by itself. The red band shows which row is next.',
     h5: 'Solve within par for 3 stars. Keys: WASD picks tile, arrows shift, Z undo, R restart, C contrast.',
     lRiver: 'river', lRoad: 'road', lVillage: 'village', lMount: 'mountain', lSpring: 'spring', lHan: 'caravanserai',
+    waterConnected: 'Water reached village!',
     motes: 'Dust motes',
     integrity: 'Seed Integrity', freezeTitle: 'Code Freeze & Integrity', freezeSub: 'Seeds verified through Dec 31',
     freezeRange: 'Range: {from} → {to}', freezeStatus: '{ok}/{total} daily seeds verified solvable',
@@ -849,6 +861,7 @@ const STR = {
     h4: 'Her hamleden sonra küçük bir deprem bir satırı kendiliğinden kaydırır. Kırmızı bant sıradaki satırı gösterir.',
     h5: 'Hedef hamlede çöz, 3 yıldız al. Tuşlar: WASD taş seçer, oklar kaydırır, Z geri alır, R baştan, C kontrast.',
     lRiver: 'nehir', lRoad: 'yol', lVillage: 'köy', lMount: 'dağ', lSpring: 'pınar', lHan: 'kervansaray',
+    waterConnected: 'Köye su ulaştı!',
     motes: 'Toz zerrecikleri',
     integrity: 'Tohum Doğrulama', freezeTitle: 'Kod Dondurma & Doğrulama', freezeSub: '31 Aralık\'a kadar çözülebilirlik onaylandı',
     freezeRange: 'Aralık: {from} → {to}', freezeStatus: '{ok}/{total} günlük tohum çözülebilir',
@@ -1049,6 +1062,13 @@ const sfx = {
       tone(t0, f * 2.01, 0.25, 'sine', 0.06);
     }
   },
+  // Juice: Water droplet chirp and ripple chime for village water connection
+  ripple(i = 0) {
+    if (!audio()) return;
+    const t0 = AC.currentTime, f = [880, 1046.5, 1174.7, 1318.5][i % 4];
+    tone(t0, f * 0.72, 0.12, 'sine', 0.18, f * 1.35); // water droplet pitch chirp
+    tone(t0 + 0.04, f * 1.5, 0.18, 'sine', 0.08, f * 0.9); // resonant water dissipation
+  },
   // Cappadocia victory on Central Anatolian cadence, Karadeniz horon kemençe on A, Ege sunny folk melody on D, or Steppe Hicaz run on D
   win() {
     if (!audio()) return; const t0 = AC.currentTime;
@@ -1173,8 +1193,10 @@ function getDropOffReport() {
 }
 
 // ---------------------------------------------------------------- game state & dynamic tutorial
-const G = { mode: 'daily', seed: '', level: 1, pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], bot: null, celebrateAt: 0, place: '', biome: 'bozkir' };
-let anims = [], shake = 0, particles = [], botTimer = 0, disp = null;
+const G = { mode: 'daily', seed: '', level: 1, pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], riv: [], bot: null, celebrateAt: 0, place: '', biome: 'bozkir' };
+let anims = [], shake = 0, particles = [], ripples = [], botTimer = 0, disp = null;
+let ripplesEnabled = true;
+function setRipples(v) { ripplesEnabled = !!v; }
 
 // Dynamic tutorial tooltips (onboarding for first-time players on mobile/desktop)
 let tutStep = 1, tutActive = false;
@@ -1233,7 +1255,7 @@ function nextQuake() { return G.pz && !G.won ? G.pz.quakes[G.moves % G.pz.quakes
 
 function startPuzzle(mode, arg, firstHelp = true) {
   clearTimeout(botTimer); G.bot = null;
-  G.mode = mode; G.state = 'loading'; G.pz = null; disp = null; anims = []; particles = []; closeAll();
+  G.mode = mode; G.state = 'loading'; G.pz = null; disp = null; anims = []; particles = []; ripples = []; closeAll();
   if (mode === 'daily') G.seed = String(arg); else { G.level = arg; G.seed = 'L' + arg; }
   updateHud();
   setTimeout(() => {
@@ -1244,7 +1266,7 @@ function startPuzzle(mode, arg, firstHelp = true) {
     let pz = null;
     for (let k = 0; !pz && k < 5; k++) pz = makePuzzle(seed + k * 7919, cfg);
     G.genMs = Math.round(performance.now() - t0);
-    G.pz = pz; G.ids = pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.sat = [];
+    G.pz = pz; G.ids = pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.sat = []; G.riv = [];
     G.biome = biomeOverride || getBiome(mode, G.seed, G.level);
     const isKrd = G.biome === 'karadeniz' && currentTheme === 'classic';
     const isEge = G.biome === 'ege' && currentTheme === 'classic';
@@ -1315,7 +1337,7 @@ function restart() {
   puzzleRestarts++;
   trackEvent('restart', { movesAtRestart: G.moves, restartsInPuzzle: puzzleRestarts });
   flushAnims(); closeAll();
-  G.ids = G.pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.state = 'play'; particles = [];
+  G.ids = G.pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.state = 'play'; particles = []; ripples = []; G.riv = [];
   puzzleStartTime = performance.now();
   puzzleFirstMoveTime = 0;
   sfx.undo(); settle(true); updateHud();
@@ -1371,20 +1393,33 @@ function stepAnims(dt) {
 // the board came to rest: recompute connections, ping newly happy villages, start the celebration
 function settle(silent) {
   setDisp(G.ids);
-  const st = disp.st, prev = G.sat;
-  if (!silent) st.sat.forEach((ok, i) => {
-    if (ok && !prev[i]) {
-      sfx.ping(i);
-      trackEvent('village_connected', {
-        villageIndex: i,
-        cell: G.pz && G.pz.villages[i] ? G.pz.villages[i].cell : null,
-        need: G.pz && G.pz.villages[i] ? G.pz.villages[i].need : null,
-        moves: G.moves,
-        elapsedMs: puzzleStartTime ? Math.round(performance.now() - puzzleStartTime) : 0,
-      });
-    }
-  });
+  const st = disp.st, prevSat = G.sat, prevRiv = G.riv || [];
+  const curRiv = G.pz ? G.pz.villages.map((v) => !!((v.need & NEED_RIVER) && ((st.rr >> v.cell) & 1))) : [];
+  if (!silent) {
+    curRiv.forEach((ok, i) => {
+      // Juice: Ripple Particles on Water Connection
+      if (ok && !prevRiv[i]) {
+        if (ripplesEnabled) spawnWaterRipple(G.pz.villages[i].cell);
+        sfx.ripple(i);
+        const liveEl = $('live');
+        if (liveEl) liveEl.textContent = t('waterConnected');
+      }
+    });
+    st.sat.forEach((ok, i) => {
+      if (ok && !prevSat[i]) {
+        sfx.ping(i);
+        trackEvent('village_connected', {
+          villageIndex: i,
+          cell: G.pz && G.pz.villages[i] ? G.pz.villages[i].cell : null,
+          need: G.pz && G.pz.villages[i] ? G.pz.villages[i].need : null,
+          moves: G.moves,
+          elapsedMs: puzzleStartTime ? Math.round(performance.now() - puzzleStartTime) : 0,
+        });
+      }
+    });
+  }
   G.sat = st.sat.slice();
+  G.riv = curRiv.slice();
   if (G.won && G.state === 'play') win();
 }
 function setDisp(ids) {
@@ -2380,6 +2415,7 @@ function frame(now) {
       ctx.strokeStyle = '#7cc4f0'; ctx.lineWidth = 3; rr(ctx, ox + (cursor % N) * cs + 3, oy + ((cursor / N) | 0) * cs + 3, cs - 6, cs - 6, cs * 0.14); ctx.stroke();
     }
   }
+  drawRipples(dt);
   drawMotes(dt, now);
   drawParticles(dt);
   ctx.restore();
@@ -2406,6 +2442,115 @@ function drawParticles(dt) {
     p.vy += cs * 5 * s; p.vx *= 0.985; p.x += p.vx * s; p.y += p.vy * s; p.rot += p.vr * s;
     ctx.save(); ctx.globalAlpha = Math.max(0, 1 - (p.t - p.delay) / p.life); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillStyle = p.col;
     ctx.beginPath(); ctx.ellipse(0, 0, cs * 0.06, cs * 0.03, 0, 0, 7); ctx.fill(); ctx.restore();
+  }
+}
+
+// ---------------------------------------------------------------- water ripple particles (cosmetic card: juice-ripples)
+// Concentric ripple rings, radial shimmer glow & splash droplets when water connects to a village.
+function spawnWaterRipple(cell) {
+  const rings = RM ? [{ rMax: cs * 0.42, dur: 0.4, delay: 0 }] : [
+    { rMax: cs * 0.76, dur: 0.68, delay: 0 },
+    { rMax: cs * 0.60, dur: 0.60, delay: 0.12 },
+    { rMax: cs * 0.44, dur: 0.52, delay: 0.24 },
+  ];
+  const drops = [];
+  if (!RM) {
+    const cols = highContrast
+      ? ['#00e5ff', '#ffffff', '#0077b6', '#ffffff']
+      : currentTheme === 'gece'
+      ? ['#64b5f6', '#30bde2', '#e5eef8', '#90caf9', '#ffffff']
+      : currentTheme === 'kagit'
+      ? ['#268ec7', '#46bfe0', '#ffffff', '#fdfaf2', '#18649c']
+      : G.biome === 'karadeniz'
+      ? ['#2ea8b8', '#92ebd9', '#ffffff', '#196b75', '#e6f7f5']
+      : G.biome === 'ege'
+      ? ['#2bb1c9', '#99edf2', '#ffffff', '#1c7295', '#eefbfb']
+      : ['#9fe3ea', '#3d95cf', '#7cc4f0', '#ffffff', '#2fa3b6', '#e2f7ff'];
+    const count = 10;
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
+      const sp = cs * (0.8 + Math.random() * 1.3);
+      drops.push({
+        dx: 0, dy: 0,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp * 0.8 - cs * 0.65,
+        r: cs * (0.024 + Math.random() * 0.018),
+        life: 0.52 + Math.random() * 0.22,
+        t: 0,
+        col: cols[i % cols.length],
+      });
+    }
+  }
+  ripples.push({ cell, rings, drops, t: 0, dur: 0.88 });
+}
+function drawRipples(dt) {
+  if (!ripples.length) return;
+  const s = dt / 1000;
+  ripples = ripples.filter((rp) => rp.t < rp.dur);
+  for (const rp of ripples) {
+    rp.t += s;
+    const cx = ox + (rp.cell % N) * cs + cs / 2;
+    const cy = oy + ((rp.cell / N) | 0) * cs + cs / 2;
+    // Radial water shimmer glow at the village
+    const glowProgress = Math.min(1, rp.t / 0.45);
+    const glowAlpha = Math.max(0, (1 - glowProgress) * (RM ? 0.25 : 0.42));
+    if (glowAlpha > 0) {
+      const gl = ctx.createRadialGradient(cx, cy, 2, cx, cy, cs * 0.62);
+      if (highContrast) {
+        gl.addColorStop(0, `rgba(0,229,255,${glowAlpha * 0.8})`);
+        gl.addColorStop(0.5, `rgba(0,119,182,${glowAlpha * 0.4})`);
+        gl.addColorStop(1, 'rgba(0,119,182,0)');
+      } else if (currentTheme === 'gece') {
+        gl.addColorStop(0, `rgba(100,181,246,${glowAlpha})`);
+        gl.addColorStop(0.5, `rgba(42,106,176,${glowAlpha * 0.35})`);
+        gl.addColorStop(1, 'rgba(42,106,176,0)');
+      } else {
+        gl.addColorStop(0, `rgba(159,227,234,${glowAlpha})`);
+        gl.addColorStop(0.5, `rgba(61,149,207,${glowAlpha * 0.35})`);
+        gl.addColorStop(1, 'rgba(61,149,207,0)');
+      }
+      ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(cx, cy, cs * 0.62, 0, 7); ctx.fill();
+    }
+    // Concentric expanding ripple rings
+    for (const rg of rp.rings) {
+      if (rp.t < rg.delay) continue;
+      const u = Math.min(1, (rp.t - rg.delay) / rg.dur);
+      if (u >= 1) continue;
+      const ease = 1 - Math.pow(1 - u, 2.4);
+      const r = rg.rMax * ease;
+      const alpha = (1 - u) * 0.85;
+      ctx.save();
+      // Outer river blue ripple line
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7);
+      ctx.lineWidth = Math.max(1.2, cs * 0.036 * (1 - u * 0.6));
+      if (highContrast) {
+        ctx.strokeStyle = `rgba(0,229,255,${alpha * 0.95})`;
+      } else if (currentTheme === 'gece') {
+        ctx.strokeStyle = `rgba(100,181,246,${alpha * 0.88})`;
+      } else {
+        ctx.strokeStyle = `rgba(61,149,207,${alpha * 0.85})`;
+      }
+      ctx.stroke();
+      // Inner crest highlight (bright water foam/sheen)
+      ctx.beginPath(); ctx.arc(cx, cy, Math.max(0, r - 1.2), 0, 7);
+      ctx.lineWidth = Math.max(0.8, cs * 0.02 * (1 - u));
+      ctx.strokeStyle = highContrast ? `rgba(255,255,255,${alpha})` : `rgba(226,247,255,${alpha * 0.95})`;
+      ctx.stroke();
+      ctx.restore();
+    }
+    // Splash droplet particles (respects prefers-reduced-motion)
+    for (const d of rp.drops) {
+      d.t += s;
+      if (d.t >= d.life) continue;
+      const u = d.t / d.life;
+      d.vy += cs * 4.5 * s;
+      d.vx *= 0.96; d.vy *= 0.96;
+      d.dx += d.vx * s; d.dy += d.vy * s;
+      const alpha = Math.max(0, (1 - u) * 0.92);
+      const curR = Math.max(0.5, d.r * (1 - u * 0.35));
+      ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = d.col;
+      ctx.beginPath(); ctx.arc(cx + d.dx, cy + d.dy, curR, 0, 7); ctx.fill(); ctx.restore();
+    }
   }
 }
 
@@ -2833,6 +2978,7 @@ window.fayHatti = {
   get bot() { return G.bot ? { strategy: G.bot.strategy, planned: G.bot.plan.length, played: G.bot.i } : null; },
   get genMs() { return G.genMs; }, get fps() { return fps; }, get plan() { return G.pz ? G.pz.solution.slice() : null; },
   get motes() { return motes; }, get motesCount() { return motes.length; }, get motesEnabled() { return motesEnabled; }, setMotes: (v) => setMotes(v),
+  get ripples() { return ripples.length; }, get ripplesEnabled() { return ripplesEnabled; }, setRipples: (v) => setRipples(v), ripple: (cell) => spawnWaterRipple(cell),
   get board() { if (!G.pz) return null; const v = toVals(G.pz, G.ids), out = []; for (let r = 0; r < N; r++) { const row = []; for (let c = 0; c < N; c++) { const x = v[r * N + c], k = x >> 4; row.push(k === KR ? 'r' + (x & 15).toString(16) : k === KD ? 'd' + (x & 15).toString(16) : GLYPH[k]); } out.push(row.join(' ')); } return out; },
   get highContrast() { return highContrast; }, setContrast, toggleContrast,
   get haptic() { return haptic; }, setHaptic, toggleHaptic, vibe,
