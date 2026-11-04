@@ -9,7 +9,7 @@ Shift rows and columns to bring rivers and caravan roads to the villages. After 
 
 - **Daily puzzle:** everyone gets the same map each day (seeded by the date).
 - **Endless mode:** numbered levels that grow from 2 villages and short solutions to 3 villages, mountains and longer solutions.
-- One HTML file, no downloads, no external requests. Phone first (portrait), works on desktop. English and Turkish.
+- One HTML file, no downloads, no external requests. Phone first (portrait & landscape), works on desktop. English and Turkish.
 
 ## How to play
 
@@ -19,7 +19,7 @@ Shift rows and columns to bring rivers and caravan roads to the villages. After 
 4. After each of your moves a small quake shifts one row by one tile. The red band and the line above the board show which row is next and which way it will go. If your move solves the map, the ground stays calm.
 5. Solve within par (the fewest possible moves) for 3 stars, par + 2 for 2 stars. Share your result without spoilers.
 
-**Controls:** drag or tap the arrows; keyboard WASD moves the cursor, arrow keys shift its row or column, Z or Backspace undo, R restart, M mute, Esc menu.
+**Controls:** drag or tap the arrows (with swipe thresholds and accidental-swipe guard); keyboard WASD moves the cursor, arrow keys shift its row or column, Z or Backspace undo, R restart, M mute, Esc menu. One-hand reach layout places Undo/Restart right under your right or left thumb.
 
 ## URL flags
 
@@ -27,6 +27,7 @@ Shift rows and columns to bring rivers and caravan roads to the villages. After 
 |---|---|
 | `?seed=YYYYMMDD` | Play the daily map of that date (any short word also works as a seed) |
 | `?level=N` | Play endless level N |
+| `?reach=right` / `?reach=left` | One-hand reach layout for right or left thumb |
 | `?demo=1` | The bot solves the map visibly, about one move every 0.8 s (strategy A) |
 | `?demo=a` / `?demo=b` | Bot strategy A (optimal planner) or B (greedy beam search, often slower) for "bot race" videos |
 | `?auto` | Fast bot (strategy A; add `&demo=b` for B) |
@@ -34,7 +35,7 @@ Shift rows and columns to bring rivers and caravan roads to the villages. After 
 | `?lang=en` / `?lang=tr` | Force the language (default: Turkish for Turkish browsers, English otherwise) |
 | `?nosave` | Do not write to localStorage |
 
-`window.fayHatti` exposes `seed`, `moves`, `solved`, `state` (`loading`, `play`, `won`), `par`, `stars`, `mode`, `level`, `nextQuake`, `bot`, `plan`, `board`, `fps`, `genMs` and the actions `move(code)`, `undo()`, `restart()`, `start(mode, arg)`. A move code is `line * 2 + dir`: lines 0-4 are rows, 5-9 columns; dir 0 is right/down, 1 is left/up.
+`window.fayHatti` exposes `seed`, `moves`, `solved`, `state` (`loading`, `play`, `won`), `par`, `stars`, `mode`, `level`, `nextQuake`, `bot`, `plan`, `board`, `fps`, `genMs`, `reach` and the actions `move(code)`, `undo()`, `restart()`, `start(mode, arg)`, `setReach(v)`. A move code is `line * 2 + dir`: lines 0-4 are rows, 5-9 columns; dir 0 is right/down, 1 is left/up.
 
 Saves use localStorage keys starting with `fayhatti.` (language, mute, daily results, endless level, help seen).
 
