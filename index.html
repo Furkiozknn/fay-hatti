@@ -74,7 +74,30 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
   #bar{flex-direction:column;padding:8px 10px 8px 4px;overflow:auto}
   .tb{min-height:44px;flex-direction:row;gap:6px}
 }
-@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on{animation:none}}
+/* Dynamic Tutorial Tooltip: phone-first Anatolian parchment card */
+#tutTip{position:absolute;left:50%;transform:translateX(-50%);bottom:10px;width:calc(100% - 24px);max-width:420px;background:var(--paper);color:var(--paper-ink);border-radius:16px;padding:12px 14px;box-shadow:0 12px 36px rgba(0,0,0,.45),inset 0 0 0 2px #d9c596;display:none;flex-direction:column;gap:8px;z-index:6;pointer-events:auto;box-sizing:border-box;animation:tutPop .22s cubic-bezier(.2,1,.3,1)}
+#tutTip.on{display:flex}
+@keyframes tutPop{from{transform:translate(-50%,10px) scale(.95);opacity:0}to{transform:translate(-50%,0) scale(1);opacity:1}}
+.tut-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tut-title-wrap{display:flex;align-items:center;gap:10px;min-width:0}
+.tut-icon{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;background:#e8d7b0;flex:none;color:#5a2a18}
+.tut-title-wrap div{min-width:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tut-badge{font-size:11px;font-weight:700;letter-spacing:.06em;color:#fff8ec;background:var(--terra);padding:1px 7px;border-radius:999px;line-height:16px}
+#tutTitle{font:700 16px/1.2 "Palatino Linotype",Palatino,Georgia,serif;color:#5a2a18;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tut-close{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:0;background:transparent;color:#7a5638;font-size:18px;line-height:1;border-radius:10px;padding:0;margin:-6px -6px -6px 0;cursor:pointer;flex:none}
+.tut-close:hover{background:rgba(90,42,24,.08);color:#5a2a18}
+.tut-close:focus-visible,.tut-btn:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.tut-body{margin:0;font-size:13.5px;line-height:1.35;color:#493826}
+.tut-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:2px}
+.tut-dots{display:flex;gap:5px;align-items:center}
+.tut-dot{width:7px;height:7px;border-radius:50%;background:#cbba95;transition:background .2s,transform .2s}
+.tut-dot.on{background:var(--terra);transform:scale(1.35)}
+.tut-actions{display:flex;align-items:center;gap:6px}
+.tut-btn{min-height:44px;min-width:44px;padding:8px 16px;border:0;border-radius:10px;background:var(--terra);color:#fff8ec;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.tut-btn:hover{background:#b9472c}
+.tut-btn.alt{background:#e6d3a8;color:var(--paper-ink);box-shadow:inset 0 0 0 1px #b8935a}
+.tut-btn.alt:hover{background:#ecdcb6}
+@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on,#tutTip{animation:none}.tut-dot{transition:none}}
 </style>
 </head>
 <body>
@@ -88,7 +111,31 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
     </div>
   </header>
   <div id="quake" class="calm" aria-live="polite"><span class="dot"></span><span id="tQuake">…</span><span id="bot"></span></div>
-  <main id="stage"><canvas id="cv" role="img" aria-label="Puzzle board"></canvas></main>
+  <main id="stage">
+    <canvas id="cv" role="img" aria-label="Puzzle board"></canvas>
+    <div id="tutTip" role="region" aria-live="polite" aria-label="Tutorial">
+      <div class="tut-head">
+        <div class="tut-title-wrap">
+          <span class="tut-icon" id="tutIcon" aria-hidden="true"></span>
+          <div>
+            <span class="tut-badge" id="tutStepBadge">1/3</span>
+            <strong id="tutTitle"></strong>
+          </div>
+        </div>
+        <button class="tut-close" id="bTutClose" aria-label="Dismiss tutorial">✕</button>
+      </div>
+      <p class="tut-body" id="tutBody"></p>
+      <div class="tut-foot">
+        <div class="tut-dots" id="tutDots" aria-hidden="true">
+          <span class="tut-dot on"></span><span class="tut-dot"></span><span class="tut-dot"></span>
+        </div>
+        <div class="tut-actions">
+          <button class="tut-btn alt" id="bTutPrev"></button>
+          <button class="tut-btn" id="bTutNext"></button>
+        </div>
+      </div>
+    </div>
+  </main>
   <footer id="bar">
     <button class="tb" id="bUndo"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span id="lUndo">Undo</span></button>
     <button class="tb" id="bRestart"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/></svg><span id="lRestart">Restart</span></button>
@@ -113,7 +160,7 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
     <h2 id="hTitle"></h2>
     <ol class="help" id="hList"></ol>
     <div class="legend" id="hLegend"></div>
-    <button class="btn" id="bHelpOk" style="text-align:center"></button>
+    <div class="row"><button class="btn alt" id="bTutReplay" style="text-align:center"></button><button class="btn" id="bHelpOk" style="text-align:center"></button></div>
   </div>
 </div>
 <div class="ov" id="result" role="dialog" aria-modal="true" aria-labelledby="rTitle">
@@ -554,6 +601,10 @@ const STR = {
     h4: 'After each move a small quake shifts one row by itself. The red band shows which row is next.',
     h5: 'Solve within par for 3 stars. Keys: WASD picks a tile, arrow keys shift, Z undo, R restart.',
     lRiver: 'river', lRoad: 'road', lVillage: 'village', lMount: 'mountain', lSpring: 'spring', lHan: 'caravanserai',
+    tutTitle1: 'Shift the Land', tutBody1: 'Drag any row sideways or column up/down (or tap the arrows). Tiles wrap around the board.',
+    tutTitle2: 'Fault Line Quake', tutBody2: 'The red band marks the fault line. After each move you make, that row shifts automatically!',
+    tutTitle3: 'Connect Villages', tutBody3: 'Route river water from the spring and roads from the caravanserai to each village.',
+    tutStep: '{s} of {t}', tutNext: 'Next', tutPrev: 'Back', tutGotIt: 'Got it', tutDismiss: 'Dismiss tips', tutReplay: 'Tutorial tips',
   },
   tr: {
     sub: 'Anadolu toprağını kaydır. Her köye su ve yol götür.',
@@ -569,6 +620,10 @@ const STR = {
     h4: 'Her hamleden sonra küçük bir deprem bir satırı kendiliğinden kaydırır. Kırmızı bant sıradaki satırı gösterir.',
     h5: 'Hedef hamlede çöz, 3 yıldız al. Tuşlar: WASD taş seçer, ok tuşları kaydırır, Z geri alır, R baştan.',
     lRiver: 'nehir', lRoad: 'yol', lVillage: 'köy', lMount: 'dağ', lSpring: 'pınar', lHan: 'kervansaray',
+    tutTitle1: 'Karoları Kaydır', tutBody1: 'Bir satırı sağa/sola veya sütunu yukarı/aşağı sürükle (ya da oklara dokun). Karolar kenardan dolanır.',
+    tutTitle2: 'Fay Hattı Depremi', tutBody2: 'Kırmızı şerit fay hattıdır. Yaptığın her hamleden sonra o satır kendiliğinden kayar!',
+    tutTitle3: 'Köylere Su ve Yol', tutBody3: 'Pınardan nehri, kervansaraydan yolu köylerin istediği simgelere ulaştır.',
+    tutStep: '{s} / {t}', tutNext: 'İleri', tutPrev: 'Geri', tutGotIt: 'Anladım', tutDismiss: 'İpuçlarını kapat', tutReplay: 'Rehber ipuçları',
   },
 };
 let lang = (QS.get('lang') || '').toLowerCase();
@@ -631,9 +686,58 @@ const sfx = {
   undo() { if (!audio()) return; noise(AC.currentTime, 0.1, 'bandpass', 500, 1300, 0.16, 1.2); },
 };
 
-// ---------------------------------------------------------------- game state
+// ---------------------------------------------------------------- game state & dynamic tutorial
 const G = { mode: 'daily', seed: '', level: 1, pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], bot: null, celebrateAt: 0, place: '' };
 let anims = [], shake = 0, particles = [], botTimer = 0, disp = null;
+
+// Dynamic tutorial tooltips (onboarding for first-time players on mobile)
+let tutStep = 1, tutActive = false;
+const TUT_SVGS = [
+  '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="3" stroke-dasharray="2 2"/><path d="M2 12h5m-2-3-3 3 3 3"/><path d="M22 12h-5m2-3 3 3-3 3"/></svg>',
+  '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#e0553a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l2.5-6 4 12 3-8 2.5 4h4"/><circle cx="12.5" cy="18" r="1.5" fill="#e0553a"/></svg>',
+  '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4c-2.5 3.5-4 5.5-4 7.5a4 4 0 0 0 8 0c0-2-1.5-4-4-7.5z" fill="#3d95cf" stroke="#256d9c" stroke-width="1.5"/><circle cx="17" cy="12" r="4" fill="#f2b33d" stroke="#b9843f" stroke-width="1.5"/><path d="M15 12h4M17 10v4" stroke="#fff" stroke-width="1.5"/></svg>',
+];
+function updateTutPos() {
+  const el = $('tutTip');
+  if (!el || !tutActive) return;
+  const BW = N * cs, botSpace = H - (oy + BW), topSpace = oy;
+  if (botSpace >= 96) { el.style.top = 'auto'; el.style.bottom = Math.max(8, Math.floor((botSpace - el.offsetHeight) / 2)) + 'px'; }
+  else if (topSpace >= 96) { el.style.bottom = 'auto'; el.style.top = Math.max(8, Math.floor((topSpace - el.offsetHeight) / 2)) + 'px'; }
+  else { el.style.top = 'auto'; el.style.bottom = '6px'; }
+}
+function setTutStep(s) {
+  if (!tutActive || G.won) return;
+  tutStep = Math.max(1, Math.min(3, s));
+  const el = $('tutTip'); if (!el) return;
+  el.classList.add('on');
+  $('tutIcon').innerHTML = TUT_SVGS[tutStep - 1];
+  $('tutStepBadge').textContent = t('tutStep', { s: tutStep, t: 3 });
+  $('tutTitle').textContent = t('tutTitle' + tutStep);
+  $('tutBody').textContent = t('tutBody' + tutStep);
+  $('bTutClose').setAttribute('aria-label', t('tutDismiss'));
+  const dots = $('tutDots').children;
+  for (let i = 0; i < dots.length; i++) dots[i].className = 'tut-dot' + (i === tutStep - 1 ? ' on' : '');
+  const bPrev = $('bTutPrev'), bNext = $('bTutNext');
+  bPrev.textContent = t('tutPrev');
+  bPrev.style.display = tutStep > 1 ? 'inline-flex' : 'none';
+  bNext.textContent = tutStep === 3 ? t('tutGotIt') : t('tutNext');
+  updateTutPos();
+}
+function showTut(s = 1) {
+  if (BOT || G.won || G.state !== 'play') return;
+  tutActive = true; setTutStep(s);
+}
+function hideTut(markDone = true) {
+  tutActive = false;
+  const el = $('tutTip'); if (el) el.classList.remove('on');
+  if (markDone) store.set('tutDone', true);
+}
+function tutOnMove() {
+  if (!tutActive) return;
+  if (G.won) { hideTut(false); return; }
+  if (G.moves === 1 && tutStep === 1) setTutStep(2);
+  else if (G.moves === 2 && tutStep === 2) setTutStep(3);
+}
 
 function starsFor(moves, par) { return moves <= par ? 3 : moves <= par + 2 ? 2 : 1; }
 function nextQuake() { return G.pz && !G.won ? G.pz.quakes[G.moves % G.pz.quakes.length] : -1; }
@@ -657,6 +761,7 @@ function startPuzzle(mode, arg, firstHelp = true) {
     buildCaches(); settle(true); updateHud();
     if (BOT) startBot();
     else if (firstHelp && !NOSAVE && !store.get('help', false)) { store.set('help', true); openHelp(); }
+    else if (!store.get('tutDone', false)) { showTut(1); }
   }, 30);
 }
 
@@ -682,6 +787,7 @@ function doMove(m) {
   G.ids = cur;
   if (G.won) G.stars = starsFor(G.moves, pz.par);
   sfx.slide(); updateHud();
+  tutOnMove();
   return true;
 }
 function undo() {
@@ -689,16 +795,19 @@ function undo() {
   flushAnims();
   const u = G.undo.pop(); G.ids = u.ids; G.moves = u.moves;
   sfx.undo(); settle(true); updateHud();
+  if (tutActive && G.moves === 0) setTutStep(1);
 }
 function restart() {
   if (!G.pz || G.bot) return;
   flushAnims(); closeAll();
   G.ids = G.pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.state = 'play'; particles = [];
   sfx.undo(); settle(true); updateHud();
+  if (tutActive) setTutStep(1);
 }
 function win() {
   const pz = G.pz;
   G.state = 'won';
+  hideTut(false);
   if (G.mode === 'daily') { if (!store.get('daily.' + G.seed, null)) store.set('daily.' + G.seed, { m: G.moves, s: G.stars }); }
   else store.set('endless', Math.max(store.get('endless', 1), G.level + 1));
   G.celebrateAt = performance.now();
@@ -786,6 +895,7 @@ function layout() {
   cs = Math.max(24, Math.floor(Math.min(W / units, H / units, 112)));
   ox = Math.round((W - N * cs) / 2); oy = Math.round((H - N * cs) / 2); pad = Math.round(cs * 0.2);
   buildCaches();
+  if (tutActive) updateTutPos();
 }
 const edgePt = (e, s) => [s / 2 + DC[e] * s / 2, s / 2 + DR[e] * s / 2];
 const isCorner = (m) => m === 3 || m === 6 || m === 12 || m === 9;
@@ -984,7 +1094,7 @@ function frame(now) {
   // next-quake band
   const nq = A && A.kind === 'quake' ? A.m : anims.length ? -1 : nextQuake();
   if (nq >= 0 && G.state === 'play') {
-    const r = nq >> 1, a = A && A.kind === 'quake' ? 0.28 : 0.1 + 0.06 * Math.sin(now / 200);
+    const r = nq >> 1, a = A && A.kind === 'quake' ? 0.28 : (tutActive && tutStep === 2 ? 0.18 + 0.08 * Math.sin(now / 180) : 0.1 + 0.06 * Math.sin(now / 200));
     ctx.fillStyle = `rgba(214,70,40,${a})`; ctx.fillRect(ox, oy + r * cs, BW, cs);
   }
   if (hover >= 0 && !anims.length && G.state === 'play' && !G.bot) {
@@ -1043,7 +1153,8 @@ function frame(now) {
   pz.villages.forEach((vg, n) => {
     const X = ox + (vg.cell % N) * cs, Y = oy + ((vg.cell / N) | 0) * cs, r = cs * 0.13;
     const ok = disp.st.sat[n];
-    const pulse = G.celebrateAt ? Math.max(0, 1 - Math.abs((now - G.celebrateAt) / 1000 - 0.35 - n * 0.12) * 4) : 0;
+    const tutBadge = tutActive && tutStep === 3 && !ok && !RM ? 0.12 * Math.sin(now / 240 + n) : 0;
+    const pulse = G.celebrateAt ? Math.max(0, 1 - Math.abs((now - G.celebrateAt) / 1000 - 0.35 - n * 0.12) * 4) : tutBadge;
     if (ok) { const gl = ctx.createRadialGradient(X + cs / 2, Y + cs * 0.65, 2, X + cs / 2, Y + cs * 0.65, cs * 0.5); gl.addColorStop(0, 'rgba(255,214,120,.55)'); gl.addColorStop(1, 'rgba(255,214,120,0)'); ctx.fillStyle = gl; ctx.fillRect(X, Y, cs, cs); }
     if (vg.need & NEED_RIVER) drawBadge(X + cs * 0.2, Y + cs * 0.2, r, true, (disp.st.rr >> vg.cell) & 1, pulse);
     if (vg.need & NEED_ROAD) drawBadge(X + cs * 0.8, Y + cs * 0.2, r, false, (disp.st.rd >> vg.cell) & 1, pulse);
@@ -1051,10 +1162,11 @@ function frame(now) {
   // gutter arrows (tap targets) and the quake marker
   const qRow = nq >= 0 && G.state === 'play' ? nq >> 1 : -1, qDir = nq >= 0 ? moveDir(nq) : 0;
   const gx = (cs * GUT + pad) / 2, chs = cs * 0.13;
+  const tutPulse = tutActive && tutStep === 1 && !RM ? 0.45 + 0.35 * Math.sin(now / 240) : 0;
   for (let l = 0; l < 2 * N; l++) {
     if (pz.lens[l] < 2) continue;
     const hot = hover >= 0 && (l < N ? ((hover / N) | 0) === l : hover % N === l - N);
-    const col = l === qRow ? 'rgba(255,140,110,.95)' : hot ? 'rgba(243,234,216,.95)' : 'rgba(243,234,216,.42)';
+    const col = l === qRow ? 'rgba(255,140,110,.95)' : hot ? 'rgba(243,234,216,.95)' : tutPulse ? `rgba(242,179,61,${tutPulse})` : 'rgba(243,234,216,.42)';
     if (l < N) { const cy = oy + l * cs + cs / 2; chevron(ox - gx, cy, -1, false, chs, col); chevron(ox + BW + gx, cy, 1, false, chs, col); }
     else { const cx = ox + (l - N) * cs + cs / 2; chevron(cx, oy - gx, -1, true, chs, col); chevron(cx, oy + BW + gx, 1, true, chs, col); }
   }
@@ -1142,7 +1254,7 @@ addEventListener('keydown', (e) => {
   if (k === 'z' || k === 'backspace') { undo(); e.preventDefault(); }
   else if (k === 'r') restart();
   else if (k === 'm') toggleMute();
-  else if (k === 'escape') openMenu();
+  else if (k === 'escape') { if (tutActive) { hideTut(true); e.preventDefault(); return; } openMenu(); }
 });
 
 // ---------------------------------------------------------------- UI
@@ -1185,10 +1297,15 @@ function openHelp() {
   $('hTitle').textContent = t('how');
   $('hList').innerHTML = ['h1', 'h2', 'h3', 'h4', 'h5'].map((k) => `<li>${t(k)}</li>`).join('');
   $('hLegend').innerHTML = [['#3d95cf', 'lRiver'], ['#c79a5e', 'lRoad'], ['#c25b35', 'lVillage'], ['#2fa3b6', 'lSpring'], ['#b8a07a', 'lHan'], ['#7a6551', 'lMount']].map(([c, k]) => `<span><i style="background:${c}"></i>${t(k)}</span>`).join('');
+  $('bTutReplay').textContent = t('tutReplay');
   $('bHelpOk').textContent = t('gotIt');
   $('help').classList.add('on'); if (!COARSE) setTimeout(() => $('bHelpOk').focus(), 30);
 }
-function closeHelp() { $('help').classList.remove('on'); if (helpReturn === 'menu') openMenu(); }
+function closeHelp() {
+  $('help').classList.remove('on');
+  if (helpReturn === 'menu') openMenu();
+  else if (!store.get('tutDone', false) && !BOT && G.state === 'play' && !G.won) showTut(1);
+}
 function shareText() { return `Fay Hattı ${G.mode === 'daily' ? seedLabel(G.seed) : '#' + G.level} ${'⭐'.repeat(G.stars)} ${G.moves} ${t('movesWord')}`; }
 function shareUrl() { return CANON + (G.mode === 'daily' ? '?seed=' + G.seed : '?level=' + G.level); }
 function showResult() {
@@ -1214,18 +1331,26 @@ async function share() {
   catch (e) { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); toast(t('copied')); } catch (e2) {} ta.remove(); }
 }
 function toggleMute() { muted = !muted; store.set('mute', muted); if (AC) master.gain.value = muted ? 0 : 0.55; updateHud(); fillMenu(); if (!muted) sfx.click(); }
-function toggleLang() { lang = lang === 'tr' ? 'en' : 'tr'; store.set('lang', lang); updateHud(); fillMenu(); if ($('result').classList.contains('on')) showResult(); if ($('help').classList.contains('on')) { const r = helpReturn; openHelp(); helpReturn = r; } }
+function toggleLang() { lang = lang === 'tr' ? 'en' : 'tr'; store.set('lang', lang); updateHud(); fillMenu(); if ($('result').classList.contains('on')) showResult(); if ($('help').classList.contains('on')) { const r = helpReturn; openHelp(); helpReturn = r; } if (tutActive) setTutStep(tutStep); }
 
 $('bUndo').onclick = undo; $('bRestart').onclick = restart; $('bMenu').onclick = () => { sfx.click(); openMenu(); };
 $('bSound').onclick = toggleMute; $('mSound').onclick = toggleMute; $('bLang').onclick = toggleLang; $('mLang').onclick = toggleLang;
 $('bDaily').onclick = () => {
   sfx.click();
-  if (G.mode === 'daily' && G.seed === todaySeed() && G.pz && !G.won) { closeAll(); if (!NOSAVE && !store.get('help', false)) { store.set('help', true); openHelp(); } }
+  if (G.mode === 'daily' && G.seed === todaySeed() && G.pz && !G.won) {
+    closeAll();
+    if (!NOSAVE && !store.get('help', false)) { store.set('help', true); openHelp(); }
+    else if (!store.get('tutDone', false)) { showTut(1); }
+  }
   else startPuzzle('daily', todaySeed());
 };
 $('bEndless').onclick = () => { sfx.click(); startPuzzle('endless', store.get('endless', 1)); };
 $('bHow').onclick = () => { sfx.click(); openHelp(); };
 $('bHelpOk').onclick = closeHelp;
+$('bTutReplay').onclick = () => { sfx.click(); closeHelp(); showTut(1); };
+$('bTutNext').onclick = () => { sfx.click(); if (tutStep < 3) setTutStep(tutStep + 1); else hideTut(true); };
+$('bTutPrev').onclick = () => { sfx.click(); if (tutStep > 1) setTutStep(tutStep - 1); };
+$('bTutClose').onclick = () => { sfx.click(); hideTut(true); };
 $('bShare').onclick = share;
 $('bNext').onclick = () => { sfx.click(); startPuzzle('endless', G.mode === 'daily' ? store.get('endless', 1) : G.level + 1); };
 $('bRMenu').onclick = () => { sfx.click(); openMenu(); };
@@ -1249,6 +1374,7 @@ window.fayHatti = {
   get genMs() { return G.genMs; }, get fps() { return fps; }, get plan() { return G.pz ? G.pz.solution.slice() : null; },
   get board() { if (!G.pz) return null; const v = toVals(G.pz, G.ids), out = []; for (let r = 0; r < N; r++) { const row = []; for (let c = 0; c < N; c++) { const x = v[r * N + c], k = x >> 4; row.push(k === KR ? 'r' + (x & 15).toString(16) : k === KD ? 'd' + (x & 15).toString(16) : GLYPH[k]); } out.push(row.join(' ')); } return out; },
   move: (m) => doMove(m), undo, restart, start: (mode, arg) => startPuzzle(mode, arg, false),
+  tutorial: { get step() { return tutStep; }, get active() { return tutActive; }, show: (s) => showTut(s || 1), hide: () => hideTut(true), next: () => setTutStep(tutStep + 1), prev: () => setTutStep(tutStep - 1) },
 };
 addEventListener('resize', layout);
 layout();
