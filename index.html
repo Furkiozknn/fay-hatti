@@ -11,8 +11,10 @@
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.4 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent}
 body{background:radial-gradient(120% 80% at 50% 0%,#2a3f49 0%,var(--bg) 60%)}
+::selection{background:#c25b35;color:#fff8ec}
 button{font:inherit;color:inherit;cursor:pointer}
-button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--focus);outline-offset:2px;box-shadow:0 0 0 1px rgba(27,40,48,.85)}
+button:focus:not(:focus-visible),[tabindex]:focus:not(:focus-visible){outline:none}
 #app{position:fixed;inset:0;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto 1fr auto;grid-template-areas:"hud" "quake" "stage" "bar";padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left)}
 #hud{grid-area:hud;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px 4px;max-width:620px;width:100%;margin:0 auto}
 .brand{min-width:0}
@@ -24,34 +26,48 @@ button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 .stat b{display:block;font-size:22px;line-height:1.1;font-variant-numeric:tabular-nums}
 .stars{display:flex;gap:2px}
 .stars svg{width:18px;height:18px}
-#quake{grid-area:quake;display:flex;align-items:center;justify-content:center;gap:8px;min-height:30px;padding:2px 16px;font-size:15px;color:#ffd9cf}
+#quake{grid-area:quake;display:flex;align-items:center;justify-content:center;gap:8px;min-height:32px;padding:3px 16px;font-size:15px;color:#ffd9cf;border-radius:10px;margin:2px 14px;background:rgba(224,85,58,.14);border:1px solid rgba(224,85,58,.28);transition:background .25s ease,border-color .25s ease,color .25s ease}
 #quake .dot{width:10px;height:10px;flex:none;border-radius:50%;background:var(--quake);box-shadow:0 0 0 0 rgba(224,85,58,.6);animation:pulse 1.4s infinite}
-#quake.calm{color:var(--ink2)}#quake.calm .dot{background:#6f8f6a;animation:none}
+#quake.calm{color:var(--ink2);background:transparent;border-color:transparent}
+#quake.calm .dot{background:#6f8f6a;animation:none;box-shadow:none}
 #bot{display:none;margin-left:8px;padding:2px 8px;border-radius:999px;background:#33505c;color:#e7f4fb;font-size:13px;font-weight:700;letter-spacing:.05em}
 @keyframes pulse{70%{box-shadow:0 0 0 8px rgba(224,85,58,0)}100%{box-shadow:0 0 0 0 rgba(224,85,58,0)}}
 #stage{grid-area:stage;position:relative;min-height:0;min-width:0}
 #cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
+#cv:focus-visible{outline:3px solid var(--focus);outline-offset:-3px;border-radius:12px}
 #bar{grid-area:bar;display:flex;justify-content:center;gap:8px;padding:6px 12px calc(10px + env(safe-area-inset-bottom))}
-.tb{min-width:58px;min-height:48px;padding:4px 8px;border:1px solid #3d5561;border-radius:12px;background:var(--bg2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:12px;color:var(--ink)}
+.tb{min-width:60px;min-height:48px;padding:5px 10px;border:1px solid #3d5561;border-radius:12px;background:var(--bg2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px;color:var(--ink);box-shadow:0 2px 0 #141f26;transform:translateY(0);transition:transform .08s ease,background .12s ease,border-color .12s ease,box-shadow .08s ease}
 .tb svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.tb:hover{background:#2c434e}.tb:disabled{opacity:.4;cursor:default}
+.tb:hover:not(:disabled){background:#2c434e;border-color:#4e6c7c}
+.tb:active:not(:disabled){transform:translateY(1px);box-shadow:0 1px 0 #141f26;background:#1e2d35}
+.tb:disabled{opacity:.42;cursor:default;box-shadow:none}
 .tb b{font-size:15px;line-height:22px}
-.ov{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(14,22,27,.74);z-index:10}
-.ov.on{display:flex}
-.panel{width:100%;max-width:380px;max-height:100%;overflow:auto;background:var(--paper);color:var(--paper-ink);border-radius:18px;padding:22px 20px;box-shadow:0 18px 50px rgba(0,0,0,.45),inset 0 0 0 2px #d9c596;animation:pop .22s ease-out}
-@keyframes pop{from{transform:scale(.94);opacity:0}to{transform:none;opacity:1}}
+.ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(14,22,27,.78);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:10;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .22s cubic-bezier(.16,1,.3,1),visibility .22s}
+.ov.on{opacity:1;visibility:visible;pointer-events:auto}
+.panel{position:relative;width:100%;max-width:390px;max-height:92vh;overflow-y:auto;overscroll-behavior:contain;background:var(--paper);color:var(--paper-ink);border-radius:18px;padding:24px 20px 20px;box-shadow:0 20px 48px rgba(0,0,0,.55),inset 0 0 0 2px #d9c596,inset 0 0 0 1px #bca167;transform:translateY(12px) scale(.96);opacity:0;transition:transform .22s cubic-bezier(.16,1,.3,1),opacity .2s ease-out}
+.ov.on .panel{transform:translateY(0) scale(1);opacity:1}
+.panel::-webkit-scrollbar{width:6px}
+.panel::-webkit-scrollbar-track{background:transparent}
+.panel::-webkit-scrollbar-thumb{background:#c7b182;border-radius:3px}
+.panel-close{position:absolute;top:12px;right:12px;width:44px;height:44px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;border:1px solid #c9b485;border-radius:50%;background:#ede0bf;color:#5a2a18;font-size:18px;line-height:1;padding:0;box-shadow:0 2px 0 #baa072;transition:transform .08s ease,background .12s ease,box-shadow .08s ease}
+.panel-close:hover{background:#f6ecce;border-color:#a88349}
+.panel-close:active{transform:translateY(1px);box-shadow:0 1px 0 #baa072;background:#decda7}
 .panel h1{margin:0;font:700 34px/1.05 "Palatino Linotype",Palatino,Georgia,serif;color:#5a2a18}
 .panel h1 small{display:block;font-size:17px;font-weight:400;color:#7a5638;margin-top:2px}
 .panel h2{margin:0 0 6px;font:700 26px/1.1 "Palatino Linotype",Palatino,Georgia,serif;color:#5a2a18;text-align:center}
 .panel .sub{margin:8px 0 14px;color:#5b4a36;font-size:15px}
-.btn{display:block;width:100%;min-height:52px;margin:8px 0;padding:10px 14px;border:0;border-radius:12px;background:var(--terra);color:#fff8ec;font-size:17px;font-weight:700;text-align:left}
-.btn small{display:block;font-weight:400;font-size:14px;opacity:.92}
+.btn{display:block;width:100%;min-height:54px;margin:8px 0;padding:12px 16px;border:0;border-radius:12px;background:var(--terra);color:#fff8ec;font-size:17px;font-weight:700;text-align:left;box-shadow:0 3px 0 #732a18,0 6px 16px rgba(166,63,39,.25);transform:translateY(0);transition:transform .08s ease,background .12s ease,box-shadow .08s ease}
+.btn small{display:block;font-weight:400;font-size:14px;opacity:.92;margin-top:2px}
 .btn:hover{background:#b9472c}
-.btn.alt{background:#e6d3a8;color:var(--paper-ink);box-shadow:inset 0 0 0 1px #b8935a}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 #732a18;background:#93361e}
+.btn.alt{background:#e6d3a8;color:var(--paper-ink);box-shadow:inset 0 0 0 1px #b8935a,0 2px 0 #ab864e}
 .btn.alt:hover{background:#ecdcb6}
+.btn.alt:active{transform:translateY(1px);box-shadow:inset 0 0 0 1px #b8935a,0 1px 0 #ab864e;background:#dcc99c}
 .row{display:flex;gap:8px}.row .btn{text-align:center}
 .mini{display:flex;gap:8px;margin-top:10px}
-.mini button{flex:1;min-height:44px;border-radius:10px;border:1px solid #b8935a;background:transparent;color:var(--paper-ink);font-size:15px}
+.mini button{flex:1;min-height:48px;min-width:44px;border-radius:10px;border:1px solid #b8935a;background:#ebe0c4;color:var(--paper-ink);font-size:15px;font-weight:600;box-shadow:0 2px 0 #baa072;transition:transform .08s,background .12s,box-shadow .08s}
+.mini button:hover{background:#f5ebd2}
+.mini button:active{transform:translateY(1px);box-shadow:0 1px 0 #baa072;background:#decda7}
 .big-stars{display:flex;justify-content:center;gap:6px;margin:6px 0 4px}
 .big-stars svg{width:46px;height:46px}
 .big-stars svg.on{animation:starpop .45s cubic-bezier(.3,1.6,.5,1) both}
@@ -63,18 +79,24 @@ button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
 .legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:14px;margin-bottom:8px}
 .legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:5px}
-#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#0e171c;color:var(--ink);padding:10px 16px;border-radius:10px;font-size:15px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
-#toast.on{opacity:1}
+#toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%) translateY(10px);background:#0e171c;color:var(--ink);padding:10px 18px;border-radius:10px;font-size:15px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.5),0 0 0 1px #3d5561;opacity:0;visibility:hidden;transition:opacity .2s cubic-bezier(.16,1,.3,1),transform .2s cubic-bezier(.16,1,.3,1),visibility .2s;pointer-events:none;z-index:20}
+#toast.on{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
 #debug{position:fixed;left:6px;top:6px;z-index:30;font:12px/1.3 ui-monospace,Consolas,monospace;background:rgba(0,0,0,.6);color:#9f9;padding:4px 6px;border-radius:6px;display:none;white-space:pre;pointer-events:none}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @media (orientation:landscape) and (max-height:540px){
   #app{grid-template-columns:minmax(170px,230px) 1fr auto;grid-template-rows:auto 1fr;grid-template-areas:"hud stage bar" "quake stage bar"}
   #hud{flex-direction:column;align-items:flex-start;padding:10px 6px 4px 12px}
-  #quake{align-items:flex-start;justify-content:flex-start;padding:4px 6px 4px 12px;flex-wrap:wrap}
+  #quake{align-items:flex-start;justify-content:flex-start;padding:4px 6px 4px 12px;flex-wrap:wrap;margin:2px 6px}
   #bar{flex-direction:column;padding:8px 10px 8px 4px;overflow:auto}
-  .tb{min-height:44px;flex-direction:row;gap:6px}
+  .tb{min-height:46px;flex-direction:row;gap:6px}
 }
-@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on{animation:none}}
+@media (prefers-reduced-motion:reduce){
+  #quake .dot{animation:none}
+  .ov{transition:opacity .12s linear,visibility .12s}
+  .panel{transform:none !important;transition:opacity .12s linear}
+  .big-stars svg.on{animation:none;transform:none}
+  .btn,.tb,.mini button,.panel-close{transition:background .1s linear,box-shadow .1s linear,border-color .1s linear;transform:none !important}
+}
 </style>
 </head>
 <body>
@@ -84,22 +106,23 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
     <div class="stats">
       <div class="stat"><span id="lMoves">Moves</span><b id="vMoves">0</b></div>
       <div class="stat"><span id="lPar">Par</span><b id="vPar">–</b></div>
-      <div class="stars" id="vStars" aria-hidden="true"></div>
+      <div class="stars" id="vStars" role="img" aria-label="Stars"></div>
     </div>
   </header>
   <div id="quake" class="calm" aria-live="polite"><span class="dot"></span><span id="tQuake">…</span><span id="bot"></span></div>
-  <main id="stage"><canvas id="cv" role="img" aria-label="Puzzle board"></canvas></main>
+  <main id="stage"><canvas id="cv" role="img" tabindex="0" aria-label="Puzzle board"></canvas></main>
   <footer id="bar">
-    <button class="tb" id="bUndo"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span id="lUndo">Undo</span></button>
-    <button class="tb" id="bRestart"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/></svg><span id="lRestart">Restart</span></button>
-    <button class="tb" id="bMenu"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span id="lMenu">Menu</span></button>
-    <button class="tb" id="bSound" aria-label="Sound"><svg viewBox="0 0 24 24" id="iSound"></svg><span id="lSound">Sound</span></button>
+    <button class="tb" id="bUndo" aria-label="Undo"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span id="lUndo">Undo</span></button>
+    <button class="tb" id="bRestart" aria-label="Restart"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/></svg><span id="lRestart">Restart</span></button>
+    <button class="tb" id="bMenu" aria-label="Menu" aria-haspopup="dialog"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span id="lMenu">Menu</span></button>
+    <button class="tb" id="bSound" aria-label="Sound" aria-pressed="true"><svg viewBox="0 0 24 24" id="iSound"></svg><span id="lSound">Sound</span></button>
     <button class="tb" id="bLang" aria-label="Language"><b id="vLang">TR</b><span id="lLang">Türkçe</span></button>
   </footer>
 </div>
 
-<div class="ov" id="menu" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+<div class="ov" id="menu" role="dialog" aria-modal="true" aria-labelledby="mTitle" aria-hidden="true">
   <div class="panel">
+    <button class="panel-close" id="bMenuClose" aria-label="Close">✕</button>
     <h1 id="mTitle">Fay Hattı<small>Fault Line</small></h1>
     <p class="sub" id="mSub"></p>
     <button class="btn" id="bDaily"></button>
@@ -108,16 +131,18 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
     <div class="mini"><button id="mLang"></button><button id="mSound"></button></div>
   </div>
 </div>
-<div class="ov" id="help" role="dialog" aria-modal="true" aria-labelledby="hTitle">
+<div class="ov" id="help" role="dialog" aria-modal="true" aria-labelledby="hTitle" aria-hidden="true">
   <div class="panel">
+    <button class="panel-close" id="bHelpClose" aria-label="Close">✕</button>
     <h2 id="hTitle"></h2>
     <ol class="help" id="hList"></ol>
     <div class="legend" id="hLegend"></div>
     <button class="btn" id="bHelpOk" style="text-align:center"></button>
   </div>
 </div>
-<div class="ov" id="result" role="dialog" aria-modal="true" aria-labelledby="rTitle">
+<div class="ov" id="result" role="dialog" aria-modal="true" aria-labelledby="rTitle" aria-hidden="true">
   <div class="panel">
+    <button class="panel-close" id="bResultClose" aria-label="Close">✕</button>
     <h2 id="rTitle"></h2>
     <div class="big-stars" id="rStars"></div>
     <p class="res-line" id="rLine"></p>
@@ -554,6 +579,8 @@ const STR = {
     h4: 'After each move a small quake shifts one row by itself. The red band shows which row is next.',
     h5: 'Solve within par for 3 stars. Keys: WASD picks a tile, arrow keys shift, Z undo, R restart.',
     lRiver: 'river', lRoad: 'road', lVillage: 'village', lMount: 'mountain', lSpring: 'spring', lHan: 'caravanserai',
+    close: 'Close', starsLabel: '{n} of 3 stars', rowName: 'Row {r}', colName: 'Column {c}', rowMoved: '{line} shifted',
+    quakeHit: 'Quake shifted row {r}', undoDone: 'Move undone', restartDone: 'Restarted',
   },
   tr: {
     sub: 'Anadolu toprağını kaydır. Her köye su ve yol götür.',
@@ -569,6 +596,8 @@ const STR = {
     h4: 'Her hamleden sonra küçük bir deprem bir satırı kendiliğinden kaydırır. Kırmızı bant sıradaki satırı gösterir.',
     h5: 'Hedef hamlede çöz, 3 yıldız al. Tuşlar: WASD taş seçer, ok tuşları kaydırır, Z geri alır, R baştan.',
     lRiver: 'nehir', lRoad: 'yol', lVillage: 'köy', lMount: 'dağ', lSpring: 'pınar', lHan: 'kervansaray',
+    close: 'Kapat', starsLabel: '3 üzerinden {n} yıldız', rowName: '{r}. satır', colName: '{c}. sütun', rowMoved: '{line} kaydırıldı',
+    quakeHit: 'Deprem {r}. satırı kaydırdı', undoDone: 'Hamle geri alındı', restartDone: 'Baştan başlatıldı',
   },
 };
 let lang = (QS.get('lang') || '').toLowerCase();
@@ -587,8 +616,17 @@ const starSvg = (on, size) => `<svg viewBox="0 0 24 24" class="${on ? 'on' : ''}
 const ICON_ON = '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18.5 6a8 8 0 0 1 0 12"/>';
 const ICON_OFF = '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M22 9l-6 6M16 9l6 6"/>';
 
-// ---------------------------------------------------------------- audio (Web Audio, synthesized)
+// ---------------------------------------------------------------- audio & haptics (tactile feedback)
 let AC = null, master = null, noiseBuf = null;
+function haptic(type = 'tap') {
+  if (muted || typeof navigator === 'undefined' || !navigator.vibrate) return;
+  try {
+    if (type === 'tap') navigator.vibrate(12);
+    else if (type === 'quake') navigator.vibrate([35, 45, 25]);
+    else if (type === 'win') navigator.vibrate([40, 50, 40, 50, 80]);
+    else if (type === 'undo') navigator.vibrate(18);
+  } catch (e) {}
+}
 function audio() {
   if (muted) return null;
   try {
@@ -626,9 +664,9 @@ const sfx = {
   quake() { if (!audio()) return; const t0 = AC.currentTime; noise(t0, 0.7, 'lowpass', 220, 60, 0.75, 0.8); tone(t0, 52, 0.6, 'sine', 0.45, 34); noise(t0 + 0.12, 0.25, 'bandpass', 600, 300, 0.12, 2); },
   ping(i) { if (!audio()) return; const t0 = AC.currentTime, f = [587.3, 740, 880, 1174.7][i % 4]; tone(t0, f, 0.5, 'sine', 0.2); tone(t0, f * 2.01, 0.25, 'sine', 0.06); },
   // Hicaz-flavoured run on D: D Eb F# G A D
-  win() { if (!audio()) return; const t0 = AC.currentTime; [293.7, 311.1, 370, 392, 440, 587.3].forEach((f, i) => pluck(t0 + i * 0.09, f, 0.16)); tone(t0 + 0.55, 587.3, 1.2, 'sine', 0.12); tone(t0 + 0.55, 880, 1.2, 'sine', 0.07); },
-  click() { if (!audio()) return; tone(AC.currentTime, 900, 0.04, 'square', 0.04); },
-  undo() { if (!audio()) return; noise(AC.currentTime, 0.1, 'bandpass', 500, 1300, 0.16, 1.2); },
+  win() { haptic('win'); if (!audio()) return; const t0 = AC.currentTime; [293.7, 311.1, 370, 392, 440, 587.3].forEach((f, i) => pluck(t0 + i * 0.09, f, 0.16)); tone(t0 + 0.55, 587.3, 1.2, 'sine', 0.12); tone(t0 + 0.55, 880, 1.2, 'sine', 0.07); },
+  click() { haptic('tap'); if (!audio()) return; tone(AC.currentTime, 900, 0.04, 'square', 0.04); },
+  undo() { haptic('undo'); if (!audio()) return; noise(AC.currentTime, 0.1, 'bandpass', 500, 1300, 0.16, 1.2); },
 };
 
 // ---------------------------------------------------------------- game state
@@ -681,6 +719,10 @@ function doMove(m) {
   }
   G.ids = cur;
   if (G.won) G.stars = starsFor(G.moves, pz.par);
+  haptic('tap');
+  const isRow = line < N;
+  const lineName = isRow ? t('rowName', { r: line + 1 }) : t('colName', { c: line - N + 1 });
+  $('live').textContent = t('rowMoved', { line: lineName });
   sfx.slide(); updateHud();
   return true;
 }
@@ -688,12 +730,14 @@ function undo() {
   if (!G.pz || G.won || G.state !== 'play' || !G.undo.length || G.bot) return;
   flushAnims();
   const u = G.undo.pop(); G.ids = u.ids; G.moves = u.moves;
+  $('live').textContent = t('undoDone');
   sfx.undo(); settle(true); updateHud();
 }
 function restart() {
   if (!G.pz || G.bot) return;
   flushAnims(); closeAll();
   G.ids = G.pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.state = 'play'; particles = [];
+  $('live').textContent = t('restartDone');
   sfx.undo(); settle(true); updateHud();
 }
 function win() {
@@ -717,12 +761,31 @@ function pushAnim(kind, from, to, m) {
   anims.push({ kind, from, toPos, m, t: 0, delay: kind === 'quake' ? DUR.qDelay : 0, dur: kind === 'quake' ? DUR.quake : DUR.slide, started: false, hit: false });
 }
 function flushAnims() { if (anims.length) { anims = []; shake = 0; settle(false); } }
+function quakeDust(row) {
+  if (RM) return;
+  const cy = oy + row * cs + cs / 2, BW = N * cs;
+  for (let i = 0; i < 7; i++) {
+    const cx = ox + (i / 6) * BW + (Math.random() - 0.5) * cs * 0.35;
+    particles.push({
+      x: cx, y: cy + (Math.random() - 0.5) * cs * 0.3,
+      vx: (Math.random() - 0.5) * cs * 0.7, vy: -cs * (0.25 + Math.random() * 0.4),
+      life: 0.5 + Math.random() * 0.25, t: 0, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 8,
+      col: i % 2 ? 'rgba(214,110,65,.6)' : 'rgba(235,215,175,.6)', delay: 0
+    });
+  }
+}
 function stepAnims(dt) {
   while (anims.length) {
     const A = anims[0];
     if (!A.started) { A.started = true; setDisp(A.from); if (A.kind === 'quake') sfx.quake(); }
     A.t += dt;
-    if (A.kind === 'quake' && !A.hit && A.t >= A.delay) { A.hit = true; if (!RM) shake = cs * 0.07; }
+    if (A.kind === 'quake' && !A.hit && A.t >= A.delay) {
+      A.hit = true;
+      if (!RM) shake = cs * 0.08;
+      haptic('quake');
+      quakeDust(A.m >> 1);
+      $('live').textContent = t('quakeHit', { r: (A.m >> 1) + 1 });
+    }
     if (A.t < A.delay + A.dur) return;
     anims.shift();
     if (!anims.length) settle(false);
@@ -1096,8 +1159,15 @@ function drawParticles(dt) {
 function hitTest(px, py) {
   const bx = (px - ox) / cs, by = (py - oy) / cs;
   if (bx >= 0 && bx < N && by >= 0 && by < N) return { cell: (by | 0) * N + (bx | 0) };
-  if (by >= 0 && by < N) { if (bx < 0 && bx >= -GUT) return { m: (by | 0) * 2 + 1 }; if (bx >= N && bx < N + GUT) return { m: (by | 0) * 2 }; }
-  if (bx >= 0 && bx < N) { if (by < 0 && by >= -GUT) return { m: (N + (bx | 0)) * 2 + 1 }; if (by >= N && by < N + GUT) return { m: (N + (bx | 0)) * 2 }; }
+  const hitGUT = Math.max(GUT, 44 / cs);
+  if (by >= 0 && by < N) {
+    if (bx < 0 && bx >= -hitGUT) return { m: (by | 0) * 2 + 1 };
+    if (bx >= N && bx < N + hitGUT) return { m: (by | 0) * 2 };
+  }
+  if (bx >= 0 && bx < N) {
+    if (by < 0 && by >= -hitGUT) return { m: (N + (bx | 0)) * 2 + 1 };
+    if (by >= N && by < N + hitGUT) return { m: (N + (bx | 0)) * 2 };
+  }
   return null;
 }
 const ptr = (e) => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
@@ -1127,10 +1197,21 @@ const endDrag = (e) => {
 cv.addEventListener('pointerup', endDrag);
 cv.addEventListener('pointercancel', () => { drag = null; });
 cv.addEventListener('pointerleave', () => { hover = -1; });
+cv.addEventListener('focus', () => { if (cursor < 0 && G.state === 'play') cursor = 12; });
 addEventListener('keydown', (e) => {
   audio();
-  if ($('help').classList.contains('on') && (e.key === 'Escape' || e.key === 'Enter')) { closeHelp(); e.preventDefault(); return; }
-  if (document.querySelector('.ov.on')) return;
+  const activeModal = document.querySelector('.ov.on');
+  if (activeModal) {
+    if (e.key === 'Escape') {
+      if (activeModal.id === 'help') closeHelp();
+      else if (activeModal.id === 'menu' && G.pz) closeAll();
+      else if (activeModal.id === 'result') closeAll();
+      e.preventDefault();
+      return;
+    }
+    if (activeModal.id === 'help' && e.key === 'Enter') { closeHelp(); e.preventDefault(); return; }
+    return;
+  }
   if (G.state !== 'play' || G.bot) return;
   const k = e.key.toLowerCase();
   if (cursor < 0 && /^(w|a|s|d|arrow)/.test(k)) cursor = 12;
@@ -1152,17 +1233,26 @@ function updateHud() {
   $('vMoves').textContent = G.moves; $('vPar').textContent = G.pz ? G.pz.par : '–';
   const st = G.pz ? (G.won ? G.stars : starsFor(G.moves, G.pz.par)) : 0;
   $('vStars').innerHTML = [0, 1, 2].map((i) => starSvg(i < st, 18)).join('');
+  $('vStars').setAttribute('aria-label', t('starsLabel', { n: st }));
   const q = $('quake'), nq = nextQuake();
   if (G.state === 'loading') { q.className = 'calm'; $('tQuake').textContent = t('loading'); }
   else if (nq < 0) { q.className = 'calm'; $('tQuake').textContent = t('calm'); }
   else { q.className = ''; $('tQuake').textContent = t('quakeNext', { r: (nq >> 1) + 1, a: moveDir(nq) > 0 ? '→' : '←' }); }
   const b = $('bot'); b.style.display = G.bot ? 'inline-block' : 'none'; b.textContent = G.bot ? 'BOT ' + G.bot.strategy.toUpperCase() : '';
-  ['Undo', 'Restart', 'Menu'].forEach((k) => ($('l' + k).textContent = t(k.toLowerCase())));
+  ['Undo', 'Restart', 'Menu'].forEach((k) => {
+    $('l' + k).textContent = t(k.toLowerCase());
+    $('b' + k).setAttribute('aria-label', t(k.toLowerCase()));
+  });
+  $('bMenuClose').setAttribute('aria-label', t('close'));
+  $('bHelpClose').setAttribute('aria-label', t('close'));
+  $('bResultClose').setAttribute('aria-label', t('close'));
   $('bUndo').disabled = !G.undo.length || G.won || !!G.bot;
   $('bRestart').disabled = !G.pz || !!G.bot;
   $('lSound').textContent = t('sound'); $('iSound').innerHTML = muted ? ICON_OFF : ICON_ON;
+  $('bSound').setAttribute('aria-label', t('sound') + ': ' + (muted ? t('off') : t('on')));
   $('bSound').setAttribute('aria-pressed', String(!muted));
   $('vLang').textContent = lang === 'tr' ? 'EN' : 'TR'; $('lLang').textContent = lang === 'tr' ? 'English' : 'Türkçe';
+  $('bLang').setAttribute('aria-label', lang === 'tr' ? 'Switch to English' : 'Türkçe diline geç');
   cv.setAttribute('aria-label', t('board'));
   document.documentElement.lang = lang;
   dbg();
@@ -1176,23 +1266,52 @@ function fillMenu() {
   $('mLang').textContent = lang === 'tr' ? 'English' : 'Türkçe';
   $('mSound').textContent = t('sound') + ': ' + (muted ? t('off') : t('on'));
 }
-function closeAll() { document.querySelectorAll('.ov').forEach((o) => o.classList.remove('on')); }
+let prevFocus = null;
+function closeAll() {
+  document.querySelectorAll('.ov').forEach((o) => {
+    o.classList.remove('on');
+    o.setAttribute('aria-hidden', 'true');
+  });
+  $('app').removeAttribute('aria-hidden');
+  if (prevFocus && typeof prevFocus.focus === 'function') {
+    try { prevFocus.focus(); } catch (e) {}
+    prevFocus = null;
+  }
+}
 const COARSE = matchMedia('(pointer:coarse)').matches;
-function openMenu() { fillMenu(); closeAll(); $('menu').classList.add('on'); if (!COARSE) setTimeout(() => $('bDaily').focus(), 30); }
+function openMenu() {
+  prevFocus = document.activeElement;
+  fillMenu(); closeAll();
+  $('menu').classList.add('on');
+  $('menu').setAttribute('aria-hidden', 'false');
+  $('app').setAttribute('aria-hidden', 'true');
+  if (!COARSE) setTimeout(() => $('bDaily').focus(), 40);
+}
 let helpReturn = null;
 function openHelp() {
-  helpReturn = $('menu').classList.contains('on') ? 'menu' : null; closeAll();
+  helpReturn = $('menu').classList.contains('on') ? 'menu' : null;
+  prevFocus = document.activeElement;
+  closeAll();
   $('hTitle').textContent = t('how');
   $('hList').innerHTML = ['h1', 'h2', 'h3', 'h4', 'h5'].map((k) => `<li>${t(k)}</li>`).join('');
   $('hLegend').innerHTML = [['#3d95cf', 'lRiver'], ['#c79a5e', 'lRoad'], ['#c25b35', 'lVillage'], ['#2fa3b6', 'lSpring'], ['#b8a07a', 'lHan'], ['#7a6551', 'lMount']].map(([c, k]) => `<span><i style="background:${c}"></i>${t(k)}</span>`).join('');
   $('bHelpOk').textContent = t('gotIt');
-  $('help').classList.add('on'); if (!COARSE) setTimeout(() => $('bHelpOk').focus(), 30);
+  $('help').classList.add('on');
+  $('help').setAttribute('aria-hidden', 'false');
+  $('app').setAttribute('aria-hidden', 'true');
+  if (!COARSE) setTimeout(() => $('bHelpOk').focus(), 40);
 }
-function closeHelp() { $('help').classList.remove('on'); if (helpReturn === 'menu') openMenu(); }
+function closeHelp() {
+  $('help').classList.remove('on');
+  $('help').setAttribute('aria-hidden', 'true');
+  if (helpReturn === 'menu') openMenu();
+  else closeAll();
+}
 function shareText() { return `Fay Hattı ${G.mode === 'daily' ? seedLabel(G.seed) : '#' + G.level} ${'⭐'.repeat(G.stars)} ${G.moves} ${t('movesWord')}`; }
 function shareUrl() { return CANON + (G.mode === 'daily' ? '?seed=' + G.seed : '?level=' + G.level); }
 function showResult() {
   if (!G.won) return;
+  prevFocus = document.activeElement;
   closeAll();
   $('rTitle').textContent = t('solvedT');
   $('rStars').innerHTML = [0, 1, 2].map((i) => starSvg(i < G.stars, 46)).join('');
@@ -1203,7 +1322,9 @@ function showResult() {
   $('bRMenu').textContent = t('back');
   $('rNote').textContent = G.mode === 'daily' ? t('tomorrow') : t('endlessNote', { n: G.level });
   $('result').classList.add('on');
-  if (!BOT && !COARSE) setTimeout(() => $('bShare').focus(), 30);
+  $('result').setAttribute('aria-hidden', 'false');
+  $('app').setAttribute('aria-hidden', 'true');
+  if (!BOT && !COARSE) setTimeout(() => $('bShare').focus(), 40);
 }
 let toastT = 0;
 function toast(msg) { const el = $('toast'); el.textContent = msg; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 1800); }
@@ -1218,6 +1339,9 @@ function toggleLang() { lang = lang === 'tr' ? 'en' : 'tr'; store.set('lang', la
 
 $('bUndo').onclick = undo; $('bRestart').onclick = restart; $('bMenu').onclick = () => { sfx.click(); openMenu(); };
 $('bSound').onclick = toggleMute; $('mSound').onclick = toggleMute; $('bLang').onclick = toggleLang; $('mLang').onclick = toggleLang;
+$('bMenuClose').onclick = () => { sfx.click(); closeAll(); };
+$('bHelpClose').onclick = () => { sfx.click(); closeHelp(); };
+$('bResultClose').onclick = () => { sfx.click(); closeAll(); };
 $('bDaily').onclick = () => {
   sfx.click();
   if (G.mode === 'daily' && G.seed === todaySeed() && G.pz && !G.won) { closeAll(); if (!NOSAVE && !store.get('help', false)) { store.set('help', true); openHelp(); } }
@@ -1229,7 +1353,13 @@ $('bHelpOk').onclick = closeHelp;
 $('bShare').onclick = share;
 $('bNext').onclick = () => { sfx.click(); startPuzzle('endless', G.mode === 'daily' ? store.get('endless', 1) : G.level + 1); };
 $('bRMenu').onclick = () => { sfx.click(); openMenu(); };
-document.querySelectorAll('.ov').forEach((o) => o.addEventListener('click', (e) => { if (e.target === o && o.id !== 'menu') { if (o.id === 'help') closeHelp(); else o.classList.remove('on'); } }));
+document.querySelectorAll('.ov').forEach((o) => o.addEventListener('click', (e) => {
+  if (e.target === o) {
+    if (o.id === 'help') closeHelp();
+    else if (o.id === 'menu') { if (G.pz) closeAll(); }
+    else closeAll();
+  }
+}));
 
 // ---------------------------------------------------------------- debug overlay, API, boot
 let fpsN = 0, fpsT = 0, fps = 0;

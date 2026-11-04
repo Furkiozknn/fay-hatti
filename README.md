@@ -19,7 +19,7 @@ Shift rows and columns to bring rivers and caravan roads to the villages. After 
 4. After each of your moves a small quake shifts one row by one tile. The red band and the line above the board show which row is next and which way it will go. If your move solves the map, the ground stays calm.
 5. Solve within par (the fewest possible moves) for 3 stars, par + 2 for 2 stars. Share your result without spoilers.
 
-**Controls:** drag or tap the arrows; keyboard WASD moves the cursor, arrow keys shift its row or column, Z or Backspace undo, R restart, M mute, Esc menu.
+**Controls:** drag or tap the arrows (with tactile haptic feedback on supported phones); keyboard WASD moves the cursor, arrow keys shift its row or column, Z or Backspace undo, R restart, M mute, Esc menu. Accessible with full screen reader announcements and focus ring navigation.
 
 ## URL flags
 
