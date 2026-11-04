@@ -51,7 +51,18 @@ button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 .btn.alt:hover{background:#ecdcb6}
 .row{display:flex;gap:8px}.row .btn{text-align:center}
 .mini{display:flex;gap:8px;margin-top:10px}
-.mini button{flex:1;min-height:44px;border-radius:10px;border:1px solid #b8935a;background:transparent;color:var(--paper-ink);font-size:15px}
+.mini button{flex:1;min-height:44px;padding:4px 6px;border-radius:10px;border:1px solid #b8935a;background:transparent;color:var(--paper-ink);font-size:13px;line-height:1.2}
+/* Ege Region Theme: olive oil greens, terracotta, whitewashed stone */
+body.theme-ege{--bg:#1c261e;--bg2:#253328;--ink:#f4eee1;--ink2:#b8c7ae;--paper:#f5efe3;--paper-ink:#2a2016;--terra:#b85437;--gold:#f0b83a;--quake:#df5238;--focus:#46a2d8;background:radial-gradient(120% 80% at 50% 0%,#2c3d2e 0%,var(--bg) 60%)}
+body.theme-ege .panel{box-shadow:0 18px 50px rgba(0,0,0,.45),inset 0 0 0 2px #c9b482}
+body.theme-ege .btn{background:var(--terra)}
+body.theme-ege .btn:hover{background:#ca5c3d}
+body.theme-ege .btn.alt{background:#e8dfc7;box-shadow:inset 0 0 0 1px #9c844f}
+body.theme-ege .btn.alt:hover{background:#ede5d0}
+body.theme-ege .mini button{border-color:#9c844f}
+body.theme-ege .tb{border-color:#384f3c;background:var(--bg2)}
+body.theme-ege .tb:hover{background:#2f4233}
+body.theme-ege #bot{background:#3a543e;color:#e8f4ea}
 .big-stars{display:flex;justify-content:center;gap:6px;margin:6px 0 4px}
 .big-stars svg{width:46px;height:46px}
 .big-stars svg.on{animation:starpop .45s cubic-bezier(.3,1.6,.5,1) both}
@@ -105,7 +116,7 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
     <button class="btn" id="bDaily"></button>
     <button class="btn" id="bEndless"></button>
     <button class="btn alt" id="bHow"></button>
-    <div class="mini"><button id="mLang"></button><button id="mSound"></button></div>
+    <div class="mini"><button id="mLang"></button><button id="mSound"></button><button id="mTheme"></button></div>
   </div>
 </div>
 <div class="ov" id="help" role="dialog" aria-modal="true" aria-labelledby="hTitle">
@@ -554,6 +565,7 @@ const STR = {
     h4: 'After each move a small quake shifts one row by itself. The red band shows which row is next.',
     h5: 'Solve within par for 3 stars. Keys: WASD picks a tile, arrow keys shift, Z undo, R restart.',
     lRiver: 'river', lRoad: 'road', lVillage: 'village', lMount: 'mountain', lSpring: 'spring', lHan: 'caravanserai',
+    theme: 'Theme', themeAuto: 'Auto', themeEge: 'Aegean', themeClassic: 'Steppe', regEge: 'Aegean',
   },
   tr: {
     sub: 'Anadolu toprağını kaydır. Her köye su ve yol götür.',
@@ -569,6 +581,7 @@ const STR = {
     h4: 'Her hamleden sonra küçük bir deprem bir satırı kendiliğinden kaydırır. Kırmızı bant sıradaki satırı gösterir.',
     h5: 'Hedef hamlede çöz, 3 yıldız al. Tuşlar: WASD taş seçer, ok tuşları kaydırır, Z geri alır, R baştan.',
     lRiver: 'nehir', lRoad: 'yol', lVillage: 'köy', lMount: 'dağ', lSpring: 'pınar', lHan: 'kervansaray',
+    theme: 'Tema', themeAuto: 'Oto', themeEge: 'Ege', themeClassic: 'Bozkır', regEge: 'Ege',
   },
 };
 let lang = (QS.get('lang') || '').toLowerCase();
@@ -579,6 +592,22 @@ let muted = !!store.get('mute', false);
 const PLACES = ['Göreme', 'Assos', 'Safranbolu', 'Şirince', 'Uzungöl', 'Mardin', 'Beypazarı', 'Adatepe', 'Kayaköy', 'Taraklı',
   'Uçhisar', 'Mustafapaşa', 'Harput', 'Zelve', 'Avanos', 'Kemaliye', 'Sille', 'Trilye', 'Birgi', 'Eğirdir', 'Selçuk', 'Ahlat',
   'Mudurnu', 'Gerze', 'Tire', 'Hasankeyf', 'Ani', 'Midyat', 'Cumalıkızık', 'Ürgüp', 'Datça'];
+
+// Ege Region Theme support: Aegean coastal settlements with olive oil greens and terracotta
+const EGE_PLACES = new Set(['Assos', 'Şirince', 'Adatepe', 'Kayaköy', 'Trilye', 'Birgi', 'Selçuk', 'Tire', 'Datça']);
+let themeSetting = (QS.get('theme') || QS.get('region') || store.get('theme', 'auto')).toLowerCase();
+if (!['auto', 'ege', 'classic'].includes(themeSetting)) themeSetting = 'auto';
+function isEgeTheme() {
+  if (themeSetting === 'ege') return true;
+  if (themeSetting === 'classic') return false;
+  return !!(G.place && EGE_PLACES.has(G.place));
+}
+function applyThemeVisuals() {
+  const ege = isEgeTheme();
+  document.body.classList.toggle('theme-ege', ege);
+  const tc = document.querySelector('meta[name="theme-color"]');
+  if (tc) tc.setAttribute('content', ege ? '#1c261e' : '#1b2830');
+}
 
 const $ = (id) => document.getElementById(id);
 const todaySeed = () => { const d = new Date(); return String(d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()); };
@@ -625,8 +654,27 @@ const sfx = {
   slide() { if (!audio()) return; const t0 = AC.currentTime; noise(t0, 0.13, 'bandpass', 1400, 500, 0.22, 1.2); tone(t0 + 0.1, 180, 0.06, 'triangle', 0.12); },
   quake() { if (!audio()) return; const t0 = AC.currentTime; noise(t0, 0.7, 'lowpass', 220, 60, 0.75, 0.8); tone(t0, 52, 0.6, 'sine', 0.45, 34); noise(t0 + 0.12, 0.25, 'bandpass', 600, 300, 0.12, 2); },
   ping(i) { if (!audio()) return; const t0 = AC.currentTime, f = [587.3, 740, 880, 1174.7][i % 4]; tone(t0, f, 0.5, 'sine', 0.2); tone(t0, f * 2.01, 0.25, 'sine', 0.06); },
-  // Hicaz-flavoured run on D: D Eb F# G A D
-  win() { if (!audio()) return; const t0 = AC.currentTime; [293.7, 311.1, 370, 392, 440, 587.3].forEach((f, i) => pluck(t0 + i * 0.09, f, 0.16)); tone(t0 + 0.55, 587.3, 1.2, 'sine', 0.12); tone(t0 + 0.55, 880, 1.2, 'sine', 0.07); },
+  // Hicaz-flavoured run on D (classic) or Aegean sunny folk melody on D (Ege)
+  win() {
+    if (!audio()) return;
+    const t0 = AC.currentTime;
+    if (isEgeTheme()) {
+      [293.7, 329.6, 370, 440, 493.9, 587.3].forEach((f, i) => pluck(t0 + i * 0.085, f, 0.16));
+      tone(t0 + 0.52, 587.3, 1.3, 'sine', 0.12);
+      tone(t0 + 0.52, 740, 1.3, 'sine', 0.07);
+    } else {
+      [293.7, 311.1, 370, 392, 440, 587.3].forEach((f, i) => pluck(t0 + i * 0.09, f, 0.16));
+      tone(t0 + 0.55, 587.3, 1.2, 'sine', 0.12);
+      tone(t0 + 0.55, 880, 1.2, 'sine', 0.07);
+    }
+  },
+  egeChime() {
+    if (!audio()) return;
+    const t0 = AC.currentTime;
+    pluck(t0, 587.3, 0.15);
+    pluck(t0 + 0.07, 740, 0.13);
+    tone(t0 + 0.14, 880, 0.35, 'sine', 0.08);
+  },
   click() { if (!audio()) return; tone(AC.currentTime, 900, 0.04, 'square', 0.04); },
   undo() { if (!audio()) return; noise(AC.currentTime, 0.1, 'bandpass', 500, 1300, 0.16, 1.2); },
 };
@@ -654,6 +702,7 @@ function startPuzzle(mode, arg, firstHelp = true) {
     G.pz = pz; G.ids = pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.sat = [];
     G.place = PLACES[hashStr('p' + G.seed) % PLACES.length];
     G.state = 'play';
+    applyThemeVisuals();
     buildCaches(); settle(true); updateHud();
     if (BOT) startBot();
     else if (firstHelp && !NOSAVE && !store.get('help', false)) { store.set('help', true); openHelp(); }
@@ -802,103 +851,175 @@ function strokePath(c, m, s, w, col) {
   if (!isCorner(m) && popcount(m) >= 3) { c.beginPath(); c.arc(s / 2, s / 2, w / 2, 0, 7); c.fillStyle = col; c.fill(); }
 }
 function drawPlate(c, v, id) {
+  const isEge = isEgeTheme();
   const s = cs, k = v >> 4, m = v & 15, ins = Math.max(1.5, s * 0.04), r = s * 0.14, R = rng32(id * 977 + 13);
-  c.fillStyle = 'rgba(70,42,18,.38)'; rr(c, ins, ins + s * 0.035, s - 2 * ins, s - 2 * ins, r); c.fill();
+  c.fillStyle = isEge ? 'rgba(38,46,24,.36)' : 'rgba(70,42,18,.38)';
+  rr(c, ins, ins + s * 0.035, s - 2 * ins, s - 2 * ins, r); c.fill();
   const g = c.createLinearGradient(0, 0, 0, s);
-  g.addColorStop(0, '#f1e0b3'); g.addColorStop(1, '#d6bb83');
+  if (isEge) { g.addColorStop(0, '#ede5cf'); g.addColorStop(1, '#d5c49b'); }
+  else { g.addColorStop(0, '#f1e0b3'); g.addColorStop(1, '#d6bb83'); }
   c.fillStyle = g; rr(c, ins, ins, s - 2 * ins, s - 2 * ins - s * 0.02, r); c.fill();
-  c.strokeStyle = 'rgba(255,251,236,.7)'; c.lineWidth = 1.2; rr(c, ins + 1, ins + 1, s - 2 * ins - 2, s - 2 * ins - s * 0.02 - 2, r * 0.9); c.stroke();
-  // steppe tufts and pebbles travel with the tile
-  for (let i = 0; i < 6; i++) {
-    const x = s * (0.16 + R() * 0.68), y = s * (0.16 + R() * 0.64);
-    if (R() < 0.6) { c.strokeStyle = `rgba(${(110 + R() * 30) | 0},${(125 + R() * 25) | 0},60,.55)`; c.lineWidth = 1.2; c.beginPath(); c.moveTo(x - 2, y); c.lineTo(x, y - s * 0.05); c.lineTo(x + 2, y); c.stroke(); }
-    else { c.fillStyle = 'rgba(140,110,75,.35)'; c.beginPath(); c.ellipse(x, y, s * 0.02, s * 0.014, 0, 0, 7); c.fill(); }
+  c.strokeStyle = isEge ? 'rgba(255,253,244,.75)' : 'rgba(255,251,236,.7)';
+  c.lineWidth = 1.2; rr(c, ins + 1, ins + 1, s - 2 * ins - 2, s - 2 * ins - s * 0.02 - 2, r * 0.9); c.stroke();
+  if (isEge) {
+    // Aegean olive sprigs and terracotta ceramic pebbles
+    for (let i = 0; i < 6; i++) {
+      const x = s * (0.16 + R() * 0.68), y = s * (0.16 + R() * 0.64);
+      if (R() < 0.6) {
+        c.strokeStyle = `rgba(${(90 + R() * 25) | 0},${(120 + R() * 30) | 0},55,.62)`;
+        c.lineWidth = 1.3; c.beginPath(); c.moveTo(x - 2.5, y); c.quadraticCurveTo(x, y - s * 0.06, x + 2.5, y); c.stroke();
+      } else {
+        c.fillStyle = 'rgba(184,84,55,.42)';
+        c.beginPath(); c.ellipse(x, y, s * 0.022, s * 0.015, R() * 3, 0, 7); c.fill();
+      }
+    }
+  } else {
+    // steppe tufts and pebbles travel with the tile
+    for (let i = 0; i < 6; i++) {
+      const x = s * (0.16 + R() * 0.68), y = s * (0.16 + R() * 0.64);
+      if (R() < 0.6) { c.strokeStyle = `rgba(${(110 + R() * 30) | 0},${(125 + R() * 25) | 0},60,.55)`; c.lineWidth = 1.2; c.beginPath(); c.moveTo(x - 2, y); c.lineTo(x, y - s * 0.05); c.lineTo(x + 2, y); c.stroke(); }
+      else { c.fillStyle = 'rgba(140,110,75,.35)'; c.beginPath(); c.ellipse(x, y, s * 0.02, s * 0.014, 0, 0, 7); c.fill(); }
+    }
   }
   if (k === KR) {
-    strokePath(c, m, s, s * 0.44, 'rgba(105,140,62,.40)');
-    strokePath(c, m, s, s * 0.3, '#2a6c99');
-    strokePath(c, m, s, s * 0.22, '#3d95cf');
-    c.save(); c.translate(-s * 0.03, -s * 0.03); strokePath(c, m, s, s * 0.05, 'rgba(255,255,255,.22)'); c.restore();
+    if (isEge) {
+      strokePath(c, m, s, s * 0.44, 'rgba(92,126,56,.45)');
+      strokePath(c, m, s, s * 0.3, '#1c7295');
+      strokePath(c, m, s, s * 0.22, '#2bb1c9');
+      c.save(); c.translate(-s * 0.03, -s * 0.03); strokePath(c, m, s, s * 0.05, 'rgba(255,255,255,.32)'); c.restore();
+    } else {
+      strokePath(c, m, s, s * 0.44, 'rgba(105,140,62,.40)');
+      strokePath(c, m, s, s * 0.3, '#2a6c99');
+      strokePath(c, m, s, s * 0.22, '#3d95cf');
+      c.save(); c.translate(-s * 0.03, -s * 0.03); strokePath(c, m, s, s * 0.05, 'rgba(255,255,255,.22)'); c.restore();
+    }
   } else if (k === KD) {
-    strokePath(c, m, s, s * 0.3, 'rgba(122,82,48,.32)');
-    strokePath(c, m, s, s * 0.21, '#c79a5e');
-    c.setLineDash([s * 0.07, s * 0.07]); strokePath(c, m, s, s * 0.03, 'rgba(248,234,200,.9)'); c.setLineDash([]);
+    if (isEge) {
+      strokePath(c, m, s, s * 0.3, 'rgba(164,74,45,.34)');
+      strokePath(c, m, s, s * 0.21, '#b87545');
+      c.setLineDash([s * 0.07, s * 0.07]); strokePath(c, m, s, s * 0.03, 'rgba(255,245,225,.95)'); c.setLineDash([]);
+    } else {
+      strokePath(c, m, s, s * 0.3, 'rgba(122,82,48,.32)');
+      strokePath(c, m, s, s * 0.21, '#c79a5e');
+      c.setLineDash([s * 0.07, s * 0.07]); strokePath(c, m, s, s * 0.03, 'rgba(248,234,200,.9)'); c.setLineDash([]);
+    }
   }
 }
 function drawMountain(x, X, Y, s) {
-  x.fillStyle = 'rgba(70,45,25,.25)'; x.beginPath(); x.ellipse(X + s / 2, Y + s * 0.8, s * 0.42, s * 0.1, 0, 0, 7); x.fill();
+  const isEge = isEgeTheme();
+  x.fillStyle = isEge ? 'rgba(50,55,30,.26)' : 'rgba(70,45,25,.25)';
+  x.beginPath(); x.ellipse(X + s / 2, Y + s * 0.8, s * 0.42, s * 0.1, 0, 0, 7); x.fill();
   const base = Y + s * 0.82;
-  const peak = (cx, w, h, c1, c2) => {
+  const peak = (cx, w, h, c1, c2, snow = true) => {
     x.fillStyle = c1; x.beginPath(); x.moveTo(cx - w, base); x.lineTo(cx, base - h); x.lineTo(cx + w, base); x.closePath(); x.fill();
     x.fillStyle = c2; x.beginPath(); x.moveTo(cx, base - h); x.lineTo(cx + w, base); x.lineTo(cx + w * 0.15, base); x.closePath(); x.fill();
-    x.fillStyle = '#f6f2ea'; x.beginPath(); x.moveTo(cx, base - h); x.lineTo(cx - w * 0.3, base - h * 0.7); x.lineTo(cx - w * 0.1, base - h * 0.74); x.lineTo(cx + w * 0.05, base - h * 0.66); x.lineTo(cx + w * 0.3, base - h * 0.7); x.closePath(); x.fill();
+    if (snow) {
+      x.fillStyle = '#f6f2ea'; x.beginPath(); x.moveTo(cx, base - h); x.lineTo(cx - w * 0.3, base - h * 0.7); x.lineTo(cx - w * 0.1, base - h * 0.74); x.lineTo(cx + w * 0.05, base - h * 0.66); x.lineTo(cx + w * 0.3, base - h * 0.7); x.closePath(); x.fill();
+    }
   };
-  peak(X + s * 0.66, s * 0.26, s * 0.46, '#7a6551', '#5e4c3c');
-  peak(X + s * 0.4, s * 0.32, s * 0.64, '#8c7660', '#6a5644');
+  if (isEge) {
+    // Aegean coastal slopes (olive-pine foothills & warm limestone peaks)
+    peak(X + s * 0.66, s * 0.26, s * 0.46, '#5a6e45', '#445634', false);
+    peak(X + s * 0.4, s * 0.32, s * 0.64, '#7a6852', '#5f4f3e', true);
+  } else {
+    peak(X + s * 0.66, s * 0.26, s * 0.46, '#7a6551', '#5e4c3c', true);
+    peak(X + s * 0.4, s * 0.32, s * 0.64, '#8c7660', '#6a5644', true);
+  }
 }
 function drawSpring(x, X, Y, s) {
+  const isEge = isEgeTheme();
   const cx = X + s / 2, cy = Y + s / 2;
-  x.fillStyle = 'rgba(105,140,62,.45)'; x.beginPath(); x.arc(cx, cy, s * 0.36, 0, 7); x.fill();
-  x.fillStyle = '#1d6f7e'; x.beginPath(); x.arc(cx, cy, s * 0.27, 0, 7); x.fill();
+  x.fillStyle = isEge ? 'rgba(85,125,48,.48)' : 'rgba(105,140,62,.45)'; x.beginPath(); x.arc(cx, cy, s * 0.36, 0, 7); x.fill();
+  x.fillStyle = isEge ? '#156172' : '#1d6f7e'; x.beginPath(); x.arc(cx, cy, s * 0.27, 0, 7); x.fill();
   const g = x.createRadialGradient(cx - s * 0.06, cy - s * 0.06, 2, cx, cy, s * 0.25);
-  g.addColorStop(0, '#9fe3ea'); g.addColorStop(1, '#2fa3b6');
+  if (isEge) { g.addColorStop(0, '#99edf2'); g.addColorStop(1, '#24a9be'); }
+  else { g.addColorStop(0, '#9fe3ea'); g.addColorStop(1, '#2fa3b6'); }
   x.fillStyle = g; x.beginPath(); x.arc(cx, cy, s * 0.235, 0, 7); x.fill();
   x.strokeStyle = 'rgba(255,255,255,.55)'; x.lineWidth = 1.3; x.beginPath(); x.arc(cx, cy, s * 0.12, 0.4, 2.6); x.stroke();
   const R = rng32(77);
-  for (let i = 0; i < 7; i++) { const a = i * 0.9 + R(); x.fillStyle = i % 2 ? '#a3937d' : '#8b7b66'; x.beginPath(); x.ellipse(cx + Math.cos(a) * s * 0.3, cy + Math.sin(a) * s * 0.3, s * 0.045, s * 0.032, a, 0, 7); x.fill(); }
+  for (let i = 0; i < 7; i++) {
+    const a = i * 0.9 + R();
+    x.fillStyle = isEge ? (i % 2 ? '#b87550' : '#8e967a') : (i % 2 ? '#a3937d' : '#8b7b66');
+    x.beginPath(); x.ellipse(cx + Math.cos(a) * s * 0.3, cy + Math.sin(a) * s * 0.3, s * 0.045, s * 0.032, a, 0, 7); x.fill();
+  }
 }
 function drawHan(x, X, Y, s) {
+  const isEge = isEgeTheme();
   const w = s * 0.62, h = s * 0.56, x0 = X + (s - w) / 2, y0 = Y + s * 0.24;
-  x.fillStyle = 'rgba(60,40,20,.3)'; x.fillRect(x0 + 3, y0 + 4, w, h);
-  x.fillStyle = '#b8a07a'; x.fillRect(x0, y0, w, h);
-  x.fillStyle = '#9a835f'; for (let i = 0; i < 5; i++) x.fillRect(x0 + (i * w) / 4.5, y0 - s * 0.06, w / 9, s * 0.07);
-  x.strokeStyle = 'rgba(80,60,40,.45)'; x.lineWidth = 1;
+  x.fillStyle = isEge ? 'rgba(50,35,20,.32)' : 'rgba(60,40,20,.3)'; x.fillRect(x0 + 3, y0 + 4, w, h);
+  x.fillStyle = isEge ? '#cfc1a5' : '#b8a07a'; x.fillRect(x0, y0, w, h);
+  x.fillStyle = isEge ? '#a89474' : '#9a835f'; for (let i = 0; i < 5; i++) x.fillRect(x0 + (i * w) / 4.5, y0 - s * 0.06, w / 9, s * 0.07);
+  x.strokeStyle = isEge ? 'rgba(70,55,35,.45)' : 'rgba(80,60,40,.45)'; x.lineWidth = 1;
   for (let r = 1; r < 4; r++) { x.beginPath(); x.moveTo(x0, y0 + (r * h) / 4); x.lineTo(x0 + w, y0 + (r * h) / 4); x.stroke(); }
-  x.fillStyle = '#e1cfa6'; x.fillRect(x0 + w * 0.22, y0 + h * 0.16, w * 0.56, h * 0.3);
-  x.fillStyle = '#3e2f22'; const gw = w * 0.3, gx = X + s / 2 - gw / 2, gy = y0 + h * 0.5;
+  x.fillStyle = isEge ? '#f0e6cf' : '#e1cfa6'; x.fillRect(x0 + w * 0.22, y0 + h * 0.16, w * 0.56, h * 0.3);
+  x.fillStyle = isEge ? '#33271d' : '#3e2f22'; const gw = w * 0.3, gx = X + s / 2 - gw / 2, gy = y0 + h * 0.5;
   x.beginPath(); x.moveTo(gx, y0 + h); x.lineTo(gx, gy + gw / 2); x.arc(X + s / 2, gy + gw / 2, gw / 2, Math.PI, 0); x.lineTo(gx + gw, y0 + h); x.closePath(); x.fill();
-  x.strokeStyle = '#6f5a40'; x.lineWidth = 1.5; x.strokeRect(x0, y0, w, h);
-  x.fillStyle = '#a63f27'; x.beginPath(); x.moveTo(x0 + w * 0.85, y0 - s * 0.06); x.lineTo(x0 + w * 0.85, y0 - s * 0.2); x.lineTo(x0 + w * 1.02, y0 - s * 0.16); x.lineTo(x0 + w * 0.85, y0 - s * 0.12); x.fill();
+  x.strokeStyle = isEge ? '#5c4e38' : '#6f5a40'; x.lineWidth = 1.5; x.strokeRect(x0, y0, w, h);
+  x.fillStyle = isEge ? '#b85437' : '#a63f27'; x.beginPath(); x.moveTo(x0 + w * 0.85, y0 - s * 0.06); x.lineTo(x0 + w * 0.85, y0 - s * 0.2); x.lineTo(x0 + w * 1.02, y0 - s * 0.16); x.lineTo(x0 + w * 0.85, y0 - s * 0.12); x.fill();
+  if (isEge) {
+    // Terracotta amphora near caravanserai portal
+    x.fillStyle = '#b85437'; x.beginPath(); x.ellipse(x0 + w * 0.14, y0 + h - s * 0.04, s * 0.035, s * 0.05, 0, 0, 7); x.fill();
+  }
 }
 function drawVillage(x, X, Y, s, seed) {
+  const isEge = isEgeTheme();
   const R = rng32(seed);
-  x.fillStyle = 'rgba(105,140,62,.32)'; x.beginPath(); x.ellipse(X + s / 2, Y + s * 0.62, s * 0.4, s * 0.26, 0, 0, 7); x.fill();
+  x.fillStyle = isEge ? 'rgba(92,126,56,.38)' : 'rgba(105,140,62,.32)'; x.beginPath(); x.ellipse(X + s / 2, Y + s * 0.62, s * 0.4, s * 0.26, 0, 0, 7); x.fill();
   const house = (cx, by, w, h) => {
-    x.fillStyle = 'rgba(60,40,20,.28)'; x.fillRect(cx - w / 2 + 2, by - h + 3, w, h);
-    x.fillStyle = '#f5ede0'; x.fillRect(cx - w / 2, by - h, w, h);
-    x.fillStyle = '#c25b35'; x.beginPath(); x.moveTo(cx - w / 2 - s * 0.03, by - h); x.lineTo(cx, by - h - w * 0.5); x.lineTo(cx + w / 2 + s * 0.03, by - h); x.closePath(); x.fill();
-    x.fillStyle = '#8f3d22'; x.beginPath(); x.moveTo(cx, by - h - w * 0.5); x.lineTo(cx + w / 2 + s * 0.03, by - h); x.lineTo(cx, by - h); x.closePath(); x.fill();
-    x.fillStyle = '#6b4a2e'; x.fillRect(cx - w * 0.12, by - h * 0.5, w * 0.24, h * 0.5);
+    x.fillStyle = 'rgba(50,35,20,.28)'; x.fillRect(cx - w / 2 + 2, by - h + 3, w, h);
+    x.fillStyle = isEge ? '#faf7f0' : '#f5ede0'; x.fillRect(cx - w / 2, by - h, w, h);
+    x.fillStyle = isEge ? '#c65332' : '#c25b35'; x.beginPath(); x.moveTo(cx - w / 2 - s * 0.03, by - h); x.lineTo(cx, by - h - w * 0.5); x.lineTo(cx + w / 2 + s * 0.03, by - h); x.closePath(); x.fill();
+    x.fillStyle = isEge ? '#96361c' : '#8f3d22'; x.beginPath(); x.moveTo(cx, by - h - w * 0.5); x.lineTo(cx + w / 2 + s * 0.03, by - h); x.lineTo(cx, by - h); x.closePath(); x.fill();
+    x.fillStyle = isEge ? '#246b8f' : '#6b4a2e'; x.fillRect(cx - w * 0.12, by - h * 0.5, w * 0.24, h * 0.5);
+    if (isEge) {
+      // Aegean blue shutter
+      x.fillStyle = '#246b8f'; x.fillRect(cx + w * 0.16, by - h * 0.72, w * 0.18, h * 0.26);
+    }
   };
-  x.fillStyle = '#6f8f43'; x.beginPath(); x.arc(X + s * (0.72 + R() * 0.06), Y + s * 0.5, s * 0.1, 0, 7); x.fill();
-  x.fillStyle = '#5c4630'; x.fillRect(X + s * 0.74, Y + s * 0.56, s * 0.025, s * 0.12);
+  if (isEge) {
+    // Aegean olive tree with silvery canopy and dark olives
+    const tx = X + s * (0.72 + R() * 0.06), ty = Y + s * 0.5;
+    x.fillStyle = '#566e3b'; x.beginPath(); x.arc(tx, ty, s * 0.11, 0, 7); x.fill();
+    x.fillStyle = '#7a9654'; x.beginPath(); x.arc(tx - s * 0.02, ty - s * 0.02, s * 0.075, 0, 7); x.fill();
+    x.fillStyle = '#4e3e2b'; x.fillRect(tx + s * 0.01, ty + s * 0.06, s * 0.028, s * 0.12);
+    x.fillStyle = '#261b24'; x.beginPath(); x.arc(tx - s * 0.05, ty + s * 0.03, s * 0.016, 0, 7); x.arc(tx + s * 0.04, ty - s * 0.03, s * 0.016, 0, 7); x.fill();
+  } else {
+    x.fillStyle = '#6f8f43'; x.beginPath(); x.arc(X + s * (0.72 + R() * 0.06), Y + s * 0.5, s * 0.1, 0, 7); x.fill();
+    x.fillStyle = '#5c4630'; x.fillRect(X + s * 0.74, Y + s * 0.56, s * 0.025, s * 0.12);
+  }
   house(X + s * 0.34, Y + s * 0.62, s * 0.24, s * 0.18);
   house(X + s * 0.6, Y + s * 0.8, s * 0.26, s * 0.2);
   house(X + s * 0.28, Y + s * 0.86, s * 0.2, s * 0.15);
 }
 function buildCaches() {
   if (!G.pz || !cs) return;
+  const isEge = isEgeTheme();
   const pz = G.pz, S = N * cs + 2 * pad;
   const [c, x] = mkCanvas(S, S);
   baseC = { c, S };
   const R = rng32(pz.seed ^ 0x9137);
   const g = x.createLinearGradient(0, 0, S, S);
-  g.addColorStop(0, '#f0dfb3'); g.addColorStop(1, '#d8bf8b');
+  if (isEge) { g.addColorStop(0, '#ede5cb'); g.addColorStop(1, '#d5c49b'); }
+  else { g.addColorStop(0, '#f0dfb3'); g.addColorStop(1, '#d8bf8b'); }
   rr(x, 0, 0, S, S, pad * 0.9); x.fillStyle = g; x.fill();
   x.save(); rr(x, 0, 0, S, S, pad * 0.9); x.clip();
-  for (let i = 0; i < (S * S) / 70; i++) { x.fillStyle = R() < 0.5 ? `rgba(120,84,40,${0.04 + R() * 0.07})` : `rgba(255,250,232,${0.06 + R() * 0.1})`; x.fillRect(R() * S, R() * S, 1 + R() * 1.6, 1 + R() * 1.6); }
-  x.strokeStyle = 'rgba(150,108,58,.2)'; x.lineWidth = 1;
+  for (let i = 0; i < (S * S) / 70; i++) {
+    if (isEge) x.fillStyle = R() < 0.5 ? `rgba(90,110,50,${0.04 + R() * 0.06})` : `rgba(255,252,240,${0.07 + R() * 0.1})`;
+    else x.fillStyle = R() < 0.5 ? `rgba(120,84,40,${0.04 + R() * 0.07})` : `rgba(255,250,232,${0.06 + R() * 0.1})`;
+    x.fillRect(R() * S, R() * S, 1 + R() * 1.6, 1 + R() * 1.6);
+  }
+  x.strokeStyle = isEge ? 'rgba(110,125,70,.22)' : 'rgba(150,108,58,.2)'; x.lineWidth = 1;
   for (let k = 0; k < 9; k++) { // faint contour lines, like an old survey map
     x.beginPath(); const y0 = R() * S, f1 = 3 + R() * 4, f2 = 9 + R() * 6, p1 = R() * 6, p2 = R() * 6;
     for (let px = 0; px <= S; px += 6) { const y = y0 + Math.sin((px / S) * f1 + p1) * cs * 0.3 + Math.sin((px / S) * f2 + p2) * cs * 0.07; px ? x.lineTo(px, y) : x.moveTo(px, y); }
     x.stroke();
   }
   x.restore();
-  x.lineWidth = 2; x.strokeStyle = '#9f7742'; rr(x, 1, 1, S - 2, S - 2, pad * 0.9); x.stroke();
-  x.lineWidth = 1; x.strokeStyle = 'rgba(120,85,45,.5)'; rr(x, pad * 0.42, pad * 0.42, S - pad * 0.84, S - pad * 0.84, pad * 0.5); x.stroke();
+  x.lineWidth = 2; x.strokeStyle = isEge ? '#78824c' : '#9f7742'; rr(x, 1, 1, S - 2, S - 2, pad * 0.9); x.stroke();
+  x.lineWidth = 1; x.strokeStyle = isEge ? 'rgba(164,84,50,.45)' : 'rgba(120,85,45,.5)'; rr(x, pad * 0.42, pad * 0.42, S - pad * 0.84, S - pad * 0.84, pad * 0.5); x.stroke();
   for (let i = 0; i < NN; i++) {
     const X = pad + (i % N) * cs, Y = pad + ((i / N) | 0) * cs;
-    x.fillStyle = 'rgba(105,72,34,.13)'; rr(x, X + 2, Y + 2, cs - 4, cs - 4, cs * 0.14); x.fill();
+    x.fillStyle = isEge ? 'rgba(80,72,40,.12)' : 'rgba(105,72,34,.13)'; rr(x, X + 2, Y + 2, cs - 4, cs - 4, cs * 0.14); x.fill();
     if (!pz.fixed[i]) continue;
     const k = pz.tiles[i] >> 4;
     if (k === KM) drawMountain(x, X, Y, cs); else if (k === KS) drawSpring(x, X, Y, cs); else if (k === KH) drawHan(x, X, Y, cs); else if (k === KV) drawVillage(x, X, Y, cs, i * 31 + 5);
@@ -942,11 +1063,14 @@ function drawFlow(X, Y, v, i, dist, river, time, glow) {
   ctx.setLineDash([]);
 }
 function drawBadge(cx, cy, r, river, ok, pulse) {
+  const isEge = isEgeTheme();
   ctx.save(); ctx.translate(cx, cy); if (pulse) ctx.scale(1 + pulse * 0.35, 1 + pulse * 0.35);
   ctx.beginPath(); ctx.arc(0, 0, r, 0, 7);
-  ctx.fillStyle = ok ? (river ? '#2f86c4' : '#b9843f') : 'rgba(250,244,230,.92)'; ctx.fill();
-  ctx.lineWidth = 1.5; ctx.strokeStyle = ok ? '#fff6e2' : river ? '#2f86c4' : '#9a6a2c'; ctx.stroke();
-  ctx.fillStyle = ok ? '#fff' : river ? '#2f86c4' : '#9a6a2c'; ctx.strokeStyle = ctx.fillStyle;
+  const fillCol = ok ? (river ? (isEge ? '#1f8ea6' : '#2f86c4') : (isEge ? '#b36230' : '#b9843f')) : 'rgba(250,244,230,.92)';
+  ctx.fillStyle = fillCol; ctx.fill();
+  const strokeCol = ok ? '#fff6e2' : river ? (isEge ? '#1f8ea6' : '#2f86c4') : (isEge ? '#924a1e' : '#9a6a2c');
+  ctx.lineWidth = 1.5; ctx.strokeStyle = strokeCol; ctx.stroke();
+  ctx.fillStyle = ok ? '#fff' : strokeCol; ctx.strokeStyle = ctx.fillStyle;
   if (river) { ctx.beginPath(); ctx.moveTo(0, -r * 0.62); ctx.bezierCurveTo(r * 0.55, -r * 0.05, r * 0.5, r * 0.55, 0, r * 0.55); ctx.bezierCurveTo(-r * 0.5, r * 0.55, -r * 0.55, -r * 0.05, 0, -r * 0.62); ctx.fill(); }
   else { ctx.lineWidth = r * 0.22; ctx.beginPath(); ctx.moveTo(-r * 0.32, r * 0.55); ctx.lineTo(-r * 0.12, -r * 0.55); ctx.moveTo(r * 0.32, r * 0.55); ctx.lineTo(r * 0.12, -r * 0.55); ctx.stroke(); }
   ctx.restore();
@@ -1035,7 +1159,8 @@ function frame(now) {
         const p = edgePt(e2, cs), inR = RIV[v] && (RIV[vals[j]] >> OPP[e2]) & 1, inD = ROD[v] && (ROD[vals[j]] >> OPP[e2]) & 1;
         if (!inR && !inD) continue;
         const ix = X + cs / 2 + DC[e2] * cs * 0.3, iy = Y + cs / 2 + DR[e2] * cs * 0.3;
-        ctx.lineCap = 'round'; ctx.lineWidth = cs * (inR ? 0.2 : 0.18); ctx.strokeStyle = inR ? '#3d95cf' : '#c79a5e';
+        const isEge = isEgeTheme();
+        ctx.lineCap = 'round'; ctx.lineWidth = cs * (inR ? 0.2 : 0.18); ctx.strokeStyle = inR ? (isEge ? '#2bb1c9' : '#3d95cf') : (isEge ? '#b87545' : '#c79a5e');
         ctx.beginPath(); ctx.moveTo(X + p[0], Y + p[1]); ctx.lineTo(ix, iy); ctx.stroke();
       }
     }
@@ -1075,7 +1200,10 @@ function drawLoading(now) {
 }
 function burst(cell) {
   const cx = ox + (cell % N) * cs + cs / 2, cy = oy + ((cell / N) | 0) * cs + cs / 2;
-  const cols = ['#d6453d', '#f6efe1', '#f2b33d', '#c4573a', '#3d95cf'];
+  const isEge = isEgeTheme();
+  const cols = isEge
+    ? ['#c65332', '#faf7f0', '#f0b83a', '#6e8c46', '#2bb1c9']
+    : ['#d6453d', '#f6efe1', '#f2b33d', '#c4573a', '#3d95cf'];
   for (let i = 0; i < 22; i++) {
     const a = Math.random() * Math.PI * 2, sp = cs * (1.2 + Math.random() * 2.2);
     particles.push({ x: cx, y: cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - cs * 2.2, life: 1.1 + Math.random() * 0.6, t: 0, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 12, col: cols[i % cols.length], delay: 0.25 + Math.random() * 0.25 });
@@ -1175,6 +1303,31 @@ function fillMenu() {
   $('bHow').textContent = t('how');
   $('mLang').textContent = lang === 'tr' ? 'English' : 'Türkçe';
   $('mSound').textContent = t('sound') + ': ' + (muted ? t('off') : t('on'));
+  const curEge = isEgeTheme();
+  let thText = t('themeAuto') + (curEge ? ' (' + t('regEge') + ')' : '');
+  if (themeSetting === 'ege') thText = t('themeEge');
+  else if (themeSetting === 'classic') thText = t('themeClassic');
+  $('mTheme').textContent = thText;
+  $('mTheme').setAttribute('aria-label', t('theme') + ': ' + thText);
+}
+function cycleTheme() {
+  themeSetting = themeSetting === 'auto' ? 'ege' : themeSetting === 'ege' ? 'classic' : 'auto';
+  store.set('theme', themeSetting);
+  applyThemeVisuals();
+  buildCaches();
+  updateHud();
+  fillMenu();
+  if (isEgeTheme()) sfx.egeChime(); else sfx.click();
+}
+function setTheme(t) {
+  if (['auto', 'ege', 'classic'].includes(t)) {
+    themeSetting = t;
+    store.set('theme', t);
+    applyThemeVisuals();
+    buildCaches();
+    updateHud();
+    fillMenu();
+  }
 }
 function closeAll() { document.querySelectorAll('.ov').forEach((o) => o.classList.remove('on')); }
 const COARSE = matchMedia('(pointer:coarse)').matches;
@@ -1184,7 +1337,15 @@ function openHelp() {
   helpReturn = $('menu').classList.contains('on') ? 'menu' : null; closeAll();
   $('hTitle').textContent = t('how');
   $('hList').innerHTML = ['h1', 'h2', 'h3', 'h4', 'h5'].map((k) => `<li>${t(k)}</li>`).join('');
-  $('hLegend').innerHTML = [['#3d95cf', 'lRiver'], ['#c79a5e', 'lRoad'], ['#c25b35', 'lVillage'], ['#2fa3b6', 'lSpring'], ['#b8a07a', 'lHan'], ['#7a6551', 'lMount']].map(([c, k]) => `<span><i style="background:${c}"></i>${t(k)}</span>`).join('');
+  const isEge = isEgeTheme();
+  $('hLegend').innerHTML = [
+    [isEge ? '#2bb1c9' : '#3d95cf', 'lRiver'],
+    [isEge ? '#b87545' : '#c79a5e', 'lRoad'],
+    [isEge ? '#c65332' : '#c25b35', 'lVillage'],
+    [isEge ? '#24a9be' : '#2fa3b6', 'lSpring'],
+    [isEge ? '#cfc1a5' : '#b8a07a', 'lHan'],
+    [isEge ? '#7a6852' : '#7a6551', 'lMount']
+  ].map(([c, k]) => `<span><i style="background:${c}"></i>${t(k)}</span>`).join('');
   $('bHelpOk').textContent = t('gotIt');
   $('help').classList.add('on'); if (!COARSE) setTimeout(() => $('bHelpOk').focus(), 30);
 }
@@ -1218,6 +1379,7 @@ function toggleLang() { lang = lang === 'tr' ? 'en' : 'tr'; store.set('lang', la
 
 $('bUndo').onclick = undo; $('bRestart').onclick = restart; $('bMenu').onclick = () => { sfx.click(); openMenu(); };
 $('bSound').onclick = toggleMute; $('mSound').onclick = toggleMute; $('bLang').onclick = toggleLang; $('mLang').onclick = toggleLang;
+$('mTheme').onclick = cycleTheme;
 $('bDaily').onclick = () => {
   sfx.click();
   if (G.mode === 'daily' && G.seed === todaySeed() && G.pz && !G.won) { closeAll(); if (!NOSAVE && !store.get('help', false)) { store.set('help', true); openHelp(); } }
@@ -1249,8 +1411,13 @@ window.fayHatti = {
   get genMs() { return G.genMs; }, get fps() { return fps; }, get plan() { return G.pz ? G.pz.solution.slice() : null; },
   get board() { if (!G.pz) return null; const v = toVals(G.pz, G.ids), out = []; for (let r = 0; r < N; r++) { const row = []; for (let c = 0; c < N; c++) { const x = v[r * N + c], k = x >> 4; row.push(k === KR ? 'r' + (x & 15).toString(16) : k === KD ? 'd' + (x & 15).toString(16) : GLYPH[k]); } out.push(row.join(' ')); } return out; },
   move: (m) => doMove(m), undo, restart, start: (mode, arg) => startPuzzle(mode, arg, false),
+  get theme() { return isEgeTheme() ? 'ege' : 'classic'; },
+  get themeSetting() { return themeSetting; },
+  setTheme,
+  get region() { return G.place && EGE_PLACES.has(G.place) ? 'ege' : 'ic-anadolu'; },
 };
 addEventListener('resize', layout);
+applyThemeVisuals();
 layout();
 updateHud();
 requestAnimationFrame(frame);
