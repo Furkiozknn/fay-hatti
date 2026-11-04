@@ -12,6 +12,18 @@
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.4 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent}
 body{background:radial-gradient(120% 80% at 50% 0%,#2a3f49 0%,var(--bg) 60%)}
 body.biome-kapadokya{background:radial-gradient(120% 80% at 50% 0%,#35262c 0%,#1f161a 60%);--bg:#1f161a;--bg2:#2a1e24;--ink:#f6ede2;--ink2:#cdbdae;--paper:#f5ebd8;--paper-ink:#2d1e16;--terra:#b54c30;--gold:#e8a436;--quake:#e45838}
+/* Karadeniz region visual theme: mist-tinted deep greens, highland paper, tea plantation tones */
+body.biome-karadeniz,body.theme-karadeniz{--bg:#12241d;--bg2:#193228;--ink:#edf7f0;--ink2:#b2cebf;--paper:#e6f2e2;--paper-ink:#1b2d20;--terra:#2c7444;--gold:#e2a83b;--quake:#db5035;--focus:#59cf9e;background:radial-gradient(120% 80% at 50% 0%,#1e3d31 0%,var(--bg) 60%)}
+body.biome-karadeniz .panel,body.theme-karadeniz .panel{box-shadow:0 18px 50px rgba(0,0,0,.45),inset 0 0 0 2px #a8cfa0}
+body.biome-karadeniz .panel h1,body.biome-karadeniz .panel h2,body.theme-karadeniz .panel h1,body.theme-karadeniz .panel h2{color:#1a4d29}
+body.biome-karadeniz .panel h1 small,body.theme-karadeniz .panel h1 small{color:#3d6e4b}
+body.biome-karadeniz .panel .sub,body.biome-karadeniz .note,body.theme-karadeniz .panel .sub,body.theme-karadeniz .note{color:#35573e}
+body.biome-karadeniz .btn.alt,body.theme-karadeniz .btn.alt{background:#d0e6cb;box-shadow:inset 0 0 0 1px #78aa72}
+body.biome-karadeniz .btn.alt:hover,body.theme-karadeniz .btn.alt:hover{background:#dcedd8}
+body.biome-karadeniz .mini button,body.theme-karadeniz .mini button{border-color:#78aa72}
+body.biome-karadeniz .share-prev,body.theme-karadeniz .share-prev{background:#d2e8cc}
+body.biome-karadeniz .tb,body.theme-karadeniz .tb{border-color:#2a4a3c}
+body.biome-karadeniz .tb:hover,body.theme-karadeniz .tb:hover{background:#234234}
 button{font:inherit;color:inherit;cursor:pointer}
 button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 body.high-contrast{--bg:#081014;--bg2:#101a20;--ink:#ffffff;--ink2:#f5eedd;--paper:#ffffff;--paper-ink:#111111;--terra:#8a200a;--gold:#ffb703;--quake:#ff2a05;--focus:#00e5ff;background:#081014}
@@ -701,7 +713,7 @@ if (currentTheme !== 'gece' && currentTheme !== 'kagit') currentTheme = 'classic
 document.documentElement.dataset.theme = currentTheme;
 
 // --- Cards Registry ---
-// Cosmetic cards: theme-night, theme-paper, region-kapadokya
+// Cosmetic cards: theme-night, theme-paper, region-kapadokya, region-karadeniz
 // Cosmetic cards apply in every mode (including daily) and never modify moves, par, stars or score.
 const CARDS = [
   {
@@ -740,6 +752,18 @@ const CARDS = [
     },
     apply: () => applyBiome('kapadokya'),
   },
+  {
+    id: 'region-karadeniz',
+    type: 'cosmetic',
+    implemented: true,
+    biome: 'karadeniz',
+    title: { en: 'Karadeniz Region', tr: 'Karadeniz Bölgesi' },
+    desc: {
+      en: 'Black Sea mountain landscape with tea sprigs, misty Kaçkar alpine peaks, and serander chalets.',
+      tr: 'Çay filizleri, sisli Kaçkar zirveleri ve serander yayla evleriyle Karadeniz bölgesi manzarası.'
+    },
+    apply: () => applyBiome('karadeniz'),
+  },
 ];
 const STR = {
   en: {
@@ -750,7 +774,7 @@ const STR = {
     resLine: '{m} moves · par {p}', share: 'Share result', next: 'Next level', toEndless: 'Play endless', back: 'Menu',
     copied: 'Copied to clipboard', tomorrow: 'A new map tomorrow.', endlessNote: 'Level {n} done.', movesWord: 'moves',
     gotIt: 'Got it', solvedOn: 'Solved', playTag: 'same map for everyone', board: 'Puzzle board',
-    biomeKapadokya: 'Cappadocia', biomeBozkir: 'Steppe',
+    biomeKapadokya: 'Cappadocia', biomeKaradeniz: 'Karadeniz', biomeBozkir: 'Steppe',
     contrast: 'High contrast', contrastSub: 'Distinguish rivers from roads',
     theme: 'Theme', thClassic: 'Classic', thGece: 'Gece', thKagit: 'Kâğıt',
     h1: 'Drag a row sideways or a column up or down (or tap the arrows). Tiles wrap around the edge.',
@@ -777,7 +801,7 @@ const STR = {
     resLine: '{m} hamle · hedef {p}', share: 'Sonucu paylaş', next: 'Sonraki bölüm', toEndless: 'Sonsuz moda geç', back: 'Menü',
     copied: 'Panoya kopyalandı', tomorrow: 'Yarın yeni bir harita.', endlessNote: '{n}. bölüm tamam.', movesWord: 'hamle',
     gotIt: 'Anladım', solvedOn: 'Çözüldü', playTag: 'herkes için aynı harita', board: 'Bulmaca tahtası',
-    biomeKapadokya: 'Kapadokya', biomeBozkir: 'Bozkır',
+    biomeKapadokya: 'Kapadokya', biomeKaradeniz: 'Karadeniz', biomeBozkir: 'Bozkır',
     contrast: 'Yüksek kontrast', contrastSub: 'Nehir ve yolları belirginleştir',
     theme: 'Tema', thClassic: 'Klasik', thGece: 'Gece', thKagit: 'Kâğıt',
     h1: 'Bir satırı yana, bir sütunu yukarı ya da aşağı sürükle (ya da oklara dokun). Taşlar kenardan dolanır.',
@@ -833,13 +857,15 @@ const PLACES = ['Göreme', 'Assos', 'Safranbolu', 'Şirince', 'Uzungöl', 'Mardi
   'Uçhisar', 'Mustafapaşa', 'Harput', 'Zelve', 'Avanos', 'Kemaliye', 'Sille', 'Trilye', 'Birgi', 'Eğirdir', 'Selçuk', 'Ahlat',
   'Mudurnu', 'Gerze', 'Tire', 'Hasankeyf', 'Ani', 'Midyat', 'Cumalıkızık', 'Ürgüp', 'Datça'];
 const CAPPADOCIA_PLACES = ['Göreme', 'Uçhisar', 'Avanos', 'Ürgüp', 'Zelve', 'Ortahisar', 'Mustafapaşa', 'Çavuşin', 'Ihlara', 'Derinkuyu'];
+const KARADENIZ_PLACES = ['Rize', 'Trabzon', 'Uzungöl', 'Ayder', 'Artvin', 'Çamlıhemşin', 'Sürmene', 'Hopa', 'Giresun', 'Fırtına'];
 
-// Regional biome rotation: Kapadokya debuts week of Nov 9-15 2026 (Nov 12). Alternates weekly.
+// Regional biome rotation: Kapadokya debuts week of Nov 9-15 2026 (Nov 12). Karadeniz debuts week of Nov 16-22.
 let biomeOverride = store.get('biome', null);
 function getBiome(mode, seed, level) {
   if (biomeOverride) return biomeOverride;
   const q = (QS.get('theme') || QS.get('biome') || '').toLowerCase();
   if (q === 'kapadokya' || q === 'cappadocia') return 'kapadokya';
+  if (q === 'karadeniz' || q === 'blacksea') return 'karadeniz';
   if (q === 'bozkir' || q === 'steppe') return 'bozkir';
   if (mode === 'daily') {
     const s = String(seed);
@@ -847,26 +873,31 @@ function getBiome(mode, seed, level) {
       const d = new Date(+s.slice(0, 4), +s.slice(4, 6) - 1, +s.slice(6, 8));
       const t0 = new Date(2026, 10, 2).getTime(); // Launch week base (Nov 2, 2026)
       const w = Math.floor((d.getTime() - t0) / (7 * 864e5));
-      return ((w % 2) + 2) % 2 === 1 ? 'kapadokya' : 'bozkir';
+      const mod = ((w % 3) + 3) % 3;
+      return mod === 1 ? 'kapadokya' : mod === 2 ? 'karadeniz' : 'bozkir';
     }
     const sl = s.toLowerCase();
     if (sl.includes('kapadokya') || sl.includes('cappadocia') || sl.includes('goreme') || sl.includes('urgup') || sl.includes('avanos')) return 'kapadokya';
-    return (hashStr('b' + s) % 2) === 1 ? 'kapadokya' : 'bozkir';
+    if (sl.includes('karadeniz') || sl.includes('blacksea') || sl.includes('rize') || sl.includes('trabzon') || sl.includes('kackar') || sl.includes('ayder')) return 'karadeniz';
+    return (hashStr('b' + s) % 3) === 1 ? 'kapadokya' : (hashStr('b' + s) % 3) === 2 ? 'karadeniz' : 'bozkir';
   }
-  return Math.floor((level - 1) / 3) % 2 === 1 ? 'kapadokya' : 'bozkir';
+  return Math.floor((level - 1) / 3) % 3 === 1 ? 'kapadokya' : Math.floor((level - 1) / 3) % 3 === 2 ? 'karadeniz' : 'bozkir';
 }
 function applyBiome(b, save = true) {
-  biomeOverride = (b === 'kapadokya' || b === 'bozkir') ? b : null;
+  biomeOverride = (b === 'kapadokya' || b === 'karadeniz' || b === 'bozkir') ? b : null;
   if (save && !NOSAVE) {
     if (biomeOverride) store.set('biome', biomeOverride);
     else try { localStorage.removeItem('fayhatti.biome'); } catch (e) {}
   }
   G.biome = biomeOverride || getBiome(G.mode, G.seed, G.level);
+  const isKrd = G.biome === 'karadeniz' && currentTheme === 'classic';
   document.body.classList.toggle('biome-kapadokya', G.biome === 'kapadokya' && currentTheme === 'classic');
+  document.body.classList.toggle('biome-karadeniz', isKrd);
+  document.body.classList.toggle('theme-karadeniz', isKrd);
   const tc = $('metaThemeColor');
-  if (tc) tc.setAttribute('content', currentTheme === 'gece' ? '#0b111a' : currentTheme === 'kagit' ? '#2e2820' : (G.biome === 'kapadokya' ? '#1f161a' : '#1b2830'));
+  if (tc) tc.setAttribute('content', currentTheme === 'gece' ? '#0b111a' : currentTheme === 'kagit' ? '#2e2820' : (G.biome === 'kapadokya' ? '#1f161a' : G.biome === 'karadeniz' ? '#12241d' : '#1b2830'));
   if (G.pz) {
-    G.place = G.biome === 'kapadokya' ? CAPPADOCIA_PLACES[hashStr('p' + G.seed) % CAPPADOCIA_PLACES.length] : PLACES[hashStr('p' + G.seed) % PLACES.length];
+    G.place = G.biome === 'kapadokya' ? CAPPADOCIA_PLACES[hashStr('p' + G.seed) % CAPPADOCIA_PLACES.length] : G.biome === 'karadeniz' ? KARADENIZ_PLACES[hashStr('p' + G.seed) % KARADENIZ_PLACES.length] : PLACES[hashStr('p' + G.seed) % PLACES.length];
     buildCaches();
     updateHud();
   }
@@ -916,7 +947,10 @@ function pluck(t0, freq, peak) {
 const sfx = {
   slide() {
     if (!audio()) return; const t0 = AC.currentTime;
-    if (G.biome === 'kapadokya') {
+    if (G.biome === 'karadeniz') {
+      noise(t0, 0.14, 'bandpass', 1800, 700, 0.2, 1.4);
+      tone(t0 + 0.09, 210, 0.06, 'triangle', 0.12);
+    } else if (G.biome === 'kapadokya') {
       noise(t0, 0.14, 'bandpass', 1100, 380, 0.24, 1.4);
       tone(t0 + 0.09, 155, 0.07, 'triangle', 0.13);
     } else {
@@ -964,10 +998,13 @@ const sfx = {
       tone(t0, f * 2.01, 0.25, 'sine', 0.06);
     }
   },
-  // Cappadocia victory on Central Anatolian cadence or Steppe Hicaz-flavoured run on D
+  // Cappadocia victory on Central Anatolian cadence, Karadeniz horon kemençe on A, or Steppe Hicaz run on D
   win() {
     if (!audio()) return; const t0 = AC.currentTime;
-    if (G.biome === 'kapadokya') {
+    if (G.biome === 'karadeniz') {
+      [440, 493.88, 554.37, 659.25, 739.99, 880].forEach((f, i) => pluck(t0 + i * 0.08, f, 0.17));
+      tone(t0 + 0.5, 880, 1.1, 'sine', 0.12); tone(t0 + 0.5, 1318.5, 0.9, 'sine', 0.06);
+    } else if (G.biome === 'kapadokya') {
       // Central Anatolian cadence on D with airy Ney breath
       [293.7, 349.2, 392, 440, 523.3, 587.3].forEach((f, i) => {
         pluck(t0 + i * 0.095, f, 0.16);
@@ -1146,8 +1183,11 @@ function startPuzzle(mode, arg, firstHelp = true) {
     G.genMs = Math.round(performance.now() - t0);
     G.pz = pz; G.ids = pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.sat = [];
     G.biome = biomeOverride || getBiome(mode, G.seed, G.level);
+    const isKrd = G.biome === 'karadeniz' && currentTheme === 'classic';
     document.body.classList.toggle('biome-kapadokya', G.biome === 'kapadokya' && currentTheme === 'classic');
-    G.place = G.biome === 'kapadokya' ? CAPPADOCIA_PLACES[hashStr('p' + G.seed) % CAPPADOCIA_PLACES.length] : PLACES[hashStr('p' + G.seed) % PLACES.length];
+    document.body.classList.toggle('biome-karadeniz', isKrd);
+    document.body.classList.toggle('theme-karadeniz', isKrd);
+    G.place = G.biome === 'kapadokya' ? CAPPADOCIA_PLACES[hashStr('p' + G.seed) % CAPPADOCIA_PLACES.length] : G.biome === 'karadeniz' ? KARADENIZ_PLACES[hashStr('p' + G.seed) % KARADENIZ_PLACES.length] : PLACES[hashStr('p' + G.seed) % PLACES.length];
     G.state = 'play';
     puzzleStartTime = performance.now();
     puzzleFirstMoveTime = 0;
@@ -1344,6 +1384,17 @@ function strokePath(c, m, s, w, col) {
   tracePath(c, m, s); c.stroke();
   if (!isCorner(m) && popcount(m) >= 3) { c.beginPath(); c.arc(s / 2, s / 2, w / 2, 0, 7); c.fillStyle = col; c.fill(); }
 }
+// Hand-drawn tea sprig motif (tender leaves, central shoot & dewdrop) for Karadeniz theme
+function drawTeaSprig(c, x, y, s, scale, angle, R) {
+  c.save(); c.translate(x, y); c.rotate(angle); c.scale(scale, scale);
+  c.strokeStyle = '#2d5a31'; c.lineWidth = 1.3; c.lineCap = 'round';
+  c.beginPath(); c.moveTo(0, s * 0.05); c.quadraticCurveTo(0, 0, s * 0.01, -s * 0.04); c.stroke();
+  c.fillStyle = '#3e7d44'; c.beginPath(); c.moveTo(0, s * 0.02); c.quadraticCurveTo(-s * 0.045, -s * 0.01, -s * 0.04, -s * 0.05); c.quadraticCurveTo(-s * 0.015, -s * 0.045, 0, 0); c.closePath(); c.fill();
+  c.fillStyle = '#4c9452'; c.beginPath(); c.moveTo(0, s * 0.01); c.quadraticCurveTo(s * 0.045, -s * 0.02, s * 0.042, -s * 0.06); c.quadraticCurveTo(s * 0.015, -s * 0.05, 0, -s * 0.01); c.closePath(); c.fill();
+  c.fillStyle = '#6ab870'; c.beginPath(); c.moveTo(0, -s * 0.01); c.quadraticCurveTo(-s * 0.012, -s * 0.06, 0, -s * 0.08); c.quadraticCurveTo(s * 0.012, -s * 0.06, 0, -s * 0.01); c.closePath(); c.fill();
+  if (R() < 0.65) { c.fillStyle = 'rgba(255,255,255,.75)'; c.beginPath(); c.arc(s * 0.02, -s * 0.035, s * 0.012, 0, 7); c.fill(); }
+  c.restore();
+}
 function drawPlate(c, v, id) {
   const s = cs, k = v >> 4, m = v & 15, ins = Math.max(1.5, s * 0.04), r = s * 0.14, R = rng32(id * 977 + 13);
   if (highContrast) {
@@ -1422,34 +1473,59 @@ function drawPlate(c, v, id) {
       c.setLineDash([s * 0.07, s * 0.06]); strokePath(c, m, s, s * 0.04, '#fdfbf4'); c.setLineDash([]);
     }
   } else {
-    // Classic default
+    // Classic default / regional biomes (Kapadokya, Karadeniz, Bozkır)
+    const isKrd = G.biome === 'karadeniz';
     const isK = G.biome === 'kapadokya';
-    c.fillStyle = isK ? 'rgba(75,32,18,.36)' : 'rgba(70,42,18,.38)'; rr(c, ins, ins + s * 0.035, s - 2 * ins, s - 2 * ins, r); c.fill();
+    c.fillStyle = isKrd ? 'rgba(20,48,28,.38)' : isK ? 'rgba(75,32,18,.36)' : 'rgba(70,42,18,.38)'; rr(c, ins, ins + s * 0.035, s - 2 * ins, s - 2 * ins, r); c.fill();
     const g = c.createLinearGradient(0, 0, 0, s);
-    if (isK) { g.addColorStop(0, '#f6e4d4'); g.addColorStop(1, '#dcba9e'); }
+    if (isKrd) { g.addColorStop(0, '#d8ebd0'); g.addColorStop(1, '#abcda0'); }
+    else if (isK) { g.addColorStop(0, '#f6e4d4'); g.addColorStop(1, '#dcba9e'); }
     else { g.addColorStop(0, '#f1e0b3'); g.addColorStop(1, '#d6bb83'); }
     c.fillStyle = g; rr(c, ins, ins, s - 2 * ins, s - 2 * ins - s * 0.02, r); c.fill();
-    c.strokeStyle = isK ? 'rgba(255,250,245,.75)' : 'rgba(255,251,236,.7)'; c.lineWidth = 1.2; rr(c, ins + 1, ins + 1, s - 2 * ins - 2, s - 2 * ins - s * 0.02 - 2, r * 0.9); c.stroke();
+    c.strokeStyle = isKrd ? 'rgba(235,255,230,.75)' : isK ? 'rgba(255,250,245,.75)' : 'rgba(255,251,236,.7)'; c.lineWidth = 1.2; rr(c, ins + 1, ins + 1, s - 2 * ins - 2, s - 2 * ins - s * 0.02 - 2, r * 0.9); c.stroke();
     // terrain details travel with the tile
-    for (let i = 0; i < 6; i++) {
-      const x = s * (0.16 + R() * 0.68), y = s * (0.16 + R() * 0.64);
-      if (isK) {
+    if (isKrd) {
+      // Karadeniz tea leaf motifs: delicate sprigs and dewdrops travel with tile
+      for (let i = 0; i < 3; i++) {
+        const x = s * (0.2 + R() * 0.6), y = s * (0.2 + R() * 0.58);
+        const ang = (R() - 0.5) * 1.6, sc = 0.8 + R() * 0.4;
+        drawTeaSprig(c, x, y, s, sc, ang, R);
+      }
+    } else if (isK) {
+      for (let i = 0; i < 6; i++) {
+        const x = s * (0.16 + R() * 0.68), y = s * (0.16 + R() * 0.64);
         if (R() < 0.5) { c.strokeStyle = `rgba(${(140 + R() * 25) | 0},${(120 + R() * 20) | 0},75,.5)`; c.lineWidth = 1.2; c.beginPath(); c.moveTo(x - 2, y); c.lineTo(x, y - s * 0.04); c.lineTo(x + 2, y); c.stroke(); }
         else { c.fillStyle = 'rgba(165,95,65,.35)'; c.beginPath(); c.ellipse(x, y, s * 0.022, s * 0.015, 0, 0, 7); c.fill(); }
-      } else {
+      }
+    } else {
+      for (let i = 0; i < 6; i++) {
+        const x = s * (0.16 + R() * 0.68), y = s * (0.16 + R() * 0.64);
         if (R() < 0.6) { c.strokeStyle = `rgba(${(110 + R() * 30) | 0},${(125 + R() * 25) | 0},60,.55)`; c.lineWidth = 1.2; c.beginPath(); c.moveTo(x - 2, y); c.lineTo(x, y - s * 0.05); c.lineTo(x + 2, y); c.stroke(); }
         else { c.fillStyle = 'rgba(140,110,75,.35)'; c.beginPath(); c.ellipse(x, y, s * 0.02, s * 0.014, 0, 0, 7); c.fill(); }
       }
     }
     if (k === KR) {
-      strokePath(c, m, s, s * 0.44, isK ? 'rgba(185,92,62,.36)' : 'rgba(105,140,62,.40)');
-      strokePath(c, m, s, s * 0.3, isK ? '#226b96' : '#2a6c99');
-      strokePath(c, m, s, s * 0.22, isK ? '#3ca6d8' : '#3d95cf');
-      c.save(); c.translate(-s * 0.03, -s * 0.03); strokePath(c, m, s, s * 0.05, isK ? 'rgba(255,255,255,.24)' : 'rgba(255,255,255,.22)'); c.restore();
+      if (isKrd) {
+        strokePath(c, m, s, s * 0.44, 'rgba(40,110,90,.38)');
+        strokePath(c, m, s, s * 0.3, '#196b75');
+        strokePath(c, m, s, s * 0.22, '#2ea8b8');
+        c.save(); c.translate(-s * 0.03, -s * 0.03); strokePath(c, m, s, s * 0.05, 'rgba(235,255,255,.32)'); c.restore();
+      } else {
+        strokePath(c, m, s, s * 0.44, isK ? 'rgba(185,92,62,.36)' : 'rgba(105,140,62,.40)');
+        strokePath(c, m, s, s * 0.3, isK ? '#226b96' : '#2a6c99');
+        strokePath(c, m, s, s * 0.22, isK ? '#3ca6d8' : '#3d95cf');
+        c.save(); c.translate(-s * 0.03, -s * 0.03); strokePath(c, m, s, s * 0.05, isK ? 'rgba(255,255,255,.24)' : 'rgba(255,255,255,.22)'); c.restore();
+      }
     } else if (k === KD) {
-      strokePath(c, m, s, s * 0.3, isK ? 'rgba(150,85,50,.28)' : 'rgba(122,82,48,.32)');
-      strokePath(c, m, s, s * 0.21, isK ? '#caa16a' : '#c79a5e');
-      c.setLineDash([s * 0.07, s * 0.07]); strokePath(c, m, s, s * 0.03, isK ? 'rgba(255,246,228,.92)' : 'rgba(248,234,200,.9)'); c.setLineDash([]);
+      if (isKrd) {
+        strokePath(c, m, s, s * 0.3, 'rgba(50,75,55,.32)');
+        strokePath(c, m, s, s * 0.21, '#9e8f78');
+        c.setLineDash([s * 0.07, s * 0.07]); strokePath(c, m, s, s * 0.03, 'rgba(240,248,236,.9)'); c.setLineDash([]);
+      } else {
+        strokePath(c, m, s, s * 0.3, isK ? 'rgba(150,85,50,.28)' : 'rgba(122,82,48,.32)');
+        strokePath(c, m, s, s * 0.21, isK ? '#caa16a' : '#c79a5e');
+        c.setLineDash([s * 0.07, s * 0.07]); strokePath(c, m, s, s * 0.03, isK ? 'rgba(255,246,228,.92)' : 'rgba(248,234,200,.9)'); c.setLineDash([]);
+      }
     }
   }
 }
@@ -1488,6 +1564,17 @@ function drawMountain(x, X, Y, s) {
     };
     peak(X + s * 0.66, s * 0.26, s * 0.46, '#86725e', '#5a4a3c');
     peak(X + s * 0.4, s * 0.32, s * 0.64, '#96816c', '#685646');
+  } else if (G.biome === 'karadeniz') {
+    // Kaçkar peaks: pine-forested slopes into alpine rock and snow
+    x.fillStyle = 'rgba(25,48,30,.25)'; x.beginPath(); x.ellipse(X + s / 2, Y + s * 0.8, s * 0.42, s * 0.1, 0, 0, 7); x.fill();
+    const base = Y + s * 0.82;
+    const peak = (cx, w, h, c1, c2) => {
+      x.fillStyle = c1; x.beginPath(); x.moveTo(cx - w, base); x.lineTo(cx, base - h); x.lineTo(cx + w, base); x.closePath(); x.fill();
+      x.fillStyle = c2; x.beginPath(); x.moveTo(cx, base - h); x.lineTo(cx + w, base); x.lineTo(cx + w * 0.15, base); x.closePath(); x.fill();
+      x.fillStyle = '#f6f2ea'; x.beginPath(); x.moveTo(cx, base - h); x.lineTo(cx - w * 0.3, base - h * 0.7); x.lineTo(cx - w * 0.1, base - h * 0.74); x.lineTo(cx + w * 0.05, base - h * 0.66); x.lineTo(cx + w * 0.3, base - h * 0.7); x.closePath(); x.fill();
+    };
+    peak(X + s * 0.66, s * 0.26, s * 0.46, '#46614c', '#334938');
+    peak(X + s * 0.4, s * 0.32, s * 0.64, '#54725c', '#3d5444');
   } else if (G.biome === 'kapadokya') {
     // Kapadokya: Fairy chimneys (peri bacaları) with dark basalt caps & distant volcanic Erciyes
     x.fillStyle = 'rgba(65,30,15,.22)'; x.beginPath(); x.ellipse(X + s / 2, Y + s * 0.82, s * 0.44, s * 0.1, 0, 0, 7); x.fill();
@@ -1547,6 +1634,20 @@ function drawSpring(x, X, Y, s) {
     x.fillStyle = '#269ab0'; x.beginPath(); x.arc(cx, cy, s * 0.23, 0, 7); x.fill();
     x.fillStyle = '#48c5d9'; x.beginPath(); x.arc(cx, cy, s * 0.16, 0, 7); x.fill();
     x.strokeStyle = 'rgba(255,255,255,.7)'; x.lineWidth = 1.2; x.beginPath(); x.arc(cx, cy, s * 0.09, 0.5, 2.5); x.stroke();
+  } else if (G.biome === 'karadeniz') {
+    // Highland mountain spring (Yayladaki pınar) with mossy stones & clear glacier runoff
+    x.fillStyle = 'rgba(50,110,60,.45)'; x.beginPath(); x.arc(cx, cy, s * 0.36, 0, 7); x.fill();
+    x.fillStyle = '#155b66'; x.beginPath(); x.arc(cx, cy, s * 0.27, 0, 7); x.fill();
+    const g = x.createRadialGradient(cx - s * 0.06, cy - s * 0.06, 2, cx, cy, s * 0.25);
+    g.addColorStop(0, '#92ebd9'); g.addColorStop(1, '#2498a4');
+    x.fillStyle = g; x.beginPath(); x.arc(cx, cy, s * 0.235, 0, 7); x.fill();
+    x.strokeStyle = 'rgba(255,255,255,.55)'; x.lineWidth = 1.3; x.beginPath(); x.arc(cx, cy, s * 0.12, 0.4, 2.6); x.stroke();
+    const R = rng32(77);
+    for (let i = 0; i < 7; i++) {
+      const a = i * 0.9 + R();
+      x.fillStyle = i % 2 ? '#7a8c80' : '#5e7064';
+      x.beginPath(); x.ellipse(cx + Math.cos(a) * s * 0.3, cy + Math.sin(a) * s * 0.3, s * 0.045, s * 0.032, a, 0, 7); x.fill();
+    }
   } else if (G.biome === 'kapadokya') {
     // Kapadokya: Rock-hewn cistern & tuff fountain basin (Kaya Sarnıcı) with clay jugs
     x.fillStyle = 'rgba(165,95,65,.32)'; x.beginPath(); x.arc(cx, cy, s * 0.37, 0, 7); x.fill();
@@ -1618,6 +1719,18 @@ function drawHan(x, X, Y, s) {
     x.fillStyle = '#3a2b1f';
     x.beginPath(); x.moveTo(gx, y0 + h); x.lineTo(gx, gy + gw / 2); x.arc(X + s / 2, gy + gw / 2, gw / 2, Math.PI, 0); x.lineTo(gx + gw, y0 + h); x.closePath(); x.fill();
     x.fillStyle = '#cf3f2a'; x.beginPath(); x.moveTo(x0 + w * 0.85, y0 - s * 0.06); x.lineTo(x0 + w * 0.85, y0 - s * 0.2); x.lineTo(x0 + w * 1.02, y0 - s * 0.16); x.lineTo(x0 + w * 0.85, y0 - s * 0.12); x.fill();
+  } else if (G.biome === 'karadeniz') {
+    // Karadeniz stone & chestnut timber highland station (Yayla Konağı / Kervansaray)
+    x.fillStyle = 'rgba(30,45,35,.3)'; x.fillRect(x0 + 3, y0 + 4, w, h);
+    x.fillStyle = '#8b968c'; x.fillRect(x0, y0, w, h);
+    x.fillStyle = '#717a72'; for (let i = 0; i < 5; i++) x.fillRect(x0 + (i * w) / 4.5, y0 - s * 0.06, w / 9, s * 0.07);
+    x.strokeStyle = 'rgba(40,60,45,.45)'; x.lineWidth = 1;
+    for (let r = 1; r < 4; r++) { x.beginPath(); x.moveTo(x0, y0 + (r * h) / 4); x.lineTo(x0 + w, y0 + (r * h) / 4); x.stroke(); }
+    x.fillStyle = '#c9d4c8'; x.fillRect(x0 + w * 0.22, y0 + h * 0.16, w * 0.56, h * 0.3);
+    x.fillStyle = '#253028'; const gw = w * 0.3, gx = X + s / 2 - gw / 2, gy = y0 + h * 0.5;
+    x.beginPath(); x.moveTo(gx, y0 + h); x.lineTo(gx, gy + gw / 2); x.arc(X + s / 2, gy + gw / 2, gw / 2, Math.PI, 0); x.lineTo(gx + gw, y0 + h); x.closePath(); x.fill();
+    x.strokeStyle = '#4a574d'; x.lineWidth = 1.5; x.strokeRect(x0, y0, w, h);
+    x.fillStyle = '#2e7545'; x.beginPath(); x.moveTo(x0 + w * 0.85, y0 - s * 0.06); x.lineTo(x0 + w * 0.85, y0 - s * 0.2); x.lineTo(x0 + w * 1.02, y0 - s * 0.16); x.lineTo(x0 + w * 0.85, y0 - s * 0.12); x.fill();
   } else if (G.biome === 'kapadokya') {
     // Kapadokya: Sarıhan style Seljuk caravanserai (two-tone yellow & red volcanic ashlar masonry)
     x.fillStyle = 'rgba(65,30,15,.28)'; x.fillRect(x0 + 3, y0 + 4, w, h);
@@ -1701,6 +1814,21 @@ function drawVillage(x, X, Y, s, seed) {
     };
     x.fillStyle = '#4b7440'; x.beginPath(); x.arc(X + s * (0.72 + R() * 0.06), Y + s * 0.5, s * 0.1, 0, 7); x.fill();
     x.fillStyle = '#3a281c'; x.fillRect(X + s * 0.74, Y + s * 0.56, s * 0.025, s * 0.12);
+    house(X + s * 0.34, Y + s * 0.62, s * 0.24, s * 0.18);
+    house(X + s * 0.6, Y + s * 0.8, s * 0.26, s * 0.2);
+    house(X + s * 0.28, Y + s * 0.86, s * 0.2, s * 0.15);
+  } else if (G.biome === 'karadeniz') {
+    // Karadeniz highland wooden chalets / Serander architecture on emerald meadow
+    x.fillStyle = 'rgba(60,120,70,.32)'; x.beginPath(); x.ellipse(X + s / 2, Y + s * 0.62, s * 0.4, s * 0.26, 0, 0, 7); x.fill();
+    const house = (cx, by, w, h) => {
+      x.fillStyle = 'rgba(30,50,35,.28)'; x.fillRect(cx - w / 2 + 2, by - h + 3, w, h);
+      x.fillStyle = '#e3eee1'; x.fillRect(cx - w / 2, by - h, w, h);
+      x.fillStyle = '#4a3b2c'; x.beginPath(); x.moveTo(cx - w / 2 - s * 0.03, by - h); x.lineTo(cx, by - h - w * 0.5); x.lineTo(cx + w / 2 + s * 0.03, by - h); x.closePath(); x.fill();
+      x.fillStyle = '#32251a'; x.beginPath(); x.moveTo(cx, by - h - w * 0.5); x.lineTo(cx + w / 2 + s * 0.03, by - h); x.lineTo(cx, by - h); x.closePath(); x.fill();
+      x.fillStyle = '#2a4230'; x.fillRect(cx - w * 0.12, by - h * 0.5, w * 0.24, h * 0.5);
+    };
+    x.fillStyle = '#386f3e'; x.beginPath(); x.arc(X + s * (0.72 + R() * 0.06), Y + s * 0.5, s * 0.1, 0, 7); x.fill();
+    x.fillStyle = '#382a1c'; x.fillRect(X + s * 0.74, Y + s * 0.56, s * 0.025, s * 0.12);
     house(X + s * 0.34, Y + s * 0.62, s * 0.24, s * 0.18);
     house(X + s * 0.6, Y + s * 0.8, s * 0.26, s * 0.2);
     house(X + s * 0.28, Y + s * 0.86, s * 0.2, s * 0.15);
@@ -1817,29 +1945,31 @@ function buildCaches() {
       if (k === KM) drawMountain(x, X, Y, cs); else if (k === KS) drawSpring(x, X, Y, cs); else if (k === KH) drawHan(x, X, Y, cs); else if (k === KV) drawVillage(x, X, Y, cs, i * 31 + 5);
     }
   } else {
-    const isK = G.biome === 'kapadokya';
+    const isK = G.biome === 'kapadokya', isKrd = G.biome === 'karadeniz';
     const g = x.createLinearGradient(0, 0, S, S);
-    if (isK) { g.addColorStop(0, '#f4e3d0'); g.addColorStop(1, '#dbb598'); }
+    if (isKrd) { g.addColorStop(0, '#d2e7ca'); g.addColorStop(1, '#b0cfa6'); }
+    else if (isK) { g.addColorStop(0, '#f4e3d0'); g.addColorStop(1, '#dbb598'); }
     else { g.addColorStop(0, '#f0dfb3'); g.addColorStop(1, '#d8bf8b'); }
     rr(x, 0, 0, S, S, pad * 0.9); x.fillStyle = g; x.fill();
     x.save(); rr(x, 0, 0, S, S, pad * 0.9); x.clip();
     for (let i = 0; i < (S * S) / 70; i++) {
-      if (isK) x.fillStyle = R() < 0.5 ? `rgba(155,80,50,${0.04 + R() * 0.07})` : `rgba(255,248,238,${0.06 + R() * 0.1})`;
+      if (isKrd) x.fillStyle = R() < 0.5 ? `rgba(45,85,50,${0.04 + R() * 0.07})` : `rgba(240,255,240,${0.06 + R() * 0.1})`;
+      else if (isK) x.fillStyle = R() < 0.5 ? `rgba(155,80,50,${0.04 + R() * 0.07})` : `rgba(255,248,238,${0.06 + R() * 0.1})`;
       else x.fillStyle = R() < 0.5 ? `rgba(120,84,40,${0.04 + R() * 0.07})` : `rgba(255,250,232,${0.06 + R() * 0.1})`;
       x.fillRect(R() * S, R() * S, 1 + R() * 1.6, 1 + R() * 1.6);
     }
-    x.strokeStyle = isK ? 'rgba(165,95,65,.22)' : 'rgba(150,108,58,.2)'; x.lineWidth = 1;
+    x.strokeStyle = isKrd ? 'rgba(50,95,55,.2)' : isK ? 'rgba(165,95,65,.22)' : 'rgba(150,108,58,.2)'; x.lineWidth = 1;
     for (let k = 0; k < 9; k++) { // faint contour / valley strata lines
       x.beginPath(); const y0 = R() * S, f1 = 3 + R() * 4, f2 = 9 + R() * 6, p1 = R() * 6, p2 = R() * 6;
       for (let px = 0; px <= S; px += 6) { const y = y0 + Math.sin((px / S) * f1 + p1) * cs * 0.3 + Math.sin((px / S) * f2 + p2) * cs * 0.07; px ? x.lineTo(px, y) : x.moveTo(px, y); }
       x.stroke();
     }
     x.restore();
-    x.lineWidth = 2; x.strokeStyle = isK ? '#a46342' : '#9f7742'; rr(x, 1, 1, S - 2, S - 2, pad * 0.9); x.stroke();
-    x.lineWidth = 1; x.strokeStyle = isK ? 'rgba(150,75,45,.45)' : 'rgba(120,85,45,.5)'; rr(x, pad * 0.42, pad * 0.42, S - pad * 0.84, S - pad * 0.84, pad * 0.5); x.stroke();
+    x.lineWidth = 2; x.strokeStyle = isKrd ? '#4a7550' : isK ? '#a46342' : '#9f7742'; rr(x, 1, 1, S - 2, S - 2, pad * 0.9); x.stroke();
+    x.lineWidth = 1; x.strokeStyle = isKrd ? 'rgba(50,85,55,.5)' : isK ? 'rgba(150,75,45,.45)' : 'rgba(120,85,45,.5)'; rr(x, pad * 0.42, pad * 0.42, S - pad * 0.84, S - pad * 0.84, pad * 0.5); x.stroke();
     for (let i = 0; i < NN; i++) {
       const X = pad + (i % N) * cs, Y = pad + ((i / N) | 0) * cs;
-      x.fillStyle = isK ? 'rgba(120,55,30,.13)' : 'rgba(105,72,34,.13)'; rr(x, X + 2, Y + 2, cs - 4, cs - 4, cs * 0.14); x.fill();
+      x.fillStyle = isKrd ? 'rgba(30,65,35,.12)' : isK ? 'rgba(120,55,30,.13)' : 'rgba(105,72,34,.13)'; rr(x, X + 2, Y + 2, cs - 4, cs - 4, cs * 0.14); x.fill();
       if (!pz.fixed[i]) continue;
       const k = pz.tiles[i] >> 4;
       if (k === KM) drawMountain(x, X, Y, cs); else if (k === KS) drawSpring(x, X, Y, cs); else if (k === KH) drawHan(x, X, Y, cs); else if (k === KV) drawVillage(x, X, Y, cs, i * 31 + 5);
@@ -1924,9 +2054,12 @@ function drawBadge(cx, cy, r, river, ok, pulse) {
     ctx.lineWidth = 1.5; ctx.strokeStyle = ok ? '#ffffff' : river ? '#1f7ba8' : '#c24e35'; ctx.stroke();
     ctx.fillStyle = ok ? '#ffffff' : river ? '#1f7ba8' : '#c24e35'; ctx.strokeStyle = ctx.fillStyle;
   } else {
-    ctx.fillStyle = ok ? (river ? '#2f86c4' : '#b9843f') : 'rgba(250,244,230,.92)'; ctx.fill();
-    ctx.lineWidth = 1.5; ctx.strokeStyle = ok ? '#fff6e2' : river ? '#2f86c4' : '#9a6a2c'; ctx.stroke();
-    ctx.fillStyle = ok ? '#fff' : river ? '#2f86c4' : '#9a6a2c'; ctx.strokeStyle = ctx.fillStyle;
+    const isKrd = G.biome === 'karadeniz';
+    const rCol = isKrd ? '#2498a4' : '#2f86c4', dCol = isKrd ? '#8f8069' : '#b9843f';
+    const sCol = isKrd ? '#635742' : '#9a6a2c';
+    ctx.fillStyle = ok ? (river ? rCol : dCol) : 'rgba(250,244,230,.92)'; ctx.fill();
+    ctx.lineWidth = 1.5; ctx.strokeStyle = ok ? '#fff6e2' : river ? rCol : sCol; ctx.stroke();
+    ctx.fillStyle = ok ? '#fff' : river ? rCol : sCol; ctx.strokeStyle = ctx.fillStyle;
   }
   if (river) { ctx.beginPath(); ctx.moveTo(0, -r * 0.62); ctx.bezierCurveTo(r * 0.55, -r * 0.05, r * 0.5, r * 0.55, 0, r * 0.55); ctx.bezierCurveTo(-r * 0.5, r * 0.55, -r * 0.55, -r * 0.05, 0, -r * 0.62); ctx.fill(); }
   else { ctx.lineWidth = r * 0.22; ctx.beginPath(); ctx.moveTo(-r * 0.32, r * 0.55); ctx.lineTo(-r * 0.12, -r * 0.55); ctx.moveTo(r * 0.32, r * 0.55); ctx.lineTo(r * 0.12, -r * 0.55); ctx.stroke(); }
@@ -1969,7 +2102,7 @@ function frame(now) {
     ctx.fillStyle = `rgba(214,70,40,${a})`; ctx.fillRect(ox, oy + r * cs, BW, cs);
   }
   if (hover >= 0 && !anims.length && G.state === 'play' && !G.bot) {
-    ctx.fillStyle = currentTheme === 'gece' ? 'rgba(120,180,255,.12)' : currentTheme === 'kagit' ? 'rgba(100,75,45,.08)' : (G.biome === 'kapadokya' ? 'rgba(246,237,226,.12)' : 'rgba(255,255,255,.1)');
+    ctx.fillStyle = currentTheme === 'gece' ? 'rgba(120,180,255,.12)' : currentTheme === 'kagit' ? 'rgba(100,75,45,.08)' : (G.biome === 'karadeniz' ? 'rgba(237,247,240,.12)' : G.biome === 'kapadokya' ? 'rgba(246,237,226,.12)' : 'rgba(255,255,255,.1)');
     ctx.fillRect(ox, oy + ((hover / N) | 0) * cs, BW, cs); ctx.fillRect(ox + (hover % N) * cs, oy, cs, BW);
   }
   // movable tiles
@@ -2024,8 +2157,8 @@ function frame(now) {
           ctx.beginPath(); ctx.moveTo(X + p[0], Y + p[1]); ctx.lineTo(ix, iy); ctx.stroke();
         } else {
           ctx.lineWidth = cs * (inR ? 0.2 : 0.18);
-          const inRCol = currentTheme === 'gece' ? '#30bde2' : currentTheme === 'kagit' ? '#268ec7' : (G.biome === 'kapadokya' ? '#3ca6d8' : '#3d95cf');
-          const inDCol = currentTheme === 'gece' ? '#3b4555' : currentTheme === 'kagit' ? '#bca27c' : (G.biome === 'kapadokya' ? '#caa16a' : '#c79a5e');
+          const inRCol = currentTheme === 'gece' ? '#30bde2' : currentTheme === 'kagit' ? '#268ec7' : (G.biome === 'karadeniz' ? '#2ea8b8' : G.biome === 'kapadokya' ? '#3ca6d8' : '#3d95cf');
+          const inDCol = currentTheme === 'gece' ? '#3b4555' : currentTheme === 'kagit' ? '#bca27c' : (G.biome === 'karadeniz' ? '#9e8f78' : G.biome === 'kapadokya' ? '#caa16a' : '#c79a5e');
           ctx.strokeStyle = inR ? inRCol : inDCol;
           ctx.beginPath(); ctx.moveTo(X + p[0], Y + p[1]); ctx.lineTo(ix, iy); ctx.stroke();
         }
@@ -2041,6 +2174,7 @@ function frame(now) {
       const gl = ctx.createRadialGradient(X + cs / 2, Y + cs * 0.65, 2, X + cs / 2, Y + cs * 0.65, cs * 0.5);
       if (currentTheme === 'gece') { gl.addColorStop(0, 'rgba(255,200,60,.65)'); gl.addColorStop(1, 'rgba(255,180,40,0)'); }
       else if (currentTheme === 'kagit') { gl.addColorStop(0, 'rgba(255,225,140,.5)'); gl.addColorStop(1, 'rgba(255,225,140,0)'); }
+      else if (G.biome === 'karadeniz') { gl.addColorStop(0, 'rgba(120,225,160,.55)'); gl.addColorStop(1, 'rgba(120,225,160,0)'); }
       else if (G.biome === 'kapadokya') { gl.addColorStop(0, 'rgba(232,164,54,.55)'); gl.addColorStop(1, 'rgba(232,164,54,0)'); }
       else { gl.addColorStop(0, 'rgba(255,214,120,.55)'); gl.addColorStop(1, 'rgba(255,214,120,0)'); }
       ctx.fillStyle = gl; ctx.fillRect(X, Y, cs, cs);
@@ -2059,6 +2193,8 @@ function frame(now) {
       ? (hot ? 'rgba(220,238,255,.95)' : 'rgba(160,195,235,.45)')
       : currentTheme === 'kagit'
       ? (hot ? 'rgba(255,255,255,.98)' : 'rgba(245,240,230,.5)')
+      : G.biome === 'karadeniz'
+      ? (hot ? 'rgba(237,247,240,.95)' : 'rgba(237,247,240,.45)')
       : G.biome === 'kapadokya'
       ? (hot ? 'rgba(246,237,226,.95)' : 'rgba(246,237,226,.45)')
       : (hot ? 'rgba(243,234,216,.95)' : 'rgba(243,234,216,.42)');
@@ -2170,7 +2306,7 @@ addEventListener('keydown', (e) => {
 
 // ---------------------------------------------------------------- UI
 function updateHud() {
-  const regionTag = G.biome === 'kapadokya' ? ' (' + t('biomeKapadokya') + ')' : '';
+  const regionTag = G.biome === 'karadeniz' ? ' (' + t('biomeKaradeniz') + ')' : G.biome === 'kapadokya' ? ' (' + t('biomeKapadokya') + ')' : '';
   $('tMode').textContent = G.mode === 'daily' ? t('dailyTag', { d: seedLabel(G.seed) }) + (G.place && G.pz ? ' · ' + G.place : '') + regionTag : t('endless') + ' · ' + t('level', { n: G.level }) + regionTag;
   $('lMoves').textContent = t('moves'); $('lPar').textContent = t('par');
   $('vMoves').textContent = G.moves; $('vPar').textContent = G.pz ? G.pz.par : '–';
@@ -2192,13 +2328,16 @@ function updateHud() {
   dbg();
 }
 function applyTheme(th, save = true) {
+  if (th === 'karadeniz') { applyBiome('karadeniz', save); return; }
   if (th !== 'gece' && th !== 'kagit') th = 'classic';
   currentTheme = th;
   if (save && !NOSAVE) store.set('theme', th);
   document.documentElement.dataset.theme = th;
   document.body.classList.toggle('biome-kapadokya', G.biome === 'kapadokya' && currentTheme === 'classic');
+  document.body.classList.toggle('biome-karadeniz', G.biome === 'karadeniz' && currentTheme === 'classic');
+  document.body.classList.toggle('theme-karadeniz', G.biome === 'karadeniz' && currentTheme === 'classic');
   const tc = $('metaThemeColor');
-  if (tc) tc.setAttribute('content', th === 'gece' ? '#0b111a' : th === 'kagit' ? '#2e2820' : (G.biome === 'kapadokya' ? '#1f161a' : '#1b2830'));
+  if (tc) tc.setAttribute('content', th === 'gece' ? '#0b111a' : th === 'kagit' ? '#2e2820' : (G.biome === 'karadeniz' ? '#12241d' : G.biome === 'kapadokya' ? '#1f161a' : '#1b2830'));
   buildCaches();
   fillMenu();
 }
@@ -2240,8 +2379,13 @@ function openHelp() {
   closeAll();
   $('hTitle').textContent = t('how');
   $('hList').innerHTML = ['h1', 'h2', 'h3', 'h4', 'h5'].map((k) => `<li>${t(k)}</li>`).join('');
-  const rivCol = highContrast ? '#0077b6' : '#3d95cf', rodCol = highContrast ? '#ffb703' : '#c79a5e';
-  $('hLegend').innerHTML = [[rivCol, 'lRiver'], [rodCol, 'lRoad'], ['#c25b35', 'lVillage'], ['#2fa3b6', 'lSpring'], ['#b8a07a', 'lHan'], ['#7a6551', 'lMount']].map(([c, k]) => `<span><i style="background:${c}${highContrast ? ';border:1px solid #111' : ''}"></i>${t(k)}</span>`).join('');
+  const isKrd = G.biome === 'karadeniz' && currentTheme === 'classic';
+  const rivCol = highContrast ? '#0077b6' : (isKrd ? '#2ea8b8' : '#3d95cf'), rodCol = highContrast ? '#ffb703' : (isKrd ? '#9e8f78' : '#c79a5e');
+  const vilCol = isKrd ? '#4a3b2c' : '#c25b35';
+  const sprCol = isKrd ? '#2498a4' : '#2fa3b6';
+  const hanCol = isKrd ? '#8b968c' : '#b8a07a';
+  const mntCol = isKrd ? '#46614c' : '#7a6551';
+  $('hLegend').innerHTML = [[rivCol, 'lRiver'], [rodCol, 'lRoad'], [vilCol, 'lVillage'], [sprCol, 'lSpring'], [hanCol, 'lHan'], [mntCol, 'lMount']].map(([c, k]) => `<span><i style="background:${c}${highContrast ? ';border:1px solid #111' : ''}"></i>${t(k)}</span>`).join('');
   $('bTutReplay').textContent = t('tutReplay');
   $('bHelpOk').textContent = t('gotIt');
   $('help').classList.add('on'); if (!COARSE) setTimeout(() => $('bHelpOk').focus(), 30);
@@ -2435,7 +2579,7 @@ const GLYPH = { 0: '..', 3: 'VV', 4: 'SS', 5: 'HH', 6: 'MM' };
 window.fayHatti = {
   get seed() { return G.seed; }, get moves() { return G.moves; }, get solved() { return G.won; }, get state() { return G.state; },
   get mode() { return G.mode; }, get level() { return G.level; }, get par() { return G.pz ? G.pz.par : null; }, get stars() { return G.stars; },
-  get theme() { return currentTheme; }, setTheme: (t) => applyTheme(t),
+  get theme() { return (G.biome === 'karadeniz' && currentTheme === 'classic') ? 'karadeniz' : currentTheme; }, setTheme: (t) => t === 'karadeniz' ? applyBiome('karadeniz') : applyTheme(t),
   get biome() { return G.biome || 'bozkir'; }, setBiome: (b) => applyBiome(b),
   get cards() { return CARDS; }, get cardRegistry() { return CARDS; },
   get nextQuake() { const q = nextQuake(); return q < 0 ? null : { row: q >> 1, dir: moveDir(q) }; },
@@ -2480,7 +2624,7 @@ trackEvent('session_init', {
   h: window.innerHeight,
 });
 const tc = $('metaThemeColor');
-if (tc) tc.setAttribute('content', currentTheme === 'gece' ? '#0b111a' : currentTheme === 'kagit' ? '#2e2820' : (G.biome === 'kapadokya' ? '#1f161a' : '#1b2830'));
+if (tc) tc.setAttribute('content', currentTheme === 'gece' ? '#0b111a' : currentTheme === 'kagit' ? '#2e2820' : (G.biome === 'karadeniz' ? '#12241d' : G.biome === 'kapadokya' ? '#1f161a' : '#1b2830'));
 addEventListener('resize', layout);
 applyContrast();
 layout();
