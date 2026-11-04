@@ -554,6 +554,7 @@ const STR = {
     h4: 'After each move a small quake shifts one row by itself. The red band shows which row is next.',
     h5: 'Solve within par for 3 stars. Keys: WASD picks a tile, arrow keys shift, Z undo, R restart.',
     lRiver: 'river', lRoad: 'road', lVillage: 'village', lMount: 'mountain', lSpring: 'spring', lHan: 'caravanserai',
+    motes: 'Dust motes',
   },
   tr: {
     sub: 'Anadolu toprağını kaydır. Her köye su ve yol götür.',
@@ -569,6 +570,7 @@ const STR = {
     h4: 'Her hamleden sonra küçük bir deprem bir satırı kendiliğinden kaydırır. Kırmızı bant sıradaki satırı gösterir.',
     h5: 'Hedef hamlede çöz, 3 yıldız al. Tuşlar: WASD taş seçer, ok tuşları kaydırır, Z geri alır, R baştan.',
     lRiver: 'nehir', lRoad: 'yol', lVillage: 'köy', lMount: 'dağ', lSpring: 'pınar', lHan: 'kervansaray',
+    motes: 'Toz zerrecikleri',
   },
 };
 let lang = (QS.get('lang') || '').toLowerCase();
@@ -1066,6 +1068,7 @@ function frame(now) {
     ctx.strokeRect(ox + 1, oy + qRow * cs + 1, BW - 2, cs - 2); ctx.setLineDash([]);
   }
   if (cursor >= 0 && G.state === 'play' && !G.bot) { ctx.strokeStyle = '#7cc4f0'; ctx.lineWidth = 3; rr(ctx, ox + (cursor % N) * cs + 3, oy + ((cursor / N) | 0) * cs + 3, cs - 6, cs - 6, cs * 0.14); ctx.stroke(); }
+  drawMotes(dt, now);
   drawParticles(dt);
   ctx.restore();
 }
@@ -1090,6 +1093,67 @@ function drawParticles(dt) {
     ctx.save(); ctx.globalAlpha = Math.max(0, 1 - (p.t - p.delay) / p.life); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillStyle = p.col;
     ctx.beginPath(); ctx.ellipse(0, 0, cs * 0.06, cs * 0.03, 0, 0, 7); ctx.fill(); ctx.restore();
   }
+}
+
+// ---------------------------------------------------------------- floating dust / sand motes (25 Nov juice)
+// Ambient atmospheric motes drifting across the warm parchment map with wind sway & quake reaction.
+const MOTE_COUNT = 22;
+let motes = [];
+function initMotes() {
+  motes = [];
+  const R = rng32(0xd057);
+  const cols = ['rgba(242,179,61,', 'rgba(238,220,176,', 'rgba(255,248,231,', 'rgba(194,154,96,'];
+  for (let i = 0; i < MOTE_COUNT; i++) {
+    motes.push({
+      u: R(),
+      v: R(),
+      speed: 0.012 + R() * 0.022,
+      angle: 0.65 + (R() - 0.5) * 0.45,
+      wobbleSpeed: 1.2 + R() * 2.2,
+      wobbleAmp: 0.003 + R() * 0.005,
+      phase: R() * Math.PI * 2,
+      size: 0.75 + R() * 1.35,
+      baseAlpha: 0.18 + R() * 0.32,
+      colorPrefix: cols[i % cols.length],
+      halo: i % 7 === 0,
+    });
+  }
+}
+initMotes();
+
+function drawMotes(dt, now) {
+  if (RM || !G.pz || !baseC || !disp) return;
+  const s = dt / 1000, S = baseC.S;
+  if (!S || S <= 0) return;
+  const x0 = ox - pad, y0 = oy - pad;
+  // Agitation factor when quakes shake the steppe ground
+  const turb = shake > 0 ? Math.min(3, shake / (cs * 0.03)) : 0;
+  ctx.save();
+  for (let i = 0; i < motes.length; i++) {
+    const m = motes[i];
+    const sway = Math.sin(now * 0.0016 * m.wobbleSpeed + m.phase);
+    const swayCos = Math.cos(now * 0.0014 * m.wobbleSpeed + m.phase);
+    m.u += (Math.cos(m.angle) * m.speed + sway * m.wobbleAmp * (1 + turb * 1.5)) * s;
+    m.v += (Math.sin(m.angle) * m.speed * (1 + turb * 0.6) + swayCos * m.wobbleAmp * (1 + turb * 2)) * s;
+    if (m.u < 0) m.u += 1; else if (m.u > 1) m.u -= 1;
+    if (m.v < 0) m.v += 1; else if (m.v > 1) m.v -= 1;
+    const edgeFade = Math.min(1, m.u / 0.08, (1 - m.u) / 0.08, m.v / 0.08, (1 - m.v) / 0.08);
+    if (edgeFade <= 0) continue;
+    const twinkle = 0.82 + 0.18 * Math.sin(now * 0.0025 + m.phase);
+    const a = m.baseAlpha * edgeFade * twinkle;
+    const px = x0 + m.u * S, py = y0 + m.v * S;
+    ctx.fillStyle = m.colorPrefix + a.toFixed(3) + ')';
+    ctx.beginPath();
+    ctx.arc(px, py, m.size, 0, 6.283);
+    ctx.fill();
+    if (m.halo && a > 0.15) {
+      ctx.fillStyle = m.colorPrefix + (a * 0.35).toFixed(3) + ')';
+      ctx.beginPath();
+      ctx.arc(px, py, m.size * 2.4, 0, 6.283);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
 }
 
 // ---------------------------------------------------------------- input
@@ -1238,7 +1302,7 @@ function dbg() {
   if (!DEBUG) return;
   const el = $('debug'), pz = G.pz;
   el.style.display = 'block';
-  el.textContent = `fps ${fps}  dpr ${DPR}  cell ${cs}px\nseed ${G.seed}  K ${pz ? pz.K : '-'}  par ${pz ? pz.par : '-'}\ngen ${G.genMs} ms  nodes ${pz ? pz.solveNodes : '-'}\nmoves ${G.moves}  quake ${G.moves % 5}` + (G.bot ? `\nbot ${G.bot.strategy} plan ${G.bot.plan.length} (${G.bot.ms} ms)` : '');
+  el.textContent = `fps ${fps}  dpr ${DPR}  cell ${cs}px\nseed ${G.seed}  K ${pz ? pz.K : '-'}  par ${pz ? pz.par : '-'}\ngen ${G.genMs} ms  nodes ${pz ? pz.solveNodes : '-'}\nmoves ${G.moves}  quake ${G.moves % 5}  motes ${motes.length}` + (G.bot ? `\nbot ${G.bot.strategy} plan ${G.bot.plan.length} (${G.bot.ms} ms)` : '');
 }
 const GLYPH = { 0: '..', 3: 'VV', 4: 'SS', 5: 'HH', 6: 'MM' };
 window.fayHatti = {
@@ -1247,6 +1311,7 @@ window.fayHatti = {
   get nextQuake() { const q = nextQuake(); return q < 0 ? null : { row: q >> 1, dir: moveDir(q) }; },
   get bot() { return G.bot ? { strategy: G.bot.strategy, planned: G.bot.plan.length, played: G.bot.i } : null; },
   get genMs() { return G.genMs; }, get fps() { return fps; }, get plan() { return G.pz ? G.pz.solution.slice() : null; },
+  get motes() { return motes; }, get motesCount() { return motes.length; },
   get board() { if (!G.pz) return null; const v = toVals(G.pz, G.ids), out = []; for (let r = 0; r < N; r++) { const row = []; for (let c = 0; c < N; c++) { const x = v[r * N + c], k = x >> 4; row.push(k === KR ? 'r' + (x & 15).toString(16) : k === KD ? 'd' + (x & 15).toString(16) : GLYPH[k]); } out.push(row.join(' ')); } return out; },
   move: (m) => doMove(m), undo, restart, start: (mode, arg) => startPuzzle(mode, arg, false),
 };
