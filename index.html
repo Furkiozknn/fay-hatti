@@ -514,10 +514,28 @@ function makePuzzle(seed, cfg) {
   return null;
 }
 
+// Daily difficulty ramp: dates >= 2026-11-15 follow the gentle weekly curve
+// (Mon-Tue par 3-4, Wed-Fri par 4-5, Sat-Sun par 5-6).
+// HARD RULE: boards for dates <= 2026-11-14 stay byte-identical for video reproducibility.
 function dailyConfig(seed) {
-  const t = String(seed);
+  const t = String(seed).replace(/-/g, '');
+  const isDate = /^\d{8}$/.test(t);
   let dow = hashStr(t) % 7;
-  if (/^\d{8}$/.test(t)) dow = new Date(+t.slice(0, 4), +t.slice(4, 6) - 1, +t.slice(6, 8)).getDay();
+  let dateNum = 0;
+  if (isDate) {
+    dateNum = +t;
+    dow = new Date(+t.slice(0, 4), +t.slice(4, 6) - 1, +t.slice(6, 8)).getDay();
+  }
+  // Historical boards (up to 2026-11-14) or non-date seeds: preserved byte-identical
+  if (!isDate || dateNum <= 20261114) {
+    const K = [6, 4, 4, 5, 5, 5, 6][dow];
+    return { K, minPar: K - 1, nv: 3, nm: 1 + (hashStr('m' + t) % 2), decoy: 0.55, minPath: 7, P: 5 };
+  }
+  // From 2026-11-15: gentle week-1 ramp (par 3-4 early in the week, 5-6 on weekends)
+  // Day of week (dow): 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+  // Mon-Tue (dow 1,2): K=4, minPar=3 -> par 3-4 (gentle start)
+  // Wed-Fri (dow 3,4,5): K=5, minPar=4 -> par 4-5 (balanced midweek)
+  // Sat-Sun (dow 6,0): K=6, minPar=5 -> par 5-6 (challenging weekend)
   const K = [6, 4, 4, 5, 5, 5, 6][dow];
   return { K, minPar: K - 1, nv: 3, nm: 1 + (hashStr('m' + t) % 2), decoy: 0.55, minPath: 7, P: 5 };
 }
@@ -1244,6 +1262,7 @@ const GLYPH = { 0: '..', 3: 'VV', 4: 'SS', 5: 'HH', 6: 'MM' };
 window.fayHatti = {
   get seed() { return G.seed; }, get moves() { return G.moves; }, get solved() { return G.won; }, get state() { return G.state; },
   get mode() { return G.mode; }, get level() { return G.level; }, get par() { return G.pz ? G.pz.par : null; }, get stars() { return G.stars; },
+  get dailyRamp() { return G.pz && G.mode === 'daily' ? { K: G.pz.cfg.K, minPar: G.pz.cfg.minPar, par: G.pz.par } : null; },
   get nextQuake() { const q = nextQuake(); return q < 0 ? null : { row: q >> 1, dir: moveDir(q) }; },
   get bot() { return G.bot ? { strategy: G.bot.strategy, planned: G.bot.plan.length, played: G.bot.i } : null; },
   get genMs() { return G.genMs; }, get fps() { return fps; }, get plan() { return G.pz ? G.pz.solution.slice() : null; },

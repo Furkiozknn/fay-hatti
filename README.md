@@ -21,6 +21,24 @@ Shift rows and columns to bring rivers and caravan roads to the villages. After 
 
 **Controls:** drag or tap the arrows; keyboard WASD moves the cursor, arrow keys shift its row or column, Z or Backspace undo, R restart, M mute, Esc menu.
 
+## Daily difficulty ramp
+
+Starting from **2026-11-15**, daily puzzles follow a gentle weekly difficulty curve. Mondays and Tuesdays provide an accessible entry point (par 3–4), midweek days deepen the planning horizon (par 4–5), and weekends present peak tactical challenges (par 5–6). Historical boards for dates up to **2026-11-14** are strictly preserved byte-identical for devlog video reproducibility.
+
+| Day / Gün | Rhythm / Ritim | Target Par | Scramble ($K$) | Quakes ($P$) | Character / Oyun Karakteri |
+|---|---|---|---|---|---|
+| **Monday** / Pazartesi | Early week / Hafta başı | 3–4 | 4 | 5 | Gentle opening: compact routes, quick river/road connections |
+| **Tuesday** / Salı | Early week / Hafta başı | 3–4 | 4 | 5 | Clear canal alignments, low decoy distraction |
+| **Wednesday** / Çarşamba | Midweek / Hafta ortası | 4–5 | 5 | 5 | Balanced depth: branching network junctions |
+| **Thursday** / Perşembe | Midweek / Hafta ortası | 4–5 | 5 | 5 | Strategic routing around mountain barriers |
+| **Friday** / Cuma | Midweek / Hafta ortası | 4–5 | 5 | 5 | Multi-step shift sequencing with decoy channels |
+| **Saturday** / Cumartesi | Weekend / Hafta sonu | 5–6 | 6 | 5 | Tactical challenge: complex multi-village routing |
+| **Sunday** / Pazar | Weekend / Hafta sonu | 5–6 | 6 | 5 | Peak weekly puzzle: deep scramble, tight quake synchronization |
+
+- **Fairness:** Every daily par is verified by the optimal planner (Bot A).
+- **Integrity:** Seeds up to `2026-11-14` remain 100% byte-identical.
+- **Languages:** Fully supported in English and Turkish (`?lang=en` / `?lang=tr`).
+
 ## URL flags
 
 | Flag | Effect |
@@ -34,7 +52,7 @@ Shift rows and columns to bring rivers and caravan roads to the villages. After 
 | `?lang=en` / `?lang=tr` | Force the language (default: Turkish for Turkish browsers, English otherwise) |
 | `?nosave` | Do not write to localStorage |
 
-`window.fayHatti` exposes `seed`, `moves`, `solved`, `state` (`loading`, `play`, `won`), `par`, `stars`, `mode`, `level`, `nextQuake`, `bot`, `plan`, `board`, `fps`, `genMs` and the actions `move(code)`, `undo()`, `restart()`, `start(mode, arg)`. A move code is `line * 2 + dir`: lines 0-4 are rows, 5-9 columns; dir 0 is right/down, 1 is left/up.
+`window.fayHatti` exposes `seed`, `moves`, `solved`, `state` (`loading`, `play`, `won`), `par`, `stars`, `mode`, `level`, `dailyRamp`, `nextQuake`, `bot`, `plan`, `board`, `fps`, `genMs` and the actions `move(code)`, `undo()`, `restart()`, `start(mode, arg)`. A move code is `line * 2 + dir`: lines 0-4 are rows, 5-9 columns; dir 0 is right/down, 1 is left/up.
 
 Saves use localStorage keys starting with `fayhatti.` (language, mute, daily results, endless level, help seen).
 
