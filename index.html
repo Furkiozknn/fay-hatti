@@ -65,6 +65,8 @@ body.high-contrast button:focus-visible{outline:3px solid var(--focus);outline-o
 #quake{grid-area:quake;display:flex;align-items:center;justify-content:center;gap:8px;min-height:30px;padding:2px 16px;font-size:15px;color:#ffd9cf}
 #quake .dot{width:10px;height:10px;flex:none;border-radius:50%;background:var(--quake);box-shadow:0 0 0 0 rgba(224,85,58,.6);animation:pulse 1.4s infinite}
 #quake.calm{color:var(--ink2)}#quake.calm .dot{background:#6f8f6a;animation:none}
+#quake.quaking{color:#fff;background:rgba(224,85,58,.28);border-radius:8px}
+#quake.quaking .dot{background:#ff7a59;box-shadow:0 0 10px #ff7a59}
 #bot{display:none;margin-left:8px;padding:2px 8px;border-radius:999px;background:#33505c;color:#e7f4fb;font-size:13px;font-weight:700;letter-spacing:.05em}
 @keyframes pulse{70%{box-shadow:0 0 0 8px rgba(224,85,58,0)}100%{box-shadow:0 0 0 0 rgba(224,85,58,0)}}
 #stage{grid-area:stage;position:relative;min-height:0;min-width:0}
@@ -149,7 +151,7 @@ body.high-contrast .tut-dot.on{background:var(--terra);box-shadow:0 0 0 1px #fff
 body.high-contrast .tut-btn{box-shadow:inset 0 0 0 2px #ffffff}
 body.high-contrast .tut-btn.alt{background:#f3f3f3;color:#111111;box-shadow:inset 0 0 0 2px #111111}
 body.high-contrast .tut-badge{box-shadow:inset 0 0 0 1px #ffffff}
-@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on,.seal-svg,#tutTip{animation:none}.tut-dot{transition:none}}
+@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on,.seal-svg,#tutTip{animation:none}.tut-dot{transition:none}#quake.quaking{transition:background .2s}}
 /* Themes: Gece (night) and Kâğıt (paper-cut) */
 :root[data-theme="gece"]{--bg:#0b111a;--bg2:#141f2e;--ink:#e5eef8;--ink2:#8ea4be;--paper:#162234;--paper-ink:#e8f0fa;--terra:#2a6ab0;--gold:#f5be47;--quake:#ff6247;--focus:#64b5f6}
 html[data-theme="gece"] body{background:radial-gradient(120% 80% at 50% 0%,#16253c 0%,#0b111a 60%)}
@@ -813,13 +815,24 @@ const CARDS = [
     },
     apply: () => setRipples(true),
   },
+  {
+    id: 'juice-quake-shake',
+    type: 'cosmetic',
+    implemented: true,
+    title: { en: 'Seismic Quake Juice & Screen Shake', tr: 'Sismik Deprem Sarsıntısı' },
+    desc: {
+      en: 'Directional screen trauma shake, fault dust puffs, subterranean rumble hit sound, and fissure flash on earthquake.',
+      tr: 'Deprem anında yöne duyarlı ekran sarsıntısı, fay tozu püskürmesi, tektonik darbe sesi ve yarık parıltısı.'
+    },
+    apply: () => setQuakeJuice(true),
+  },
 ];
 const STR = {
   en: {
     sub: 'Shift the land of Anatolia. Bring water and roads to every village.',
     daily: 'Daily puzzle', endless: 'Endless', how: 'How to play', moves: 'Moves', par: 'Par', undo: 'Undo', restart: 'Restart',
     menu: 'Menu', sound: 'Sound', haptic: 'Haptic', on: 'on', off: 'off', level: 'Level {n}', dailyTag: 'Daily · {d}',
-    quakeNext: 'Next quake: row {r} {a}', calm: 'The ground is calm', loading: 'Drawing the map…', solvedT: 'Connected!',
+    quakeNext: 'Next quake: row {r} {a}', quakeActive: 'Earthquake!', calm: 'The ground is calm', loading: 'Drawing the map…', solvedT: 'Connected!',
     resLine: '{m} moves · par {p}', share: 'Share result', next: 'Next level', toEndless: 'Play endless', back: 'Menu',
     copied: 'Copied to clipboard', tomorrow: 'A new map tomorrow.', endlessNote: 'Level {n} done.', movesWord: 'moves',
     gotIt: 'Got it', solvedOn: 'Solved', playTag: 'same map for everyone', board: 'Puzzle board',
@@ -848,7 +861,7 @@ const STR = {
     sub: 'Anadolu toprağını kaydır. Her köye su ve yol götür.',
     daily: 'Günün bulmacası', endless: 'Sonsuz mod', how: 'Nasıl oynanır', moves: 'Hamle', par: 'Hedef', undo: 'Geri al', restart: 'Baştan',
     menu: 'Menü', sound: 'Ses', haptic: 'Titreşim', on: 'açık', off: 'kapalı', level: 'Bölüm {n}', dailyTag: 'Günlük · {d}',
-    quakeNext: 'Sıradaki deprem: {r}. satır {a}', calm: 'Yer sakin', loading: 'Harita çiziliyor…', solvedT: 'Bağlandı!',
+    quakeNext: 'Sıradaki deprem: {r}. satır {a}', quakeActive: 'Deprem!', calm: 'Yer sakin', loading: 'Harita çiziliyor…', solvedT: 'Bağlandı!',
     resLine: '{m} hamle · hedef {p}', share: 'Sonucu paylaş', next: 'Sonraki bölüm', toEndless: 'Sonsuz moda geç', back: 'Menü',
     copied: 'Panoya kopyalandı', tomorrow: 'Yarın yeni bir harita.', endlessNote: '{n}. bölüm tamam.', movesWord: 'hamle',
     gotIt: 'Anladım', solvedOn: 'Çözüldü', playTag: 'herkes için aynı harita', board: 'Bulmaca tahtası',
@@ -1048,6 +1061,14 @@ const sfx = {
       tone(t0 + hitDelay, 95, RM ? 0.1 : 0.16, 'sine', 0.28, 36, 0.003);
     }
   },
+  // Subterranean tectonic thump and rock friction on quake hit (cosmetic card: juice-quake-shake)
+  quakeHit() {
+    if (!audio()) return;
+    const t0 = AC.currentTime;
+    tone(t0, 88, 0.36, 'sine', 0.5, 28);
+    noise(t0, 0.22, 'lowpass', 380, 80, 0.65, 1.1);
+    noise(t0 + 0.02, 0.18, 'bandpass', 850, 220, 0.22, 2.0);
+  },
   ping(i) {
     if (!audio()) return; const t0 = AC.currentTime;
     if (G.biome === 'kapadokya') {
@@ -1194,9 +1215,11 @@ function getDropOffReport() {
 
 // ---------------------------------------------------------------- game state & dynamic tutorial
 const G = { mode: 'daily', seed: '', level: 1, pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], riv: [], bot: null, celebrateAt: 0, place: '', biome: 'bozkir' };
-let anims = [], shake = 0, particles = [], ripples = [], botTimer = 0, disp = null;
+let anims = [], shake = 0, quakeTrauma = 0, quakeDir = 1, quakeRow = 0, particles = [], ripples = [], botTimer = 0, disp = null;
 let ripplesEnabled = true;
 function setRipples(v) { ripplesEnabled = !!v; }
+let quakeJuiceEnabled = true;
+function setQuakeJuice(v) { quakeJuiceEnabled = !!v; }
 
 // Dynamic tutorial tooltips (onboarding for first-time players on mobile/desktop)
 let tutStep = 1, tutActive = false;
@@ -1255,7 +1278,11 @@ function nextQuake() { return G.pz && !G.won ? G.pz.quakes[G.moves % G.pz.quakes
 
 function startPuzzle(mode, arg, firstHelp = true) {
   clearTimeout(botTimer); G.bot = null;
-  G.mode = mode; G.state = 'loading'; G.pz = null; disp = null; anims = []; particles = []; ripples = []; closeAll();
+  G.mode = mode; G.state = 'loading'; G.pz = null; disp = null; anims = []; particles = []; ripples = []; quakeTrauma = 0;
+  const appEl = $('app'), qElInit = $('quake');
+  if (appEl && appEl.style.transform) { appEl.style.transform = ''; appEl.style.willChange = ''; }
+  if (qElInit) qElInit.classList.remove('quaking');
+  closeAll();
   if (mode === 'daily') G.seed = String(arg); else { G.level = arg; G.seed = 'L' + arg; }
   updateHud();
   setTimeout(() => {
@@ -1377,13 +1404,58 @@ function pushAnim(kind, from, to, m) {
   for (let i = 0; i < NN; i++) toPos[to[i]] = i;
   anims.push({ kind, from, toPos, m, t: 0, delay: kind === 'quake' ? DUR.qDelay : 0, dur: kind === 'quake' ? DUR.quake : DUR.slide, started: false, hit: false });
 }
-function flushAnims() { if (anims.length) { anims = []; shake = 0; settle(false); } }
+// Screen shake & fault dust juice on quake hit (cosmetic card: juice-quake-shake)
+function quakePuff(row, dir) {
+  const yCenter = oy + row * cs + cs / 2;
+  const cols = highContrast
+    ? ['#ff2a05', '#ffffff', '#ffb703', '#ffffff']
+    : currentTheme === 'gece'
+    ? ['#3a5578', '#64b5f6', '#223854', '#ff7a59']
+    : G.biome === 'karadeniz'
+    ? ['#54725c', '#8ba88f', '#3d5444', '#db5035']
+    : G.biome === 'ege'
+    ? ['#b87545', '#d5c49b', '#7a6852', '#df5238']
+    : G.biome === 'kapadokya'
+    ? ['#dcba9e', '#b54c30', '#c49f7e', '#e45838']
+    : ['#d6bb83', '#c79a5e', '#8c7660', '#a63f27'];
+  for (let i = 0; i < 12; i++) {
+    const px = ox + Math.random() * (N * cs);
+    const py = yCenter + (Math.random() - 0.5) * cs * 0.85;
+    const sp = cs * (0.8 + Math.random() * 1.4);
+    particles.push({
+      x: px, y: py,
+      vx: dir * sp + (Math.random() - 0.5) * cs * 0.4,
+      vy: (Math.random() - 0.5) * cs * 0.6 - cs * 0.25,
+      life: 0.35 + Math.random() * 0.22, t: 0, rot: Math.random() * 6,
+      vr: (Math.random() - 0.5) * 8, col: cols[i % cols.length], delay: 0,
+    });
+  }
+}
+function triggerQuakeHit(m) {
+  quakeRow = m >> 1; quakeDir = moveDir(m);
+  if (!RM) vibe([35, 25, 45, 25, 30]);
+  if (!quakeJuiceEnabled) { if (!RM) shake = cs * 0.07; return; }
+  quakeTrauma = 1.0; shake = cs * 0.12;
+  sfx.quakeHit();
+  if (!RM) quakePuff(quakeRow, quakeDir);
+  const qEl = $('quake');
+  if (qEl) { qEl.classList.add('quaking'); $('tQuake').textContent = t('quakeActive'); }
+}
+function flushAnims() {
+  if (anims.length) {
+    anims = []; shake = 0; quakeTrauma = 0;
+    const app = $('app'), qEl = $('quake');
+    if (app && app.style.transform) { app.style.transform = ''; app.style.willChange = ''; }
+    if (qEl) qEl.classList.remove('quaking');
+    settle(false);
+  }
+}
 function stepAnims(dt) {
   while (anims.length) {
     const A = anims[0];
     if (!A.started) { A.started = true; setDisp(A.from); if (A.kind === 'quake') sfx.quake(); }
     A.t += dt;
-    if (A.kind === 'quake' && !A.hit && A.t >= A.delay) { A.hit = true; if (!RM) { shake = cs * 0.07; vibe([35, 25, 45, 25, 30]); } }
+    if (A.kind === 'quake' && !A.hit && A.t >= A.delay) { A.hit = true; triggerQuakeHit(A.m); }
     if (A.t < A.delay + A.dur) return;
     anims.shift();
     if (!anims.length) settle(false);
@@ -2265,6 +2337,31 @@ function frame(now) {
   const dt = Math.min(64, now - (lastNow || now)); lastNow = now;
   fpsTick(now);
   stepAnims(dt);
+  // Directional screen shake decay and transform (cosmetic card: juice-quake-shake)
+  if (quakeTrauma > 0) {
+    quakeTrauma *= Math.exp(-dt / 130);
+    if (quakeTrauma < 0.02) {
+      quakeTrauma = 0;
+      const qEl = $('quake');
+      if (qEl) qEl.classList.remove('quaking');
+      updateHud();
+    }
+  }
+  const app = $('app');
+  if (quakeTrauma > 0 && !RM) {
+    const intensity = quakeTrauma * quakeTrauma;
+    const maxPix = Math.min(10, cs * 0.15);
+    const sx = (quakeDir * 0.65 + (Math.random() * 2 - 1) * 0.35) * intensity * maxPix;
+    const sy = (Math.random() * 2 - 1) * intensity * maxPix * 0.55;
+    const srot = (Math.random() * 2 - 1) * intensity * 0.012;
+    if (app) {
+      app.style.willChange = 'transform';
+      app.style.transform = `translate3d(${sx.toFixed(1)}px,${sy.toFixed(1)}px,0) rotate(${srot.toFixed(4)}rad)`;
+    }
+  } else if (app && app.style.transform) {
+    app.style.transform = '';
+    app.style.willChange = '';
+  }
   shake *= Math.exp(-dt / 70); if (shake < 0.2) shake = 0;
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.clearRect(0, 0, W, H);
@@ -2289,6 +2386,11 @@ function frame(now) {
   if (nq >= 0 && G.state === 'play') {
     const r = nq >> 1, a = A && A.kind === 'quake' ? 0.28 : (tutActive && tutStep === 2 ? 0.18 + 0.08 * Math.sin(now / 180) : 0.1 + 0.06 * Math.sin(now / 200));
     ctx.fillStyle = `rgba(214,70,40,${a})`; ctx.fillRect(ox, oy + r * cs, BW, cs);
+    if (quakeTrauma > 0) {
+      // Visceral seismic fissure flash along the fault row
+      ctx.fillStyle = highContrast ? `rgba(255,255,255,${(quakeTrauma * 0.5).toFixed(3)})` : `rgba(255,235,210,${(quakeTrauma * 0.4).toFixed(3)})`;
+      ctx.fillRect(ox, oy + r * cs, BW, cs);
+    }
   }
   if (hover >= 0 && !anims.length && G.state === 'play' && !G.bot) {
     ctx.fillStyle = currentTheme === 'gece' ? 'rgba(120,180,255,.12)' : currentTheme === 'kagit' ? 'rgba(100,75,45,.08)' : (G.biome === 'karadeniz' ? 'rgba(237,247,240,.12)' : G.biome === 'ege' ? 'rgba(244,238,225,.12)' : G.biome === 'kapadokya' ? 'rgba(246,237,226,.12)' : 'rgba(255,255,255,.1)');
@@ -2402,9 +2504,11 @@ function frame(now) {
   }
   if (qRow >= 0) {
     const cy = oy + qRow * cs + cs / 2, tx = qDir > 0 ? ox + BW + pad * 0.5 : ox - pad * 0.5, sz = Math.max(6, pad * 0.75);
-    ctx.fillStyle = highContrast ? '#ff2a05' : '#e0553a'; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = highContrast ? 2 : 1.5;
+    ctx.fillStyle = highContrast ? (quakeTrauma > 0 ? '#ff5533' : '#ff2a05') : (quakeTrauma > 0 ? '#ff7a59' : '#e0553a'); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = highContrast ? 2 : 1.5;
     ctx.beginPath(); ctx.moveTo(tx + qDir * sz * 0.7, cy); ctx.lineTo(tx - qDir * sz * 0.5, cy - sz); ctx.lineTo(tx - qDir * sz * 0.5, cy + sz); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.setLineDash([cs * 0.08, cs * 0.06]); ctx.strokeStyle = highContrast ? '#ff2a05' : 'rgba(224,85,58,.85)'; ctx.lineWidth = highContrast ? 2.5 : 2;
+    ctx.setLineDash([cs * 0.08, cs * 0.06]);
+    ctx.strokeStyle = highContrast ? (quakeTrauma > 0 ? 'rgba(255,180,160,1)' : '#ff2a05') : (quakeTrauma > 0 ? 'rgba(255,160,130,.95)' : 'rgba(224,85,58,.85)');
+    ctx.lineWidth = highContrast ? (quakeTrauma > 0 ? 3.5 : 2.5) : (quakeTrauma > 0 ? 3 : 2);
     ctx.strokeRect(ox + 1, oy + qRow * cs + 1, BW - 2, cs - 2); ctx.setLineDash([]);
   }
   if (cursor >= 0 && G.state === 'play' && !G.bot) {
@@ -2702,6 +2806,7 @@ function updateHud() {
   const q = $('quake'), nq = nextQuake();
   if (G.state === 'loading') { q.className = 'calm'; $('tQuake').textContent = t('loading'); }
   else if (nq < 0) { q.className = 'calm'; $('tQuake').textContent = t('calm'); }
+  else if (quakeTrauma > 0) { q.className = 'quaking'; $('tQuake').textContent = t('quakeActive'); }
   else { q.className = ''; $('tQuake').textContent = t('quakeNext', { r: (nq >> 1) + 1, a: moveDir(nq) > 0 ? '→' : '←' }); }
   const b = $('bot'); b.style.display = G.bot ? 'inline-block' : 'none'; b.textContent = G.bot ? 'BOT ' + G.bot.strategy.toUpperCase() : '';
   ['Undo', 'Restart', 'Menu'].forEach((k) => ($('l' + k).textContent = t(k.toLowerCase())));
@@ -2975,6 +3080,9 @@ window.fayHatti = {
   get region() { return G.biome === 'ege' || (G.place && EGE_PLACES_SET.has(G.place)) ? 'ege' : (G.biome || 'bozkir'); },
   get cards() { return CARDS; }, get cardRegistry() { return CARDS; },
   get nextQuake() { const q = nextQuake(); return q < 0 ? null : { row: q >> 1, dir: moveDir(q) }; },
+  get trauma() { return quakeTrauma; },
+  get quakeJuice() { return quakeJuiceEnabled; }, get quakeShakeEnabled() { return quakeJuiceEnabled; }, setQuakeShake: (v) => setQuakeJuice(v), setQuakeJuice: (v) => setQuakeJuice(v),
+  quakeShake: (m) => triggerQuakeHit(m != null ? m : (nextQuake() >= 0 ? nextQuake() : 0)),
   get bot() { return G.bot ? { strategy: G.bot.strategy, planned: G.bot.plan.length, played: G.bot.i } : null; },
   get genMs() { return G.genMs; }, get fps() { return fps; }, get plan() { return G.pz ? G.pz.solution.slice() : null; },
   get motes() { return motes; }, get motesCount() { return motes.length; }, get motesEnabled() { return motesEnabled; }, setMotes: (v) => setMotes(v),
