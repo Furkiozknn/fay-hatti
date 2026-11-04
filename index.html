@@ -339,7 +339,7 @@ body.high-contrast .th-pill.active{background:#111111;color:#ffffff;border-color
 // Pure puzzle engine: no DOM. tools/sim.mjs extracts this block to test it in Node.
 const N = 5, NN = 25;
 // tile value = kind << 4 | low nibble (edge mask N=1 E=2 S=4 W=8 for paths, need bits for villages)
-const KE = 0, KR = 1, KD = 2, KV = 3, KS = 4, KH = 5, KM = 6; // empty, river, road, village, spring, han, mountain
+const KE = 0, KR = 1, KD = 2, KV = 3, KS = 4, KH = 5, KM = 6, KF = 7; // empty, river, road, village, spring, han, mountain, ferry (tile-ferry card)
 const NEED_RIVER = 1, NEED_ROAD = 2;
 const DR = [-1, 0, 1, 0], DC = [0, 1, 0, -1], OPP = [2, 3, 0, 1];
 const NB = new Int8Array(NN * 4);
@@ -351,7 +351,7 @@ for (let i = 0; i < NN; i++) {
   }
 }
 const tv = (k, m) => (k << 4) | m;
-const isFixedV = (v) => v >> 4 >= KV;
+const isFixedV = (v) => { const k = v >> 4; return k >= KV && k !== KF; };
 
 function rng32(seed) {
   let a = seed >>> 0;
@@ -372,7 +372,7 @@ function hashStr(s) {
 const RIV = new Uint8Array(256), ROD = new Uint8Array(256);
 for (let v = 0; v < 256; v++) {
   const k = v >> 4;
-  RIV[v] = k === KR ? v & 15 : k === KS ? 15 : k === KV && v & NEED_RIVER ? 15 : 0;
+  RIV[v] = k === KR ? v & 15 : k === KS ? 15 : k === KV && v & NEED_RIVER ? 15 : k === KF ? (v & 15 || 15) : 0;
   ROD[v] = k === KD ? v & 15 : k === KH ? 15 : k === KV && v & NEED_ROAD ? 15 : 0;
 }
 
@@ -390,6 +390,12 @@ function flood(vals, off, T, src) {
       if (j < 0 || (seen >> j) & 1) continue;
       if ((T[vals[off + j]] >> OPP[e]) & 1) { seen |= 1 << j; STK[sp++] = j; }
     }
+    // Ferry teleportation across water networks (tile-ferry card)
+    if (T === RIV && (vals[off + i] >> 4) === KF) {
+      for (let k = 0; k < NN; k++) {
+        if (((vals[off + k] >> 4) === KF) && !((seen >> k) & 1)) { seen |= 1 << k; STK[sp++] = k; }
+      }
+    }
   }
   return seen;
 }
@@ -405,6 +411,11 @@ function floodDist(vals, T, src) {
       const j = NB[i * 4 + e];
       if (j < 0 || d[j] >= 0) continue;
       if ((T[vals[j]] >> OPP[e]) & 1) { d[j] = d[i] + 1; q.push(j); }
+    }
+    if (T === RIV && (vals[i] >> 4) === KF) {
+      for (let k = 0; k < NN; k++) {
+        if ((vals[k] >> 4) === KF && d[k] < 0) { d[k] = d[i] + 1; q.push(k); }
+      }
     }
   }
   return d;
@@ -657,6 +668,16 @@ function layoutSolved(R, cfg) {
     } else vals[i] = tv(KE, 0);
   }
   if (pathTiles < cfg.minPath) return null;
+  // tile-ferry card: place movable Ferry tile pair along the river network
+  if (cfg.ferry) {
+    const rCells = [];
+    for (let i = 0; i < NN; i++) if (!fixed[i] && type[i] === 1) rCells.push(i);
+    if (rCells.length >= 2) {
+      const f1 = rCells[0], f2 = rCells[rCells.length - 1];
+      vals[f1] = tv(KF, mask[f1] || 15);
+      vals[f2] = tv(KF, mask[f2] || 15);
+    }
+  }
   return { fixed, vals, spring, han, villages };
 }
 
@@ -725,7 +746,9 @@ function dailyConfig(seed) {
 }
 function endlessConfig(level) {
   const K = Math.min(6, 2 + Math.ceil(level / 2));
-  return { K, minPar: Math.max(2, K - 1), nv: level < 3 ? 2 : 3, nm: level < 4 ? 0 : level < 8 ? 1 : 2, decoy: level < 3 ? 0.35 : 0.55, minPath: level < 3 ? 5 : 7, P: 5 };
+  const cfg = { K, minPar: Math.max(2, K - 1), nv: level < 3 ? 2 : 3, nm: level < 4 ? 0 : level < 8 ? 1 : 2, decoy: level < 3 ? 0.35 : 0.55, minPath: level < 3 ? 5 : 7, P: 5 };
+  if (level >= 5) cfg.ferry = 2; // tile-ferry card: active in endless/level modes, never in daily
+  return cfg;
 }
 // ENGINE END
 
@@ -855,6 +878,17 @@ const CARDS = [
     },
     apply: (on = true) => setShareCardArt(on),
   },
+  {
+    id: 'tile-ferry',
+    type: 'gameplay',
+    implemented: true,
+    title: { en: 'Ferry Tile', tr: 'Feribot Karosu' },
+    desc: {
+      en: 'Ferry tiles teleport river water across the map to connected ferry ports (endless mode).',
+      tr: 'Feribot karoları nehir suyunu haritanın öbür ucundaki bağlı feribota taşır (sonsuz mod).'
+    },
+    apply: () => {},
+  },
 ];
 const STR = {
   en: {
@@ -873,7 +907,8 @@ const STR = {
     h3: 'Lead the river from the spring and the road from the caravanserai to every village that asks for them.',
     h4: 'After each move a small quake shifts one row by itself. The red band shows which row is next.',
     h5: 'Solve within par for 3 stars. Keys: WASD picks tile, arrows shift, Z undo, R restart, C contrast.',
-    lRiver: 'river', lRoad: 'road', lVillage: 'village', lMount: 'mountain', lSpring: 'spring', lHan: 'caravanserai',
+    hFerry: 'Ferry tiles teleport river water across the map to connected ferry ports.',
+    lRiver: 'river', lRoad: 'road', lVillage: 'village', lMount: 'mountain', lSpring: 'spring', lHan: 'caravanserai', lFerry: 'ferry',
     waterConnected: 'Water reached village!',
     motes: 'Dust motes',
     integrity: 'Seed Integrity', freezeTitle: 'Code Freeze & Integrity', freezeSub: 'Seeds verified through Dec 31',
@@ -902,7 +937,8 @@ const STR = {
     h3: 'Nehri pınardan, yolu kervansaraydan, onları isteyen her köye ulaştır.',
     h4: 'Her hamleden sonra küçük bir deprem bir satırı kendiliğinden kaydırır. Kırmızı bant sıradaki satırı gösterir.',
     h5: 'Hedef hamlede çöz, 3 yıldız al. Tuşlar: WASD taş seçer, oklar kaydırır, Z geri alır, R baştan, C kontrast.',
-    lRiver: 'nehir', lRoad: 'yol', lVillage: 'köy', lMount: 'dağ', lSpring: 'pınar', lHan: 'kervansaray',
+    hFerry: 'Feribot karoları nehir suyunu haritanın öbür ucundaki bağlı feribota taşır.',
+    lRiver: 'nehir', lRoad: 'yol', lVillage: 'köy', lMount: 'dağ', lSpring: 'pınar', lHan: 'kervansaray', lFerry: 'feribot',
     waterConnected: 'Köye su ulaştı!',
     motes: 'Toz zerrecikleri',
     integrity: 'Tohum Doğrulama', freezeTitle: 'Kod Dondurma & Doğrulama', freezeSub: '31 Aralık\'a kadar çözülebilirlik onaylandı',
@@ -1165,6 +1201,13 @@ const sfx = {
   },
   undo() { if (!audio()) return; noise(AC.currentTime, 0.1, 'bandpass', 500, 1300, 0.16, 1.2); },
   verified() { if (!audio()) return; const t0 = AC.currentTime; tone(t0, 587.3, 0.35, 'sine', 0.16); tone(t0 + 0.12, 880, 0.5, 'sine', 0.22); pluck(t0 + 0.12, 880, 0.12); },
+  ferry() {
+    if (!audio()) return;
+    const t0 = AC.currentTime;
+    tone(t0, 146.8, 0.45, 'triangle', 0.22);
+    tone(t0 + 0.02, 220, 0.42, 'sine', 0.14);
+    noise(t0, 0.25, 'lowpass', 400, 120, 0.08, 1.5);
+  },
 };
 
 // ---------------------------------------------------------------- haptics (Vibration API)
@@ -1243,7 +1286,7 @@ function getDropOffReport() {
 }
 
 // ---------------------------------------------------------------- game state & dynamic tutorial
-const G = { mode: 'daily', seed: '', level: 1, pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], riv: [], bot: null, celebrateAt: 0, place: '', biome: 'bozkir' };
+const G = { mode: 'daily', seed: '', level: 1, pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], riv: [], bot: null, celebrateAt: 0, place: '', biome: 'bozkir', ferryActive: false };
 let anims = [], shake = 0, quakeTrauma = 0, quakeDir = 1, quakeRow = 0, particles = [], ripples = [], botTimer = 0, disp = null;
 let ripplesEnabled = true;
 function setRipples(v) { ripplesEnabled = !!v; }
@@ -1322,7 +1365,7 @@ function startPuzzle(mode, arg, firstHelp = true) {
     let pz = null;
     for (let k = 0; !pz && k < 5; k++) pz = makePuzzle(seed + k * 7919, cfg);
     G.genMs = Math.round(performance.now() - t0);
-    G.pz = pz; G.ids = pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.sat = []; G.riv = [];
+    G.pz = pz; G.ids = pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.sat = []; G.riv = []; G.ferryActive = false;
     G.biome = biomeOverride || getBiome(mode, G.seed, G.level);
     const isKrd = G.biome === 'karadeniz' && currentTheme === 'classic';
     const isEge = G.biome === 'ege' && currentTheme === 'classic';
@@ -1393,7 +1436,7 @@ function restart() {
   puzzleRestarts++;
   trackEvent('restart', { movesAtRestart: G.moves, restartsInPuzzle: puzzleRestarts });
   flushAnims(); closeAll();
-  G.ids = G.pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.state = 'play'; particles = []; ripples = []; G.riv = [];
+  G.ids = G.pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.state = 'play'; particles = []; ripples = []; G.riv = []; G.ferryActive = false;
   puzzleStartTime = performance.now();
   puzzleFirstMoveTime = 0;
   sfx.undo(); settle(true); updateHud();
@@ -1521,6 +1564,14 @@ function settle(silent) {
   }
   G.sat = st.sat.slice();
   G.riv = curRiv.slice();
+  if (!silent && G.pz) {
+    let fActive = false;
+    for (let i = 0; i < NN; i++) {
+      if ((disp.vals[i] >> 4) === KF && disp.dR[i] >= 0) { fActive = true; break; }
+    }
+    if (fActive && !G.ferryActive) sfx.ferry();
+    G.ferryActive = fActive;
+  }
   if (G.won && G.state === 'play') win();
 }
 function setDisp(ids) {
@@ -1599,6 +1650,54 @@ function drawTeaSprig(c, x, y, s, scale, angle, R) {
   if (R() < 0.65) { c.fillStyle = 'rgba(255,255,255,.75)'; c.beginPath(); c.arc(s * 0.02, -s * 0.035, s * 0.012, 0, 7); c.fill(); }
   c.restore();
 }
+// Ferry tile: canal approaches, harbor basin, wooden pier and Anatolian ferry boat (tile-ferry card)
+function drawFerryDetail(c, s, highCon, th) {
+  const cx = s / 2, cy = s / 2;
+  if (highCon) {
+    c.fillStyle = '#041e2f'; c.beginPath(); c.arc(cx, cy, s * 0.32, 0, 7); c.fill();
+    c.fillStyle = '#0077b6'; c.beginPath(); c.arc(cx, cy, s * 0.27, 0, 7); c.fill();
+    c.strokeStyle = '#ffffff'; c.lineWidth = 1.8; c.beginPath(); c.arc(cx, cy, s * 0.24, 0, 7); c.stroke();
+    c.fillStyle = '#111111'; c.fillRect(cx - s * 0.22, cy - s * 0.06, s * 0.12, s * 0.12);
+    c.fillStyle = '#ffffff'; c.fillRect(cx - s * 0.22, cy - s * 0.06, s * 0.025, s * 0.12); c.fillRect(cx - s * 0.13, cy - s * 0.06, s * 0.025, s * 0.12);
+    c.fillStyle = 'rgba(0,0,0,.6)'; c.beginPath(); c.ellipse(cx + s * 0.03, cy + s * 0.05, s * 0.17, s * 0.09, -0.15, 0, 7); c.fill();
+    c.fillStyle = '#ffffff'; c.beginPath();
+    c.moveTo(cx - s * 0.14, cy);
+    c.bezierCurveTo(cx - s * 0.12, cy - s * 0.08, cx + s * 0.1, cy - s * 0.08, cx + s * 0.16, cy);
+    c.bezierCurveTo(cx + s * 0.1, cy + s * 0.08, cx - s * 0.12, cy + s * 0.08, cx - s * 0.14, cy);
+    c.closePath(); c.fill();
+    c.strokeStyle = '#111111'; c.lineWidth = 1.6; c.stroke();
+    c.fillStyle = '#ff2a05'; c.fillRect(cx - s * 0.12, cy + s * 0.02, s * 0.25, s * 0.04);
+    c.fillStyle = '#111111'; c.fillRect(cx - s * 0.06, cy - s * 0.04, s * 0.1, s * 0.06);
+    c.fillStyle = '#ffb703'; c.fillRect(cx - s * 0.04, cy - s * 0.025, s * 0.02, s * 0.03); c.fillRect(cx, cy - s * 0.025, s * 0.02, s * 0.03);
+    c.fillStyle = '#ff2a05'; c.fillRect(cx - s * 0.015, cy - s * 0.07, s * 0.03, s * 0.035);
+    return;
+  }
+  c.fillStyle = th === 'gece' ? 'rgba(25,100,165,.35)' : 'rgba(105,140,62,.35)';
+  c.beginPath(); c.arc(cx, cy, s * 0.32, 0, 7); c.fill();
+  const bg = c.createRadialGradient(cx, cy, 2, cx, cy, s * 0.27);
+  if (th === 'gece') { bg.addColorStop(0, '#30bde2'); bg.addColorStop(0.7, '#124c77'); bg.addColorStop(1, '#0c2438'); }
+  else if (th === 'kagit') { bg.addColorStop(0, '#46bfe0'); bg.addColorStop(0.7, '#268ec7'); bg.addColorStop(1, '#18649c'); }
+  else { bg.addColorStop(0, '#3d95cf'); bg.addColorStop(0.7, '#246e99'); bg.addColorStop(1, '#1a4e6e'); }
+  c.fillStyle = bg; c.beginPath(); c.arc(cx, cy, s * 0.27, 0, 7); c.fill();
+  c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 1.2; c.beginPath(); c.arc(cx, cy, s * 0.24, 0, 7); c.stroke();
+  c.fillStyle = th === 'gece' ? '#4a3b2c' : '#8c5e38'; c.fillRect(cx - s * 0.22, cy - s * 0.06, s * 0.12, s * 0.12);
+  c.fillStyle = th === 'gece' ? '#2e241c' : '#654022'; c.fillRect(cx - s * 0.22, cy - s * 0.06, s * 0.025, s * 0.12); c.fillRect(cx - s * 0.13, cy - s * 0.06, s * 0.025, s * 0.12);
+  c.fillStyle = 'rgba(10,25,35,.35)'; c.beginPath(); c.ellipse(cx + s * 0.03, cy + s * 0.05, s * 0.17, s * 0.09, -0.15, 0, 7); c.fill();
+  c.fillStyle = '#f7f3e8'; c.beginPath();
+  c.moveTo(cx - s * 0.14, cy);
+  c.bezierCurveTo(cx - s * 0.12, cy - s * 0.08, cx + s * 0.1, cy - s * 0.08, cx + s * 0.16, cy);
+  c.bezierCurveTo(cx + s * 0.1, cy + s * 0.08, cx - s * 0.12, cy + s * 0.08, cx - s * 0.14, cy);
+  c.closePath(); c.fill();
+  c.strokeStyle = '#2b2118'; c.lineWidth = 1; c.stroke();
+  c.fillStyle = '#a63f27'; c.beginPath();
+  c.moveTo(cx - s * 0.12, cy + s * 0.02); c.lineTo(cx + s * 0.14, cy + s * 0.02);
+  c.lineTo(cx + s * 0.12, cy + s * 0.06); c.lineTo(cx - s * 0.1, cy + s * 0.06);
+  c.closePath(); c.fill();
+  c.fillStyle = '#e8dfcc'; c.fillRect(cx - s * 0.06, cy - s * 0.04, s * 0.1, s * 0.06);
+  c.fillStyle = '#1b2830'; c.fillRect(cx - s * 0.04, cy - s * 0.025, s * 0.02, s * 0.03); c.fillRect(cx, cy - s * 0.025, s * 0.02, s * 0.03);
+  c.fillStyle = '#d6453d'; c.fillRect(cx - s * 0.015, cy - s * 0.07, s * 0.03, s * 0.035);
+  c.fillStyle = '#2b2118'; c.fillRect(cx - s * 0.015, cy - s * 0.075, s * 0.03, s * 0.012);
+}
 function drawPlate(c, v, id) {
   const s = cs, k = v >> 4, m = v & 15, ins = Math.max(1.5, s * 0.04), r = s * 0.14, R = rng32(id * 977 + 13);
   if (highContrast) {
@@ -1621,6 +1720,12 @@ function drawPlate(c, v, id) {
       c.setLineDash([s * 0.08, s * 0.08]); strokePath(c, m, s, s * 0.12, '#120c04');
       c.setLineDash([s * 0.04, s * 0.12]); strokePath(c, m, s, s * 0.05, '#ffffff');
       c.setLineDash([]);
+    } else if (k === KF) {
+      strokePath(c, m, s, s * 0.44, '#041e2f');
+      strokePath(c, m, s, s * 0.32, '#0077b6');
+      strokePath(c, m, s, s * 0.22, '#00b4d8');
+      strokePath(c, m, s, s * 0.06, '#ffffff');
+      drawFerryDetail(c, s, true, 'contrast');
     }
   } else if (currentTheme === 'gece') {
     // Gece: Night plate with dark indigo ground, moonlit bevel, glowing river & lantern-lit road
@@ -1653,6 +1758,12 @@ function drawPlate(c, v, id) {
         c.fillStyle = '#fff4ce'; c.beginPath(); c.arc(lx, ly, s * 0.028, 0, 7); c.fill();
         c.fillStyle = '#2a1e12'; c.fillRect(lx - s * 0.015, ly + s * 0.02, s * 0.03, s * 0.035);
       }
+    } else if (k === KF) {
+      strokePath(c, m, s, s * 0.46, 'rgba(25,100,165,.35)');
+      strokePath(c, m, s, s * 0.32, '#124c77');
+      strokePath(c, m, s, s * 0.22, '#30bde2');
+      c.save(); c.translate(-s * 0.025, -s * 0.025); strokePath(c, m, s, s * 0.05, 'rgba(230,250,255,.55)'); c.restore();
+      drawFerryDetail(c, s, false, 'gece');
     }
   } else if (currentTheme === 'kagit') {
     // Kâğıt: Layered paper-cut tile with soft physical drop shadows
@@ -1675,6 +1786,12 @@ function drawPlate(c, v, id) {
       c.save(); c.translate(0, s * 0.02); strokePath(c, m, s, s * 0.28, 'rgba(60,40,20,.18)'); c.restore();
       strokePath(c, m, s, s * 0.26, '#bca27c');
       c.setLineDash([s * 0.07, s * 0.06]); strokePath(c, m, s, s * 0.04, '#fdfbf4'); c.setLineDash([]);
+    } else if (k === KF) {
+      strokePath(c, m, s, s * 0.42, '#18649c');
+      c.save(); c.translate(0, s * 0.015); strokePath(c, m, s, s * 0.3, 'rgba(20,50,80,.25)'); c.restore();
+      strokePath(c, m, s, s * 0.28, '#268ec7');
+      strokePath(c, m, s, s * 0.16, '#46bfe0');
+      drawFerryDetail(c, s, false, 'kagit');
     }
   } else {
     // Classic default / regional biomes (Kapadokya, Karadeniz, Ege, Bozkır)
@@ -1753,6 +1870,21 @@ function drawPlate(c, v, id) {
         strokePath(c, m, s, s * 0.21, isK ? '#caa16a' : '#c79a5e');
         c.setLineDash([s * 0.07, s * 0.07]); strokePath(c, m, s, s * 0.03, isK ? 'rgba(255,246,228,.92)' : 'rgba(248,234,200,.9)'); c.setLineDash([]);
       }
+    } else if (k === KF) {
+      if (isKrd) {
+        strokePath(c, m, s, s * 0.44, 'rgba(40,110,90,.38)');
+        strokePath(c, m, s, s * 0.3, '#196b75');
+        strokePath(c, m, s, s * 0.22, '#2ea8b8');
+      } else if (isEge) {
+        strokePath(c, m, s, s * 0.44, 'rgba(92,126,56,.45)');
+        strokePath(c, m, s, s * 0.3, '#1c7295');
+        strokePath(c, m, s, s * 0.22, '#2bb1c9');
+      } else {
+        strokePath(c, m, s, s * 0.44, isK ? 'rgba(185,92,62,.36)' : 'rgba(105,140,62,.40)');
+        strokePath(c, m, s, s * 0.3, isK ? '#226b96' : '#2a6c99');
+        strokePath(c, m, s, s * 0.22, isK ? '#3ca6d8' : '#3d95cf');
+      }
+      drawFerryDetail(c, s, false, 'classic');
     }
   }
 }
@@ -2462,6 +2594,18 @@ function frame(now) {
     const v = vals[i], k = v >> 4, X = ox + (i % N) * cs, Y = oy + ((i / N) | 0) * cs;
     if (k === KR && disp.dR[i] >= 0) drawFlow(X, Y, v, i, disp.dR, true, time, wave > -9 ? Math.max(0, 1 - Math.abs(disp.dR[i] - wave) / 1.6) : 0);
     else if (k === KD && disp.dD[i] >= 0) drawFlow(X, Y, v, i, disp.dD, false, time, wave > -9 ? Math.max(0, 1 - Math.abs(disp.dD[i] - wave) / 1.6) : 0);
+    else if (k === KF && disp.dR[i] >= 0) {
+      drawFlow(X, Y, v, i, disp.dR, true, time, wave > -9 ? Math.max(0, 1 - Math.abs(disp.dR[i] - wave) / 1.6) : 0);
+      const cx = X + cs / 2, cy = Y + cs / 2;
+      const pulse = RM ? 0.35 : 0.25 + 0.2 * Math.sin(time * 4);
+      ctx.strokeStyle = highContrast ? `rgba(0,229,255,${pulse})` : `rgba(159,227,234,${pulse})`; ctx.lineWidth = cs * 0.04;
+      ctx.beginPath(); ctx.arc(cx, cy, cs * 0.25, 0, 7); ctx.stroke();
+      if (!RM) {
+        const wR = (time * 0.8) % 1;
+        ctx.strokeStyle = `rgba(255,255,255,${(1 - wR) * 0.45})`; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.arc(cx, cy, cs * (0.15 + wR * 0.16), 0, 7); ctx.stroke();
+      }
+    }
     if (k === KV || k === KS || k === KH) {
       for (let e2 = 0; e2 < 4; e2++) {
         const j = NB[i * 4 + e2];
@@ -2902,7 +3046,9 @@ function openHelp() {
   trackEvent('help_open', { from: helpReturn || 'hud', moves: G.moves });
   closeAll();
   $('hTitle').textContent = t('how');
-  $('hList').innerHTML = ['h1', 'h2', 'h3', 'h4', 'h5'].map((k) => `<li>${t(k)}</li>`).join('');
+  const hKeys = ['h1', 'h2', 'h3', 'h4', 'h5'];
+  if (G.pz && G.pz.cfg && G.pz.cfg.ferry) hKeys.push('hFerry');
+  $('hList').innerHTML = hKeys.map((k) => `<li>${t(k)}</li>`).join('');
   const isKrd = G.biome === 'karadeniz' && currentTheme === 'classic';
   const isEge = G.biome === 'ege' && currentTheme === 'classic';
   const rivCol = highContrast ? '#0077b6' : (isKrd ? '#2ea8b8' : isEge ? '#2bb1c9' : '#3d95cf'), rodCol = highContrast ? '#ffb703' : (isKrd ? '#9e8f78' : isEge ? '#b87545' : '#c79a5e');
@@ -2910,7 +3056,9 @@ function openHelp() {
   const sprCol = isKrd ? '#2498a4' : isEge ? '#24a9be' : '#2fa3b6';
   const hanCol = isKrd ? '#8b968c' : isEge ? '#cfc1a5' : '#b8a07a';
   const mntCol = isKrd ? '#46614c' : isEge ? '#7a6852' : '#7a6551';
-  $('hLegend').innerHTML = [[rivCol, 'lRiver'], [rodCol, 'lRoad'], [vilCol, 'lVillage'], [sprCol, 'lSpring'], [hanCol, 'lHan'], [mntCol, 'lMount']].map(([c, k]) => `<span><i style="background:${c}${highContrast ? ';border:1px solid #111' : ''}"></i>${t(k)}</span>`).join('');
+  const leg = [[rivCol, 'lRiver'], [rodCol, 'lRoad'], [vilCol, 'lVillage'], [sprCol, 'lSpring'], [hanCol, 'lHan'], [mntCol, 'lMount']];
+  if (G.pz && G.pz.cfg && G.pz.cfg.ferry) leg.push([highContrast ? '#00b4d8' : '#206894', 'lFerry']);
+  $('hLegend').innerHTML = leg.map(([c, k]) => `<span><i style="background:${c}${highContrast ? ';border:1px solid #111' : ''}"></i>${t(k)}</span>`).join('');
   $('bTutReplay').textContent = t('tutReplay');
   $('bHelpOk').textContent = t('gotIt');
   $('help').classList.add('on'); if (!COARSE) setTimeout(() => $('bHelpOk').focus(), 30);
@@ -3200,6 +3348,16 @@ function renderShareCard(c = $('rCard')) {
       if (!isCorner(m) && popcount(m) >= 3) { cx.beginPath(); cx.arc(px + mcs / 2, py + mcs / 2, (mcs * 0.28) / 2, 0, 7); cx.fillStyle = '#c79a5e'; cx.fill(); }
       cx.save(); cx.setLineDash([mcs * 0.1, mcs * 0.1]); cx.lineWidth = mcs * 0.06; cx.strokeStyle = 'rgba(248,234,200,.95)';
       tracePath(cx, m, mcs, px, py); cx.stroke(); cx.restore();
+    } else if (k === KF) {
+      cx.lineWidth = mcs * 0.32; cx.strokeStyle = '#2a6c99'; cx.lineCap = 'butt'; cx.lineJoin = 'round';
+      tracePath(cx, m, mcs, px, py); cx.stroke();
+      cx.lineWidth = mcs * 0.2; cx.strokeStyle = '#3d95cf';
+      tracePath(cx, m, mcs, px, py); cx.stroke();
+      const fcx = px + mcs / 2, fcy = py + mcs / 2;
+      cx.fillStyle = '#206894'; cx.beginPath(); cx.arc(fcx, fcy, mcs * 0.24, 0, 7); cx.fill();
+      cx.fillStyle = '#f7f3e8'; cx.beginPath(); cx.ellipse(fcx, fcy, mcs * 0.14, mcs * 0.07, 0, 0, 7); cx.fill();
+      cx.fillStyle = '#a63f27'; cx.fillRect(fcx - mcs * 0.1, fcy + mcs * 0.01, mcs * 0.2, mcs * 0.03);
+      cx.fillStyle = '#1b2830'; cx.fillRect(fcx - mcs * 0.03, fcy - mcs * 0.05, mcs * 0.06, mcs * 0.045);
     } else if (k === KM) drawMountain(cx, px, py, mcs);
     else if (k === KS) drawSpring(cx, px, py, mcs);
     else if (k === KH) drawHan(cx, px, py, mcs);
@@ -3499,7 +3657,7 @@ function dbg() {
   el.style.display = 'block';
   el.textContent = `fps ${fps}  dpr ${DPR}  cell ${cs}px\nseed ${G.seed}  K ${pz ? pz.K : '-'}  par ${pz ? pz.par : '-'}\ngen ${G.genMs} ms  nodes ${pz ? pz.solveNodes : '-'}\nmoves ${G.moves}  quake ${G.moves % 5}  motes ${motes.length}\nevents ${telemetryLog.length}` + (G.bot ? `\nbot ${G.bot.strategy} plan ${G.bot.plan.length} (${G.bot.ms} ms)` : '');
 }
-const GLYPH = { 0: '..', 3: 'VV', 4: 'SS', 5: 'HH', 6: 'MM' };
+const GLYPH = { 0: '..', 3: 'VV', 4: 'SS', 5: 'HH', 6: 'MM', 7: 'FF' };
 window.fayHatti = {
   get seed() { return G.seed; }, get moves() { return G.moves; }, get solved() { return G.won; }, get state() { return G.state; },
   get mode() { return G.mode; }, get level() { return G.level; }, get par() { return G.pz ? G.pz.par : null; }, get stars() { return G.stars; },
@@ -3515,9 +3673,10 @@ window.fayHatti = {
   quakeShake: (m) => triggerQuakeHit(m != null ? m : (nextQuake() >= 0 ? nextQuake() : 0)),
   get bot() { return G.bot ? { strategy: G.bot.strategy, planned: G.bot.plan.length, played: G.bot.i } : null; },
   get genMs() { return G.genMs; }, get fps() { return fps; }, get plan() { return G.pz ? G.pz.solution.slice() : null; },
+  get ferryActive() { return !!G.ferryActive; },
   get motes() { return motes; }, get motesCount() { return motes.length; }, get motesEnabled() { return motesEnabled; }, setMotes: (v) => setMotes(v),
   get ripples() { return ripples.length; }, get ripplesEnabled() { return ripplesEnabled; }, setRipples: (v) => setRipples(v), ripple: (cell) => spawnWaterRipple(cell),
-  get board() { if (!G.pz) return null; const v = toVals(G.pz, G.ids), out = []; for (let r = 0; r < N; r++) { const row = []; for (let c = 0; c < N; c++) { const x = v[r * N + c], k = x >> 4; row.push(k === KR ? 'r' + (x & 15).toString(16) : k === KD ? 'd' + (x & 15).toString(16) : GLYPH[k]); } out.push(row.join(' ')); } return out; },
+  get board() { if (!G.pz) return null; const v = toVals(G.pz, G.ids), out = []; for (let r = 0; r < N; r++) { const row = []; for (let c = 0; c < N; c++) { const x = v[r * N + c], k = x >> 4; row.push(k === KR ? 'r' + (x & 15).toString(16) : k === KD ? 'd' + (x & 15).toString(16) : k === KF ? 'f' + (x & 15).toString(16) : GLYPH[k]); } out.push(row.join(' ')); } return out; },
   get highContrast() { return highContrast; }, setContrast, toggleContrast,
   get haptic() { return haptic; }, setHaptic, toggleHaptic, vibe,
   verifySeeds: (from, to) => runSeedVerification(from, to),
