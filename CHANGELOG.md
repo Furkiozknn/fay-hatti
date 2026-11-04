@@ -13,3 +13,4 @@ One line per day: date, the one visible change, and any measured number (for exa
 - 2026-11-04: Ported cosmetic cards theme-night and theme-paper (one branch, two cards): dark indigo Gece and layered Kâğıt themes, radio pill selector, ?theme URL flag, and card registry (implemented: true).
 - 2026-11-04: Ported cosmetic card region-kapadokya: volcanic tuff palette, fairy chimneys, cave dwellings, Seljuk caravanserai, weekly rotation (debut Nov 9), and card registry (implemented: true).
 - 2026-11-04: Ported cosmetic card region-karadeniz: mist-tinted deep greens, Kaçkar alpine peaks, tea sprigs, Serander chalets, horon cadence, and card registry (implemented: true).
+- 2026-11-04: Ported cosmetic card region-ege: Aegean olive oil greens, terracotta amphorae, whitewashed stone houses, sunny folk melody, weekly rotation (debut Nov 23), and card registry (implemented: true).
