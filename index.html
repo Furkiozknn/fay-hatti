@@ -21,7 +21,9 @@ body.biome-karadeniz .panel .sub,body.biome-karadeniz .note,body.theme-karadeniz
 body.biome-karadeniz .btn.alt,body.theme-karadeniz .btn.alt{background:#d0e6cb;box-shadow:inset 0 0 0 1px #78aa72}
 body.biome-karadeniz .btn.alt:hover,body.theme-karadeniz .btn.alt:hover{background:#dcedd8}
 body.biome-karadeniz .mini button,body.theme-karadeniz .mini button{border-color:#78aa72}
+body.biome-karadeniz .share-card-wrap,body.theme-karadeniz .share-card-wrap{background:#d2e8cc}
 body.biome-karadeniz .share-prev,body.theme-karadeniz .share-prev{background:#d2e8cc}
+body.biome-karadeniz .share-prev:hover,body.theme-karadeniz .share-prev:hover{background:#c6dec0}
 body.biome-karadeniz .tb,body.theme-karadeniz .tb{border-color:#2a4a3c}
 body.biome-karadeniz .tb:hover,body.theme-karadeniz .tb:hover{background:#234234}
 /* Ege Region Theme: olive oil greens, terracotta, whitewashed stone */
@@ -35,7 +37,9 @@ body.biome-ege .btn:hover,body.theme-ege .btn:hover{background:#ca5c3d}
 body.biome-ege .btn.alt,body.theme-ege .btn.alt{background:#e8dfc7;box-shadow:inset 0 0 0 1px #9c844f}
 body.biome-ege .btn.alt:hover,body.theme-ege .btn.alt:hover{background:#ede5d0}
 body.biome-ege .mini button,body.theme-ege .mini button{border-color:#9c844f}
+body.biome-ege .share-card-wrap,body.theme-ege .share-card-wrap{background:#e6ddc5}
 body.biome-ege .share-prev,body.theme-ege .share-prev{background:#e6ddc5}
+body.biome-ege .share-prev:hover,body.theme-ege .share-prev:hover{background:#ded5bd}
 body.biome-ege .tb,body.theme-ege .tb{border-color:#384f3c;background:var(--bg2)}
 body.biome-ege .tb:hover,body.theme-ege .tb:hover{background:#2f4233}
 body.biome-ege #bot,body.theme-ege #bot{background:#3a543e;color:#e8f4ea}
@@ -50,6 +54,9 @@ body.high-contrast .btn.alt{background:#f3f3f3;color:#111111;box-shadow:inset 0 
 body.high-contrast .mini button{border:2px solid #111111;color:#111111;font-weight:700}
 body.high-contrast .vfy-card{background:#ffffff;border:2px solid #111111;color:#111111}
 body.high-contrast .vfy-stamp{background:#0f5132;color:#ffffff;box-shadow:inset 0 0 0 1px #ffffff}
+body.high-contrast .share-card-wrap{border:2px solid #111111;box-shadow:none}
+body.high-contrast .share-prev{border:2px solid #111111;background:#ffffff;color:#111111}
+body.high-contrast .share-prev:hover{background:#f0f0f0}
 body.high-contrast button:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
 #app{position:fixed;inset:0;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto 1fr auto;grid-template-areas:"hud" "quake" "stage" "bar";padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left)}
 #hud{grid-area:hud;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px 4px;max-width:620px;width:100%;margin:0 auto}
@@ -98,8 +105,12 @@ body.high-contrast button:focus-visible{outline:3px solid var(--focus);outline-o
 .big-stars svg.on{animation:starpop .45s cubic-bezier(.3,1.6,.5,1) both}
 .big-stars svg:nth-child(2){animation-delay:.12s}.big-stars svg:nth-child(3){animation-delay:.24s}
 @keyframes starpop{from{transform:scale(0) rotate(-30deg)}to{transform:none}}
-.res-line{text-align:center;font-size:17px;margin:2px 0 10px}
-.share-prev{font:15px/1.3 ui-monospace,Consolas,monospace;background:#e9dab6;border-radius:10px;padding:10px 12px;text-align:center;margin:8px 0;white-space:pre-wrap;word-break:break-word}
+.res-line{text-align:center;font-size:17px;margin:2px 0 8px}
+.share-card-wrap{width:100%;max-width:340px;margin:6px auto;border-radius:12px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.28);background:#eadebe;line-height:0}
+.share-card-cv{width:100%;height:auto;display:block;aspect-ratio:560/420;cursor:pointer;transition:opacity .15s}
+.share-card-cv:hover{opacity:.96}
+.share-prev{font:13px/1.3 ui-monospace,Consolas,monospace;background:#e9dab6;border-radius:10px;padding:8px 10px;text-align:center;margin:6px 0;white-space:pre-wrap;word-break:break-word;cursor:pointer;transition:background .15s}
+.share-prev:hover{background:#dfd0ab}
 .note{text-align:center;font-size:14px;color:#5b4a36;margin:4px 0 0}
 ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
 .legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:14px;margin-bottom:8px}
@@ -162,7 +173,9 @@ html[data-theme="gece"] .panel .sub,html[data-theme="gece"] .note{color:#9cb5d1}
 html[data-theme="gece"] .btn.alt{background:#23344d;color:#e8f0fa;box-shadow:inset 0 0 0 1px #3a547a}
 html[data-theme="gece"] .btn.alt:hover{background:#2c4160}
 html[data-theme="gece"] .mini button{border-color:#3a547a;color:#e8f0fa}
+html[data-theme="gece"] .share-card-wrap{background:#121c2c;box-shadow:0 6px 18px rgba(0,0,0,.55)}
 html[data-theme="gece"] .share-prev{background:#101826;color:#c0d5ec}
+html[data-theme="gece"] .share-prev:hover{background:#162234}
 html[data-theme="gece"] .vfy-card{background:#121c2c;border-color:#2a3e5c;color:#e8f0fa}
 html[data-theme="gece"] .vfy-stamp{background:#1a4d30;color:#e8f0fa;box-shadow:inset 0 0 0 1px #3a684c}
 html[data-theme="gece"] #tutTip{box-shadow:0 12px 36px rgba(0,0,0,.7),inset 0 0 0 2px #263852}
@@ -180,7 +193,9 @@ html[data-theme="gece"] .tut-btn.alt:hover{background:#2c4160}
 html[data-theme="kagit"] body{background:radial-gradient(120% 80% at 50% 0%,#3d3428 0%,#241f18 60%)}
 html[data-theme="kagit"] .panel{background:#fdfaf2;color:#2e241c;box-shadow:0 18px 50px rgba(0,0,0,.4),inset 0 0 0 2px #c9bda5}
 html[data-theme="kagit"] .mini button{border-color:#bdae95;color:#2e241c}
+html[data-theme="kagit"] .share-card-wrap{background:#f0e8d6}
 html[data-theme="kagit"] .share-prev{background:#f0e7d5;color:#3d3024}
+html[data-theme="kagit"] .share-prev:hover{background:#e8dfcc}
 html[data-theme="kagit"] .vfy-card{background:#f0e8d6;border-color:#c9bda5;color:#2e241c}
 html[data-theme="kagit"] #tutTip{box-shadow:0 12px 36px rgba(0,0,0,.35),inset 0 0 0 2px #c9bda5}
 html[data-theme="kagit"] #tutTitle{color:#5a2a18}
@@ -305,8 +320,9 @@ body.high-contrast .th-pill.active{background:#111111;color:#ffffff;border-color
     <h2 id="rTitle"></h2>
     <div class="big-stars" id="rStars"></div>
     <p class="res-line" id="rLine"></p>
-    <div class="share-prev" id="rShare"></div>
-    <button class="btn" id="bShare" style="text-align:center"></button>
+    <div class="share-card-wrap" id="rCardWrap"><canvas id="rCard" class="share-card-cv" width="560" height="420" role="img" aria-label="Fay Hattı Share Card"></canvas></div>
+    <div class="share-prev" id="rShare" title="Copy text"></div>
+    <div class="row"><button class="btn" id="bShare" style="text-align:center"></button><button class="btn alt" id="bSaveCard" style="text-align:center"></button></div>
     <div class="row"><button class="btn alt" id="bNext"></button><button class="btn alt" id="bRMenu"></button></div>
     <p class="note" id="rNote"></p>
   </div>
@@ -826,6 +842,17 @@ const CARDS = [
     },
     apply: () => setQuakeJuice(true),
   },
+  {
+    id: 'share-card-art',
+    type: 'cosmetic',
+    implemented: true,
+    title: { en: 'Share Card Art', tr: 'Paylaşım Kartı Sanatı' },
+    desc: {
+      en: 'Illustrated canvas share card with Anatolian topographic survey motif, solved map preview, star rating badge, and one-tap image copy/save.',
+      tr: 'Anadolu topoğrafik harita motifi, çözülen harita önizlemesi, yıldız derecesi rozeti ve tek dokunuşla görsel kopyalama/kaydetme özellikli resimli paylaşım kartı.'
+    },
+    apply: () => setShareCardArt(true),
+  },
 ];
 const STR = {
   en: {
@@ -833,7 +860,7 @@ const STR = {
     daily: 'Daily puzzle', endless: 'Endless', how: 'How to play', moves: 'Moves', par: 'Par', undo: 'Undo', restart: 'Restart',
     menu: 'Menu', sound: 'Sound', haptic: 'Haptic', on: 'on', off: 'off', level: 'Level {n}', dailyTag: 'Daily · {d}',
     quakeNext: 'Next quake: row {r} {a}', quakeActive: 'Earthquake!', calm: 'The ground is calm', loading: 'Drawing the map…', solvedT: 'Connected!',
-    resLine: '{m} moves · par {p}', share: 'Share result', next: 'Next level', toEndless: 'Play endless', back: 'Menu',
+    resLine: '{m} moves · par {p}', share: 'Share result', saveCard: 'Save card', cardCopied: 'Card image copied to clipboard', cardSaved: 'Card saved to device', next: 'Next level', toEndless: 'Play endless', back: 'Menu',
     copied: 'Copied to clipboard', tomorrow: 'A new map tomorrow.', endlessNote: 'Level {n} done.', movesWord: 'moves',
     gotIt: 'Got it', solvedOn: 'Solved', playTag: 'same map for everyone', board: 'Puzzle board',
     biomeKapadokya: 'Cappadocia', biomeKaradeniz: 'Karadeniz', biomeEge: 'Aegean', biomeBozkir: 'Steppe', regEge: 'Aegean',
@@ -862,7 +889,7 @@ const STR = {
     daily: 'Günün bulmacası', endless: 'Sonsuz mod', how: 'Nasıl oynanır', moves: 'Hamle', par: 'Hedef', undo: 'Geri al', restart: 'Baştan',
     menu: 'Menü', sound: 'Ses', haptic: 'Titreşim', on: 'açık', off: 'kapalı', level: 'Bölüm {n}', dailyTag: 'Günlük · {d}',
     quakeNext: 'Sıradaki deprem: {r}. satır {a}', quakeActive: 'Deprem!', calm: 'Yer sakin', loading: 'Harita çiziliyor…', solvedT: 'Bağlandı!',
-    resLine: '{m} hamle · hedef {p}', share: 'Sonucu paylaş', next: 'Sonraki bölüm', toEndless: 'Sonsuz moda geç', back: 'Menü',
+    resLine: '{m} hamle · hedef {p}', share: 'Sonucu paylaş', saveCard: 'Kartı kaydet', cardCopied: 'Kart panoya kopyalandı', cardSaved: 'Kart cihaza kaydedildi', next: 'Sonraki bölüm', toEndless: 'Sonsuz moda geç', back: 'Menü',
     copied: 'Panoya kopyalandı', tomorrow: 'Yarın yeni bir harita.', endlessNote: '{n}. bölüm tamam.', movesWord: 'hamle',
     gotIt: 'Anladım', solvedOn: 'Çözüldü', playTag: 'herkes için aynı harita', board: 'Bulmaca tahtası',
     biomeKapadokya: 'Kapadokya', biomeKaradeniz: 'Karadeniz', biomeEge: 'Ege', biomeBozkir: 'Bozkır', regEge: 'Ege',
@@ -2994,14 +3021,368 @@ function updateVerifyUi(rep) {
 }
 function shareText() { return `Fay Hattı ${G.mode === 'daily' ? seedLabel(G.seed) : '#' + G.level} ${'⭐'.repeat(G.stars)} ${G.moves} ${t('movesWord')}`; }
 function shareUrl() { return CANON + (G.mode === 'daily' ? '?seed=' + G.seed : '?level=' + G.level); }
+
+// ---------------------------------------------------------------- cosmetic card: share-card-art
+let shareCardArtEnabled = true;
+function setShareCardArt(v) {
+  shareCardArtEnabled = !!v;
+  const w = $('rCardWrap'), b = $('bSaveCard');
+  if (w) w.style.display = shareCardArtEnabled ? '' : 'none';
+  if (b) b.style.display = shareCardArtEnabled ? '' : 'none';
+}
+
+function drawCardStar(cx, x, y, r, on) {
+  cx.save();
+  cx.beginPath();
+  for (let i = 0; i < 5; i++) {
+    const a = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+    const px = x + Math.cos(a) * r, py = y + Math.sin(a) * r;
+    i === 0 ? cx.moveTo(px, py) : cx.lineTo(px, py);
+  }
+  cx.closePath();
+  if (on) {
+    cx.fillStyle = '#f2b33d';
+    cx.fill();
+    cx.lineWidth = 1.5;
+    cx.strokeStyle = '#9c6a12';
+    cx.stroke();
+  } else {
+    cx.fillStyle = 'rgba(141,127,105,.22)';
+    cx.fill();
+    cx.lineWidth = 1.2;
+    cx.strokeStyle = '#8d7f69';
+    cx.stroke();
+  }
+  cx.restore();
+}
+
+function renderShareCard(c = $('rCard')) {
+  if (!c || !G.pz) return;
+  const cx = c.getContext('2d');
+  const CW = c.width, CH = c.height;
+  const pz = G.pz, vals = (disp && disp.vals) ? disp.vals : toVals(pz, G.ids);
+
+  // 1. Parchment base with subtle gradient & contours
+  const bg = cx.createLinearGradient(0, 0, CW, CH);
+  bg.addColorStop(0, '#f8eedc');
+  bg.addColorStop(0.5, '#f1e1be');
+  bg.addColorStop(1, '#dfc794');
+  cx.fillStyle = bg;
+  cx.fillRect(0, 0, CW, CH);
+
+  // Topographic survey lines (Anatolian map motif)
+  cx.save();
+  cx.strokeStyle = 'rgba(150,108,58,.12)';
+  cx.lineWidth = 1.2;
+  const R = rng32(hashStr('sc' + G.seed));
+  for (let k = 0; k < 6; k++) {
+    cx.beginPath();
+    const y0 = 36 + k * 65 + R() * 20;
+    for (let px = 0; px <= CW; px += 10) {
+      const y = y0 + Math.sin((px / CW) * 6 + k) * 14 + Math.cos((px / CW) * 11 + k) * 6;
+      px ? cx.lineTo(px, y) : cx.moveTo(px, y);
+    }
+    cx.stroke();
+  }
+  // Subtle paper speckles
+  for (let i = 0; i < 140; i++) {
+    cx.fillStyle = R() < 0.5 ? 'rgba(120,84,40,.06)' : 'rgba(255,255,255,.12)';
+    cx.fillRect(R() * CW, R() * CH, 1 + R() * 1.5, 1 + R() * 1.5);
+  }
+  // Double-ruled decorative border with corner accents
+  const cardPad = 12, cr = 14;
+  cx.lineWidth = 2.5;
+  cx.strokeStyle = '#9f7742';
+  rr(cx, cardPad, cardPad, CW - 2 * cardPad, CH - 2 * cardPad, cr);
+  cx.stroke();
+  cx.lineWidth = 1;
+  cx.strokeStyle = 'rgba(120,85,45,.45)';
+  rr(cx, cardPad + 4, cardPad + 4, CW - 2 * cardPad - 8, CH - 2 * cardPad - 8, cr - 3);
+  cx.stroke();
+  const corner = (x, y) => {
+    cx.fillStyle = '#a63f27';
+    cx.beginPath(); cx.moveTo(x, y - 4); cx.lineTo(x + 4, y); cx.lineTo(x, y + 4); cx.lineTo(x - 4, y); cx.closePath(); cx.fill();
+  };
+  corner(cardPad + 10, cardPad + 10);
+  corner(CW - cardPad - 10, cardPad + 10);
+  corner(cardPad + 10, CH - cardPad - 10);
+  corner(CW - cardPad - 10, CH - cardPad - 10);
+  cx.restore();
+
+  // 2. Header: Brand, Mode, Location, Status badge
+  cx.save();
+  cx.font = '700 24px "Palatino Linotype",Palatino,Georgia,serif';
+  cx.fillStyle = '#5a2a18';
+  cx.textAlign = 'left';
+  cx.textBaseline = 'middle';
+  cx.fillText('FAY HATTI', cardPad + 18, cardPad + 22);
+
+  const dateStr = G.mode === 'daily' ? seedLabel(G.seed) : t('level', { n: G.level });
+  const locStr = G.place ? ` · ${G.place.toUpperCase()}` : '';
+  const modeStr = G.mode === 'daily' ? (lang === 'tr' ? 'GÜNÜN BULMACASI' : 'DAILY PUZZLE') : (lang === 'tr' ? 'SONSUZ MOD' : 'ENDLESS');
+  cx.font = '600 12px "Segoe UI",system-ui,sans-serif';
+  cx.fillStyle = '#7a5638';
+  cx.fillText(`${modeStr} · ${dateStr}${locStr}`, cardPad + 19, cardPad + 42);
+
+  // Status pill badge
+  const bW = 104, bH = 26, bX = CW - cardPad - 18 - bW, bY = cardPad + 16;
+  cx.fillStyle = '#a63f27';
+  rr(cx, bX, bY, bW, bH, 13);
+  cx.fill();
+  cx.fillStyle = '#fff8ec';
+  cx.font = '700 12px "Segoe UI",system-ui,sans-serif';
+  cx.textAlign = 'center';
+  cx.textBaseline = 'middle';
+  cx.fillText(t('solvedT').toUpperCase(), bX + bW / 2, bY + bH / 2 + 1);
+
+  // Fault line separator (seismic crack motif)
+  cx.strokeStyle = '#e0553a';
+  cx.lineWidth = 1.5;
+  cx.beginPath();
+  const sepY = cardPad + 56;
+  cx.moveTo(cardPad + 16, sepY);
+  cx.lineTo(CW * 0.35, sepY);
+  cx.lineTo(CW * 0.38, sepY - 3);
+  cx.lineTo(CW * 0.42, sepY + 4);
+  cx.lineTo(CW * 0.46, sepY - 2);
+  cx.lineTo(CW * 0.50, sepY + 3);
+  cx.lineTo(CW * 0.53, sepY);
+  cx.lineTo(CW - cardPad - 16, sepY);
+  cx.stroke();
+  cx.restore();
+
+  // 3. Left Side: The 5x5 Solved Map
+  const gridX = cardPad + 16, gridY = 82;
+  const mcs = 52, gridW = N * mcs;
+
+  cx.save();
+  // Map shadow & plate
+  cx.fillStyle = 'rgba(70,42,18,.2)';
+  rr(cx, gridX + 2, gridY + 3, gridW, gridW, 10);
+  cx.fill();
+  cx.fillStyle = '#ecd8ab';
+  rr(cx, gridX, gridY, gridW, gridW, 10);
+  cx.fill();
+  cx.strokeStyle = '#9f7742';
+  cx.lineWidth = 1.5;
+  rr(cx, gridX, gridY, gridW, gridW, 10);
+  cx.stroke();
+
+  for (let i = 0; i < NN; i++) {
+    const r = (i / N) | 0, c = i % N;
+    const px = gridX + c * mcs, py = gridY + r * mcs;
+    const v = vals[i], k = v >> 4, m = v & 15;
+    const isFixed = pz.fixed[i];
+
+    // Plate background
+    const ins = 2, pr = 5;
+    cx.fillStyle = isFixed ? 'rgba(120,85,45,.18)' : 'rgba(245,230,195,.85)';
+    rr(cx, px + ins, py + ins, mcs - 2 * ins, mcs - 2 * ins, pr);
+    cx.fill();
+    cx.strokeStyle = isFixed ? 'rgba(120,85,45,.35)' : 'rgba(165,130,85,.3)';
+    cx.lineWidth = 1;
+    rr(cx, px + ins, py + ins, mcs - 2 * ins, mcs - 2 * ins, pr);
+    cx.stroke();
+
+    if (k === KR) {
+      cx.lineWidth = mcs * 0.32; cx.strokeStyle = '#2a6c99'; cx.lineCap = 'butt'; cx.lineJoin = 'round';
+      tracePath(cx, m, mcs, px, py); cx.stroke();
+      if (!isCorner(m) && popcount(m) >= 3) { cx.beginPath(); cx.arc(px + mcs / 2, py + mcs / 2, (mcs * 0.32) / 2, 0, 7); cx.fillStyle = '#2a6c99'; cx.fill(); }
+      cx.lineWidth = mcs * 0.2; cx.strokeStyle = '#3d95cf';
+      tracePath(cx, m, mcs, px, py); cx.stroke();
+      if (!isCorner(m) && popcount(m) >= 3) { cx.beginPath(); cx.arc(px + mcs / 2, py + mcs / 2, (mcs * 0.2) / 2, 0, 7); cx.fillStyle = '#3d95cf'; cx.fill(); }
+    } else if (k === KD) {
+      cx.lineWidth = mcs * 0.28; cx.strokeStyle = '#c79a5e'; cx.lineCap = 'butt'; cx.lineJoin = 'round';
+      tracePath(cx, m, mcs, px, py); cx.stroke();
+      if (!isCorner(m) && popcount(m) >= 3) { cx.beginPath(); cx.arc(px + mcs / 2, py + mcs / 2, (mcs * 0.28) / 2, 0, 7); cx.fillStyle = '#c79a5e'; cx.fill(); }
+      cx.save(); cx.setLineDash([mcs * 0.1, mcs * 0.1]); cx.lineWidth = mcs * 0.06; cx.strokeStyle = 'rgba(248,234,200,.95)';
+      tracePath(cx, m, mcs, px, py); cx.stroke(); cx.restore();
+    } else if (k === KM) drawMountain(cx, px, py, mcs);
+    else if (k === KS) drawSpring(cx, px, py, mcs);
+    else if (k === KH) drawHan(cx, px, py, mcs);
+    else if (k === KV) drawVillage(cx, px, py, mcs, i * 31 + 5);
+
+    if (k === KV || k === KS || k === KH) {
+      for (let e2 = 0; e2 < 4; e2++) {
+        const j = NB[i * 4 + e2];
+        if (j < 0) continue;
+        const p = edgePt(e2, mcs);
+        const inR = RIV[v] && (RIV[vals[j]] >> OPP[e2]) & 1;
+        const inD = ROD[v] && (ROD[vals[j]] >> OPP[e2]) & 1;
+        if (!inR && !inD) continue;
+        const ix = px + mcs / 2 + DC[e2] * mcs * 0.3, iy = py + mcs / 2 + DR[e2] * mcs * 0.3;
+        cx.lineCap = 'round'; cx.lineWidth = mcs * (inR ? 0.2 : 0.18); cx.strokeStyle = inR ? '#3d95cf' : '#c79a5e';
+        cx.beginPath(); cx.moveTo(px + p[0], py + p[1]); cx.lineTo(ix, iy); cx.stroke();
+      }
+    }
+  }
+
+  // Village badges on map
+  pz.villages.forEach((vg) => {
+    const vx = gridX + (vg.cell % N) * mcs, vy = gridY + ((vg.cell / N) | 0) * mcs, vr = mcs * 0.13;
+    if (vg.need & NEED_RIVER) {
+      cx.fillStyle = '#2f86c4'; cx.beginPath(); cx.arc(vx + mcs * 0.2, vy + mcs * 0.2, vr, 0, 7); cx.fill();
+      cx.strokeStyle = '#fff6e2'; cx.lineWidth = 1; cx.stroke();
+      cx.fillStyle = '#fff'; cx.beginPath(); cx.arc(vx + mcs * 0.2, vy + mcs * 0.2, vr * 0.5, 0, 7); cx.fill();
+    }
+    if (vg.need & NEED_ROAD) {
+      cx.fillStyle = '#b9843f'; cx.beginPath(); cx.arc(vx + mcs * 0.8, vy + mcs * 0.2, vr, 0, 7); cx.fill();
+      cx.strokeStyle = '#fff6e2'; cx.lineWidth = 1; cx.stroke();
+      cx.fillStyle = '#fff'; cx.beginPath(); cx.arc(vx + mcs * 0.8, vy + mcs * 0.2, vr * 0.5, 0, 7); cx.fill();
+    }
+  });
+  cx.restore();
+
+  // 4. Right Side: Performance, Stars, Moves/Par Bento Tiles
+  const rightX = gridX + gridW + 16;
+  const rightW = CW - cardPad - 16 - rightX;
+  const rightY = 82;
+
+  cx.save();
+  // Stars tile
+  const starBoxH = 72;
+  cx.fillStyle = '#eadebe';
+  rr(cx, rightX, rightY, rightW, starBoxH, 10);
+  cx.fill();
+  cx.strokeStyle = '#c9b588';
+  cx.lineWidth = 1;
+  rr(cx, rightX, rightY, rightW, starBoxH, 10);
+  cx.stroke();
+
+  const starSz = 30, starGap = (rightW - 3 * starSz) / 4;
+  for (let s = 0; s < 3; s++) {
+    const sx = rightX + starGap + s * (starSz + starGap) + starSz / 2;
+    drawCardStar(cx, sx, rightY + 26, starSz * 0.46, s < G.stars);
+  }
+  cx.font = '700 12px "Segoe UI",system-ui,sans-serif';
+  cx.fillStyle = '#5a2a18';
+  cx.textAlign = 'center';
+  cx.textBaseline = 'middle';
+  const starRatingText = G.stars === 3 ? (lang === 'tr' ? 'KUSURSUZ ÇÖZÜM' : 'PERFECT SOLVE') : G.stars === 2 ? (lang === 'tr' ? 'USTA İŞİ' : 'EXPERT') : (lang === 'tr' ? 'TAMAMLANDI' : 'SOLVED');
+  cx.fillText(starRatingText, rightX + rightW / 2, rightY + starBoxH - 15);
+
+  // Moves & Par boxes
+  const statsY = rightY + starBoxH + 10;
+  const statBoxW = (rightW - 8) / 2, statBoxH = 80;
+
+  // Moves box
+  cx.fillStyle = '#eadebe';
+  rr(cx, rightX, statsY, statBoxW, statBoxH, 10);
+  cx.fill();
+  cx.strokeStyle = '#c9b588';
+  cx.lineWidth = 1;
+  rr(cx, rightX, statsY, statBoxW, statBoxH, 10);
+  cx.stroke();
+
+  cx.font = '600 11px "Segoe UI",system-ui,sans-serif';
+  cx.fillStyle = '#7a5638';
+  cx.fillText(t('moves').toUpperCase(), rightX + statBoxW / 2, statsY + 20);
+  cx.font = '700 32px "Palatino Linotype",Palatino,serif';
+  cx.fillStyle = '#5a2a18';
+  cx.fillText(String(G.moves), rightX + statBoxW / 2, statsY + 52);
+
+  // Par box
+  const parX = rightX + statBoxW + 8;
+  cx.fillStyle = '#eadebe';
+  rr(cx, parX, statsY, statBoxW, statBoxH, 10);
+  cx.fill();
+  cx.strokeStyle = '#c9b588';
+  cx.lineWidth = 1;
+  rr(cx, parX, statsY, statBoxW, statBoxH, 10);
+  cx.stroke();
+
+  cx.font = '600 11px "Segoe UI",system-ui,sans-serif';
+  cx.fillStyle = '#7a5638';
+  cx.fillText(t('par').toUpperCase(), parX + statBoxW / 2, statsY + 20);
+  cx.font = '700 32px "Palatino Linotype",Palatino,serif';
+  cx.fillStyle = '#5a2a18';
+  cx.fillText(String(pz.par), parX + statBoxW / 2, statsY + 52);
+
+  // Seismic & Map Summary Tile
+  const infoY = statsY + statBoxH + 10, infoH = 80;
+  cx.fillStyle = '#eadebe';
+  rr(cx, rightX, infoY, rightW, infoH, 10);
+  cx.fill();
+  cx.strokeStyle = '#c9b588';
+  cx.lineWidth = 1;
+  rr(cx, rightX, infoY, rightW, infoH, 10);
+  cx.stroke();
+
+  // Seismic red fault dot
+  cx.fillStyle = '#e0553a';
+  cx.beginPath();
+  cx.arc(rightX + 22, infoY + 28, 6, 0, 7);
+  cx.fill();
+
+  cx.textAlign = 'left';
+  cx.font = '700 13px "Segoe UI",system-ui,sans-serif';
+  cx.fillStyle = '#5a2a18';
+  const quakesWeathered = Math.max(0, G.moves - 1);
+  const quakeTxt = lang === 'tr' ? `${quakesWeathered} Deprem Atlatıldı` : `${quakesWeathered} Quakes Weathered`;
+  cx.fillText(quakeTxt, rightX + 36, infoY + 28);
+
+  cx.font = '600 11px "Segoe UI",system-ui,sans-serif';
+  cx.fillStyle = '#7a5638';
+  const villagesTxt = lang === 'tr' ? `${pz.villages.length} Köy Şebekeye Bağlandı` : `${pz.villages.length} Villages Connected`;
+  cx.fillText(villagesTxt, rightX + 36, infoY + 52);
+  cx.restore();
+
+  // 5. Card Footer
+  cx.save();
+  cx.strokeStyle = 'rgba(159,119,66,.35)';
+  cx.lineWidth = 1;
+  cx.beginPath();
+  cx.moveTo(cardPad + 16, 372);
+  cx.lineTo(CW - cardPad - 16, 372);
+  cx.stroke();
+
+  cx.font = '600 11px "Segoe UI",system-ui,sans-serif';
+  cx.fillStyle = '#8b6f52';
+  cx.textBaseline = 'middle';
+  cx.textAlign = 'left';
+  cx.fillText('Anadolu Kaydırmalı Bulmaca · GitHub Game Off 2026', cardPad + 18, 394);
+
+  cx.textAlign = 'right';
+  cx.font = '700 11px "Segoe UI",system-ui,sans-serif';
+  cx.fillStyle = '#5a2a18';
+  cx.fillText('furkiozknn.github.io/fay-hatti', CW - cardPad - 18, 394);
+  cx.restore();
+}
+
+function saveShareCard() {
+  sfx.click();
+  vibe(20);
+  const c = $('rCard');
+  if (!c) return;
+  trackEvent('share_card_save', { mode: G.mode, seed: G.seed, level: G.level, moves: G.moves, stars: G.stars });
+  try {
+    const a = document.createElement('a');
+    a.download = `fay-hatti-${G.seed}.png`;
+    a.href = c.toDataURL('image/png');
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    toast(t('cardSaved'));
+  } catch (e) {
+    toast(t('copied'));
+  }
+}
+
 function showResult() {
   if (!G.won) return;
   closeAll();
   $('rTitle').textContent = t('solvedT');
   $('rStars').innerHTML = [0, 1, 2].map((i) => starSvg(i < G.stars, 46)).join('');
   $('rLine').textContent = t('resLine', { m: G.moves, p: G.pz.par });
+  if (shareCardArtEnabled) renderShareCard($('rCard'));
   $('rShare').textContent = shareText() + '\n' + shareUrl();
+  $('rShare').title = lang === 'tr' ? 'Metni kopyala' : 'Copy text';
   $('bShare').textContent = t('share');
+  if ($('bSaveCard')) $('bSaveCard').textContent = t('saveCard');
+  if ($('rCard')) {
+    $('rCard').title = t('saveCard');
+    $('rCard').setAttribute('aria-label', lang === 'tr' ? 'Fay Hattı Paylaşım Kartı' : 'Fay Hattı Share Card');
+  }
   $('bNext').textContent = G.mode === 'daily' ? t('toEndless') : t('next');
   $('bRMenu').textContent = t('back');
   $('rNote').textContent = G.mode === 'daily' ? t('tomorrow') : t('endlessNote', { n: G.level });
@@ -3012,11 +3393,45 @@ let toastT = 0;
 function toast(msg) { const el = $('toast'); el.textContent = msg; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 1800); }
 async function share() {
   sfx.click();
+  vibe(20);
   trackEvent('share', { mode: G.mode, seed: G.seed, level: G.level, moves: G.moves, stars: G.stars });
   const text = shareText() + '\n' + shareUrl();
-  if (navigator.share && matchMedia('(pointer:coarse)').matches) { try { await navigator.share({ text }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
-  try { await navigator.clipboard.writeText(text); toast(t('copied')); }
-  catch (e) { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); toast(t('copied')); } catch (e2) {} ta.remove(); }
+  const c = $('rCard');
+  if (shareCardArtEnabled && navigator.share && c && c.toBlob) {
+    try {
+      const blob = await new Promise((res) => c.toBlob(res, 'image/png'));
+      if (blob) {
+        const file = new File([blob], `fay-hatti-${G.seed}.png`, { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ title: 'Fay Hattı', text, files: [file] });
+          return;
+        }
+      }
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;
+    }
+  }
+  if (shareCardArtEnabled && navigator.clipboard && window.ClipboardItem && c && c.toBlob) {
+    try {
+      const blob = await new Promise((res) => c.toBlob(res, 'image/png'));
+      if (blob) {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        toast(t('cardCopied'));
+        return;
+      }
+    } catch (e) {}
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    toast(t('copied'));
+  } catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); toast(t('copied')); } catch (e2) {}
+    ta.remove();
+  }
 }
 function toggleMute() { muted = !muted; store.set('mute', muted); if (AC) master.gain.value = muted ? 0 : 0.55; updateHud(); fillMenu(); if (!muted) sfx.click(); }
 function toggleLang() { sfx.click(); lang = lang === 'tr' ? 'en' : 'tr'; store.set('lang', lang); updateHud(); fillMenu(); if ($('result').classList.contains('on')) showResult(); if ($('help').classList.contains('on')) { const r = helpReturn; openHelp(); helpReturn = r; } if ($('verify').classList.contains('on')) { const r = verifyReturn; openVerify(); verifyReturn = r; } if (tutActive) setTutStep(tutStep); }
@@ -3055,6 +3470,9 @@ $('bVerifyRun').onclick = () => {
   }, 40);
 };
 $('bShare').onclick = share;
+$('bSaveCard').onclick = saveShareCard;
+$('rCard').onclick = saveShareCard;
+$('rShare').onclick = async () => { sfx.click(); vibe(15); try { await navigator.clipboard.writeText(shareText() + '\n' + shareUrl()); toast(t('copied')); } catch (e) {} };
 $('bNext').onclick = () => { sfx.click(); startPuzzle('endless', G.mode === 'daily' ? store.get('endless', 1) : G.level + 1); };
 $('bRMenu').onclick = () => { sfx.click(); openMenu(); };
 $('thClassic').onclick = () => { sfx.click(); applyTheme('classic'); };
@@ -3081,6 +3499,8 @@ window.fayHatti = {
   get cards() { return CARDS; }, get cardRegistry() { return CARDS; },
   get nextQuake() { const q = nextQuake(); return q < 0 ? null : { row: q >> 1, dir: moveDir(q) }; },
   get trauma() { return quakeTrauma; },
+  get shareCard() { return $('rCard'); }, renderShareCard: () => renderShareCard($('rCard')), saveShareCard,
+  get shareCardArt() { return shareCardArtEnabled; }, setShareCardArt,
   get quakeJuice() { return quakeJuiceEnabled; }, get quakeShakeEnabled() { return quakeJuiceEnabled; }, setQuakeShake: (v) => setQuakeJuice(v), setQuakeJuice: (v) => setQuakeJuice(v),
   quakeShake: (m) => triggerQuakeHit(m != null ? m : (nextQuake() >= 0 ? nextQuake() : 0)),
   get bot() { return G.bot ? { strategy: G.bot.strategy, planned: G.bot.plan.length, played: G.bot.i } : null; },
