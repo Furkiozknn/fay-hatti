@@ -31,10 +31,11 @@ button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 @keyframes pulse{70%{box-shadow:0 0 0 8px rgba(224,85,58,0)}100%{box-shadow:0 0 0 0 rgba(224,85,58,0)}}
 #stage{grid-area:stage;position:relative;min-height:0;min-width:0}
 #cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
-#bar{grid-area:bar;display:flex;justify-content:center;gap:8px;padding:6px 12px calc(10px + env(safe-area-inset-bottom))}
-.tb{min-width:58px;min-height:48px;padding:4px 8px;border:1px solid #3d5561;border-radius:12px;background:var(--bg2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:12px;color:var(--ink)}
+#bar{grid-area:bar;display:flex;justify-content:center;gap:6px;padding:6px 8px calc(10px + env(safe-area-inset-bottom));max-width:620px;margin:0 auto;width:100%}
+.tb{min-width:46px;flex:1 1 0;max-width:68px;min-height:48px;padding:4px 4px;border:1px solid #3d5561;border-radius:12px;background:var(--bg2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:12px;color:var(--ink)}
 .tb svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .tb:hover{background:#2c434e}.tb:disabled{opacity:.4;cursor:default}
+.tb.active{border-color:var(--gold);color:var(--gold)}
 .tb b{font-size:15px;line-height:22px}
 .ov{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(14,22,27,.74);z-index:10}
 .ov.on{display:flex}
@@ -63,6 +64,19 @@ button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
 .legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:14px;margin-bottom:8px}
 .legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:5px}
+.hint-cost{background:#f8dcd4;color:#7a2416;border:1px solid #e0553a;border-radius:10px;padding:9px 12px;font-size:14px;font-weight:600;margin:10px 0;line-height:1.35;display:flex;align-items:center;gap:8px}
+.hint-cost svg{width:22px;height:22px;flex:none;stroke:#e0553a;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hint-steps{max-height:175px;overflow-y:auto;background:#e9dab6;border-radius:10px;padding:6px 8px;margin:10px 0;font-size:14px}
+.hint-step-item{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border-radius:6px;margin:2px 0;color:var(--paper-ink)}
+.hint-step-item.cur{background:#fdf6e6;font-weight:700;box-shadow:inset 0 0 0 1.5px var(--gold)}
+.hint-step-item .badge{display:inline-block;padding:1px 7px;border-radius:999px;background:#33505c;color:#e7f4fb;font-size:12px;font-weight:700}
+.hint-hud{position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:rgba(27,40,48,.94);border:1.5px solid var(--gold);color:var(--ink);padding:4px 10px 4px 12px;border-radius:999px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.5);z-index:5;max-width:94%;white-space:nowrap}
+.hint-hud .hh-icon{font-size:14px;line-height:1}
+.hint-hud .hh-txt{font-weight:600;color:var(--gold);overflow:hidden;text-overflow:ellipsis}
+.hh-btn{border:0;border-radius:999px;background:var(--gold);color:#2b2118;font-size:12px;font-weight:700;padding:4px 10px;cursor:pointer;min-height:26px}
+.hh-btn:hover{background:#fcd172}
+.hh-close{border:0;background:transparent;color:var(--ink2);font-size:15px;padding:2px 6px;cursor:pointer;border-radius:50%;line-height:1}
+.hh-close:hover{color:var(--ink)}
 #toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#0e171c;color:var(--ink);padding:10px 16px;border-radius:10px;font-size:15px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
 #toast.on{opacity:1}
 #debug{position:fixed;left:6px;top:6px;z-index:30;font:12px/1.3 ui-monospace,Consolas,monospace;background:rgba(0,0,0,.6);color:#9f9;padding:4px 6px;border-radius:6px;display:none;white-space:pre;pointer-events:none}
@@ -72,9 +86,9 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
   #hud{flex-direction:column;align-items:flex-start;padding:10px 6px 4px 12px}
   #quake{align-items:flex-start;justify-content:flex-start;padding:4px 6px 4px 12px;flex-wrap:wrap}
   #bar{flex-direction:column;padding:8px 10px 8px 4px;overflow:auto}
-  .tb{min-height:44px;flex-direction:row;gap:6px}
+  .tb{min-height:44px;flex-direction:row;gap:6px;min-width:unset;max-width:unset}
 }
-@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on{animation:none}}
+@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on{animation:none}.hint-hud{box-shadow:0 2px 6px rgba(0,0,0,.5)}}
 </style>
 </head>
 <body>
@@ -88,10 +102,19 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
     </div>
   </header>
   <div id="quake" class="calm" aria-live="polite"><span class="dot"></span><span id="tQuake">…</span><span id="bot"></span></div>
-  <main id="stage"><canvas id="cv" role="img" aria-label="Puzzle board"></canvas></main>
+  <main id="stage">
+    <canvas id="cv" role="img" aria-label="Puzzle board"></canvas>
+    <div id="hintHud" class="hint-hud" style="display:none" role="region" aria-label="Hint">
+      <span class="hh-icon" aria-hidden="true">💡</span>
+      <span id="tHintStep" class="hh-txt"></span>
+      <button id="bStepHint" class="hh-btn"></button>
+      <button id="bCloseHint" class="hh-close" aria-label="Dismiss hint">✕</button>
+    </div>
+  </main>
   <footer id="bar">
     <button class="tb" id="bUndo"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span id="lUndo">Undo</span></button>
     <button class="tb" id="bRestart"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/></svg><span id="lRestart">Restart</span></button>
+    <button class="tb" id="bHint" aria-label="Hint"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-6 6c0 2.2 1.2 3.8 2 5v2h8v-2c.8-1.2 2-2.8 2-5a6 6 0 0 0-6-6z"/></svg><span id="lHint">Hint</span></button>
     <button class="tb" id="bMenu"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span id="lMenu">Menu</span></button>
     <button class="tb" id="bSound" aria-label="Sound"><svg viewBox="0 0 24 24" id="iSound"></svg><span id="lSound">Sound</span></button>
     <button class="tb" id="bLang" aria-label="Language"><b id="vLang">TR</b><span id="lLang">Türkçe</span></button>
@@ -125,6 +148,19 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
     <button class="btn" id="bShare" style="text-align:center"></button>
     <div class="row"><button class="btn alt" id="bNext"></button><button class="btn alt" id="bRMenu"></button></div>
     <p class="note" id="rNote"></p>
+  </div>
+</div>
+<div class="ov" id="hint" role="dialog" aria-modal="true" aria-labelledby="hiTitle">
+  <div class="panel">
+    <h2 id="hiTitle"></h2>
+    <div class="sub" id="hiSub"></div>
+    <div id="hiCost" class="hint-cost">
+      <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+      <span id="tHiCost"></span>
+    </div>
+    <div id="hiSteps" class="hint-steps"></div>
+    <button class="btn" id="bHiShow" style="text-align:center"></button>
+    <button class="btn alt" id="bHiClose" style="text-align:center"></button>
   </div>
 </div>
 <div id="toast" role="status"></div>
@@ -548,6 +584,12 @@ const STR = {
     resLine: '{m} moves · par {p}', share: 'Share result', next: 'Next level', toEndless: 'Play endless', back: 'Menu',
     copied: 'Copied to clipboard', tomorrow: 'A new map tomorrow.', endlessNote: 'Level {n} done.', movesWord: 'moves',
     gotIt: 'Got it', solvedOn: 'Solved', playTag: 'same map for everyone', board: 'Puzzle board',
+    hint: 'Hint', hintTitle: 'Solution Path', hintDesc: 'Reveal the sequence of moves to connect the map.',
+    hintCostWarn: 'Cost: Score capped at 1 star. 3-star rating forfeited for this map.',
+    hintShowBtn: 'Show Path on Board', hintStepBtn: 'Play Move', hintCloseBtn: 'Close', hintUsedTag: 'Hint used (1★)',
+    hintStepMsg: 'Step {cur}/{tot}: {desc}', hintTangled: 'Board is tangled. Restart map to view initial solution path?',
+    hintRestartBtn: 'Restart & Show Path', hintRow: 'Row {r} {dir}', hintCol: 'Col {c} {dir}',
+    dirRight: 'Right →', dirLeft: 'Left ←', dirDown: 'Down ↓', dirUp: 'Up ↑',
     h1: 'Drag a row sideways or a column up or down (or tap the arrows). Tiles wrap around the edge.',
     h2: 'Villages, mountains, the spring and the caravanserai never move: tiles slide past them.',
     h3: 'Lead the river from the spring and the road from the caravanserai to every village that asks for them.',
@@ -563,6 +605,12 @@ const STR = {
     resLine: '{m} hamle · hedef {p}', share: 'Sonucu paylaş', next: 'Sonraki bölüm', toEndless: 'Sonsuz moda geç', back: 'Menü',
     copied: 'Panoya kopyalandı', tomorrow: 'Yarın yeni bir harita.', endlessNote: '{n}. bölüm tamam.', movesWord: 'hamle',
     gotIt: 'Anladım', solvedOn: 'Çözüldü', playTag: 'herkes için aynı harita', board: 'Bulmaca tahtası',
+    hint: 'İpucu', hintTitle: 'Çözüm Yolu', hintDesc: 'Haritayı bağlayan hamle sırasını gör.',
+    hintCostWarn: 'Bedel: En fazla 1 yıldız kazanırsın. Bu haritada 3 yıldız hakkı kaybolur.',
+    hintShowBtn: 'Tahtada Yolu Göster', hintStepBtn: 'Hamleyi Oyna', hintCloseBtn: 'Kapat', hintUsedTag: 'İpucu kullanıldı (1★)',
+    hintStepMsg: 'Adım {cur}/{tot}: {desc}', hintTangled: 'Tahta karıştı. Baştan başlayıp çözüm yolunu görmek ister misin?',
+    hintRestartBtn: 'Baştan Başla & Yolu Gör', hintRow: '{r}. Satır {dir}', hintCol: '{c}. Sütun {dir}',
+    dirRight: 'Sağa →', dirLeft: 'Sola ←', dirDown: 'Aşağı ↓', dirUp: 'Yukarı ↑',
     h1: 'Bir satırı yana, bir sütunu yukarı ya da aşağı sürükle (ya da oklara dokun). Taşlar kenardan dolanır.',
     h2: 'Köyler, dağlar, pınar ve kervansaray yerinden oynamaz: taşlar onların yanından kayar.',
     h3: 'Nehri pınardan, yolu kervansaraydan, onları isteyen her köye ulaştır.',
@@ -629,10 +677,11 @@ const sfx = {
   win() { if (!audio()) return; const t0 = AC.currentTime; [293.7, 311.1, 370, 392, 440, 587.3].forEach((f, i) => pluck(t0 + i * 0.09, f, 0.16)); tone(t0 + 0.55, 587.3, 1.2, 'sine', 0.12); tone(t0 + 0.55, 880, 1.2, 'sine', 0.07); },
   click() { if (!audio()) return; tone(AC.currentTime, 900, 0.04, 'square', 0.04); },
   undo() { if (!audio()) return; noise(AC.currentTime, 0.1, 'bandpass', 500, 1300, 0.16, 1.2); },
+  hint() { if (!audio()) return; const t0 = AC.currentTime; [440, 554.4, 659.3, 880].forEach((f, i) => { tone(t0 + i * 0.07, f, 0.35, 'sine', 0.12); }); },
 };
 
 // ---------------------------------------------------------------- game state
-const G = { mode: 'daily', seed: '', level: 1, pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], bot: null, celebrateAt: 0, place: '' };
+const G = { mode: 'daily', seed: '', level: 1, pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], bot: null, celebrateAt: 0, place: '', hintActive: false, hintUsed: false, hintPlan: null, hintStep: 0 };
 let anims = [], shake = 0, particles = [], botTimer = 0, disp = null;
 
 function starsFor(moves, par) { return moves <= par ? 3 : moves <= par + 2 ? 2 : 1; }
@@ -641,6 +690,7 @@ function nextQuake() { return G.pz && !G.won ? G.pz.quakes[G.moves % G.pz.quakes
 function startPuzzle(mode, arg, firstHelp = true) {
   clearTimeout(botTimer); G.bot = null;
   G.mode = mode; G.state = 'loading'; G.pz = null; disp = null; anims = []; particles = []; closeAll();
+  G.hintActive = false; G.hintUsed = false; G.hintPlan = null; G.hintStep = 0; updateHintHud();
   if (mode === 'daily') G.seed = String(arg); else { G.level = arg; G.seed = 'L' + arg; }
   updateHud();
   setTimeout(() => {
@@ -680,7 +730,23 @@ function doMove(m) {
     if (isSolved(pz, toVals(pz, cur), 0)) G.won = true;
   }
   G.ids = cur;
-  if (G.won) G.stars = starsFor(G.moves, pz.par);
+  if (G.won) G.stars = G.hintUsed ? 1 : starsFor(G.moves, pz.par);
+  if (G.hintActive && G.hintPlan) {
+    if (m === G.hintPlan[G.hintStep]) {
+      G.hintStep++;
+      if (G.hintStep >= G.hintPlan.length) G.hintActive = false;
+    } else {
+      setTimeout(() => {
+        if (G.hintActive && !G.won && G.state === 'play') {
+          const np = getSolutionPath();
+          if (np && np.length) { G.hintPlan = np; G.hintStep = 0; }
+          else G.hintActive = false;
+          updateHintHud();
+        }
+      }, (DUR.slide + DUR.quake) * 1.1);
+    }
+  }
+  updateHintHud();
   sfx.slide(); updateHud();
   return true;
 }
@@ -688,17 +754,24 @@ function undo() {
   if (!G.pz || G.won || G.state !== 'play' || !G.undo.length || G.bot) return;
   flushAnims();
   const u = G.undo.pop(); G.ids = u.ids; G.moves = u.moves;
+  if (G.hintActive && G.hintPlan && G.hintStep > 0) G.hintStep--;
+  updateHintHud();
   sfx.undo(); settle(true); updateHud();
 }
 function restart() {
   if (!G.pz || G.bot) return;
   flushAnims(); closeAll();
   G.ids = G.pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.state = 'play'; particles = [];
+  G.hintActive = false; G.hintUsed = false; G.hintPlan = null; G.hintStep = 0;
+  updateHintHud();
   sfx.undo(); settle(true); updateHud();
 }
 function win() {
   const pz = G.pz;
   G.state = 'won';
+  G.hintActive = false;
+  updateHintHud();
+  if (G.hintUsed) G.stars = 1;
   if (G.mode === 'daily') { if (!store.get('daily.' + G.seed, null)) store.set('daily.' + G.seed, { m: G.moves, s: G.stars }); }
   else store.set('endless', Math.max(store.get('endless', 1), G.level + 1));
   G.celebrateAt = performance.now();
@@ -987,6 +1060,13 @@ function frame(now) {
     const r = nq >> 1, a = A && A.kind === 'quake' ? 0.28 : 0.1 + 0.06 * Math.sin(now / 200);
     ctx.fillStyle = `rgba(214,70,40,${a})`; ctx.fillRect(ox, oy + r * cs, BW, cs);
   }
+  if (G.hintActive && G.hintPlan && G.hintStep < G.hintPlan.length && G.state === 'play' && !anims.length) {
+    const hm = G.hintPlan[G.hintStep], hl = hm >> 1;
+    const ha = RM ? 0.22 : 0.16 + 0.08 * Math.sin(now / 180);
+    ctx.fillStyle = `rgba(242,179,61,${ha})`;
+    if (hl < N) ctx.fillRect(ox, oy + hl * cs, BW, cs);
+    else ctx.fillRect(ox + (hl - N) * cs, oy, cs, BW);
+  }
   if (hover >= 0 && !anims.length && G.state === 'play' && !G.bot) {
     ctx.fillStyle = 'rgba(255,255,255,.1)';
     ctx.fillRect(ox, oy + ((hover / N) | 0) * cs, BW, cs); ctx.fillRect(ox + (hover % N) * cs, oy, cs, BW);
@@ -1057,6 +1137,25 @@ function frame(now) {
     const col = l === qRow ? 'rgba(255,140,110,.95)' : hot ? 'rgba(243,234,216,.95)' : 'rgba(243,234,216,.42)';
     if (l < N) { const cy = oy + l * cs + cs / 2; chevron(ox - gx, cy, -1, false, chs, col); chevron(ox + BW + gx, cy, 1, false, chs, col); }
     else { const cx = ox + (l - N) * cs + cs / 2; chevron(cx, oy - gx, -1, true, chs, col); chevron(cx, oy + BW + gx, 1, true, chs, col); }
+  }
+  if (G.hintActive && G.hintPlan && G.hintStep < G.hintPlan.length && G.state === 'play') {
+    const hm = G.hintPlan[G.hintStep], hl = hm >> 1, hd = moveDir(hm);
+    let hx = 0, hy = 0, hVert = false;
+    if (hl < N) {
+      hy = oy + hl * cs + cs / 2;
+      hx = hd > 0 ? ox + BW + gx : ox - gx;
+      hVert = false;
+    } else {
+      hx = ox + (hl - N) * cs + cs / 2;
+      hy = hd > 0 ? oy + BW + gx : oy - gx;
+      hVert = true;
+    }
+    const pulseR = chs * (RM ? 1.5 : 1.35 + 0.35 * Math.sin(now / 160));
+    ctx.save();
+    ctx.strokeStyle = '#f2b33d'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(hx, hy, pulseR, 0, Math.PI * 2); ctx.stroke();
+    chevron(hx, hy, hd, hVert, chs * 1.35, '#f2b33d');
+    ctx.restore();
   }
   if (qRow >= 0) {
     const cy = oy + qRow * cs + cs / 2, tx = qDir > 0 ? ox + BW + pad * 0.5 : ox - pad * 0.5, sz = Math.max(6, pad * 0.75);
@@ -1130,6 +1229,7 @@ cv.addEventListener('pointerleave', () => { hover = -1; });
 addEventListener('keydown', (e) => {
   audio();
   if ($('help').classList.contains('on') && (e.key === 'Escape' || e.key === 'Enter')) { closeHelp(); e.preventDefault(); return; }
+  if ($('hint').classList.contains('on') && (e.key === 'Escape' || e.key === 'Enter')) { closeHint(); e.preventDefault(); return; }
   if (document.querySelector('.ov.on')) return;
   if (G.state !== 'play' || G.bot) return;
   const k = e.key.toLowerCase();
@@ -1142,6 +1242,7 @@ addEventListener('keydown', (e) => {
   if (k === 'z' || k === 'backspace') { undo(); e.preventDefault(); }
   else if (k === 'r') restart();
   else if (k === 'm') toggleMute();
+  else if (k === 'h') openHint();
   else if (k === 'escape') openMenu();
 });
 
@@ -1150,16 +1251,18 @@ function updateHud() {
   $('tMode').textContent = G.mode === 'daily' ? t('dailyTag', { d: seedLabel(G.seed) }) + (G.place && G.pz ? ' · ' + G.place : '') : t('endless') + ' · ' + t('level', { n: G.level });
   $('lMoves').textContent = t('moves'); $('lPar').textContent = t('par');
   $('vMoves').textContent = G.moves; $('vPar').textContent = G.pz ? G.pz.par : '–';
-  const st = G.pz ? (G.won ? G.stars : starsFor(G.moves, G.pz.par)) : 0;
+  const st = G.pz ? (G.won ? G.stars : (G.hintUsed ? 1 : starsFor(G.moves, G.pz.par))) : 0;
   $('vStars').innerHTML = [0, 1, 2].map((i) => starSvg(i < st, 18)).join('');
   const q = $('quake'), nq = nextQuake();
   if (G.state === 'loading') { q.className = 'calm'; $('tQuake').textContent = t('loading'); }
   else if (nq < 0) { q.className = 'calm'; $('tQuake').textContent = t('calm'); }
   else { q.className = ''; $('tQuake').textContent = t('quakeNext', { r: (nq >> 1) + 1, a: moveDir(nq) > 0 ? '→' : '←' }); }
   const b = $('bot'); b.style.display = G.bot ? 'inline-block' : 'none'; b.textContent = G.bot ? 'BOT ' + G.bot.strategy.toUpperCase() : '';
-  ['Undo', 'Restart', 'Menu'].forEach((k) => ($('l' + k).textContent = t(k.toLowerCase())));
+  ['Undo', 'Restart', 'Menu', 'Hint'].forEach((k) => ($('l' + k).textContent = t(k.toLowerCase())));
   $('bUndo').disabled = !G.undo.length || G.won || !!G.bot;
   $('bRestart').disabled = !G.pz || !!G.bot;
+  $('bHint').disabled = !G.pz || G.won || !!G.bot;
+  $('bHint').classList.toggle('active', !!(G.hintActive && G.hintPlan));
   $('lSound').textContent = t('sound'); $('iSound').innerHTML = muted ? ICON_OFF : ICON_ON;
   $('bSound').setAttribute('aria-pressed', String(!muted));
   $('vLang').textContent = lang === 'tr' ? 'EN' : 'TR'; $('lLang').textContent = lang === 'tr' ? 'English' : 'Türkçe';
@@ -1189,14 +1292,14 @@ function openHelp() {
   $('help').classList.add('on'); if (!COARSE) setTimeout(() => $('bHelpOk').focus(), 30);
 }
 function closeHelp() { $('help').classList.remove('on'); if (helpReturn === 'menu') openMenu(); }
-function shareText() { return `Fay Hattı ${G.mode === 'daily' ? seedLabel(G.seed) : '#' + G.level} ${'⭐'.repeat(G.stars)} ${G.moves} ${t('movesWord')}`; }
+function shareText() { return `Fay Hattı ${G.mode === 'daily' ? seedLabel(G.seed) : '#' + G.level} ${'⭐'.repeat(G.stars)} ${G.moves} ${t('movesWord')}` + (G.hintUsed ? ' 💡' : ''); }
 function shareUrl() { return CANON + (G.mode === 'daily' ? '?seed=' + G.seed : '?level=' + G.level); }
 function showResult() {
   if (!G.won) return;
   closeAll();
   $('rTitle').textContent = t('solvedT');
   $('rStars').innerHTML = [0, 1, 2].map((i) => starSvg(i < G.stars, 46)).join('');
-  $('rLine').textContent = t('resLine', { m: G.moves, p: G.pz.par });
+  $('rLine').textContent = t('resLine', { m: G.moves, p: G.pz.par }) + (G.hintUsed ? ' · ' + t('hintUsedTag') : '');
   $('rShare').textContent = shareText() + '\n' + shareUrl();
   $('bShare').textContent = t('share');
   $('bNext').textContent = G.mode === 'daily' ? t('toEndless') : t('next');
@@ -1214,9 +1317,89 @@ async function share() {
   catch (e) { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); toast(t('copied')); } catch (e2) {} ta.remove(); }
 }
 function toggleMute() { muted = !muted; store.set('mute', muted); if (AC) master.gain.value = muted ? 0 : 0.55; updateHud(); fillMenu(); if (!muted) sfx.click(); }
-function toggleLang() { lang = lang === 'tr' ? 'en' : 'tr'; store.set('lang', lang); updateHud(); fillMenu(); if ($('result').classList.contains('on')) showResult(); if ($('help').classList.contains('on')) { const r = helpReturn; openHelp(); helpReturn = r; } }
+function toggleLang() { lang = lang === 'tr' ? 'en' : 'tr'; store.set('lang', lang); updateHud(); fillMenu(); updateHintHud(); if ($('result').classList.contains('on')) showResult(); if ($('help').classList.contains('on')) { const r = helpReturn; openHelp(); helpReturn = r; } if ($('hint').classList.contains('on')) openHint(); }
 
-$('bUndo').onclick = undo; $('bRestart').onclick = restart; $('bMenu').onclick = () => { sfx.click(); openMenu(); };
+// ---------------------------------------------------------------- hint system
+function formatMove(m) {
+  const line = m >> 1, dir = m & 1 ? -1 : 1;
+  if (line < N) return t('hintRow', { r: line + 1, dir: dir > 0 ? t('dirRight') : t('dirLeft') });
+  return t('hintCol', { c: line - N + 1, dir: dir > 0 ? t('dirDown') : t('dirUp') });
+}
+function getSolutionPath() {
+  if (!G.pz) return null;
+  if (G.moves === 0 && G.pz.solution && G.pz.solution.length) return G.pz.solution.slice();
+  const v0 = toVals(G.pz, G.ids);
+  if (isSolved(G.pz, v0, 0)) return [];
+  const sol = solveOptimal(G.pz, v0, G.moves, 8, 2e5);
+  if (sol && sol.path && sol.path.length) return sol.path;
+  const bm = solveBeam(G.pz, v0, G.moves, 11);
+  if (bm && bm.path && bm.path.length) return bm.path;
+  return null;
+}
+function openHint() {
+  if (!G.pz || G.won || !!G.bot) return;
+  sfx.click(); closeAll();
+  const plan = getSolutionPath();
+  $('hiTitle').textContent = t('hintTitle');
+  $('tHiCost').textContent = t('hintCostWarn');
+  $('bHiClose').textContent = t('hintCloseBtn');
+  if (plan && plan.length) {
+    $('hiSub').textContent = t('hintDesc');
+    let html = '';
+    const curIdx = (G.hintActive && G.hintPlan && G.hintPlan.length === plan.length) ? G.hintStep : 0;
+    for (let i = 0; i < plan.length; i++) {
+      html += `<div class="hint-step-item${i === curIdx ? ' cur' : ''}"><span class="badge">${i + 1}</span><span>${formatMove(plan[i])}</span></div>`;
+    }
+    $('hiSteps').innerHTML = html;
+    $('bHiShow').textContent = t('hintShowBtn');
+    $('bHiShow').style.display = 'block';
+    $('bHiShow').onclick = () => {
+      sfx.hint();
+      G.hintActive = true;
+      G.hintUsed = true;
+      G.hintPlan = plan;
+      G.hintStep = curIdx;
+      closeAll();
+      updateHintHud();
+      updateHud();
+      $('live').textContent = t('hintTitle') + ': ' + t('hintStepMsg', { cur: G.hintStep + 1, tot: plan.length, desc: formatMove(plan[G.hintStep]) });
+    };
+  } else if (plan && plan.length === 0) {
+    $('hiSub').textContent = t('solvedT');
+    $('hiSteps').innerHTML = '';
+    $('bHiShow').textContent = t('gotIt');
+    $('bHiShow').style.display = 'block';
+    $('bHiShow').onclick = closeAll;
+  } else {
+    $('hiSub').textContent = t('hintTangled');
+    $('hiSteps').innerHTML = '';
+    $('bHiShow').textContent = t('hintRestartBtn');
+    $('bHiShow').style.display = 'block';
+    $('bHiShow').onclick = () => { restart(); setTimeout(openHint, 50); };
+  }
+  $('hint').classList.add('on');
+  if (!COARSE) setTimeout(() => $('bHiShow').focus(), 30);
+}
+function closeHint() { $('hint').classList.remove('on'); }
+function stepHint() {
+  if (!G.pz || G.state !== 'play' || G.won || !G.hintPlan) return;
+  if (G.hintStep >= G.hintPlan.length) return;
+  doMove(G.hintPlan[G.hintStep]);
+}
+function updateHintHud() {
+  const el = $('hintHud');
+  if (!el) return;
+  if (!G.hintActive || !G.hintPlan || G.hintStep >= G.hintPlan.length || G.won || G.state !== 'play') {
+    el.style.display = 'none';
+    return;
+  }
+  el.style.display = 'flex';
+  const m = G.hintPlan[G.hintStep];
+  $('tHintStep').textContent = t('hintStepMsg', { cur: G.hintStep + 1, tot: G.hintPlan.length, desc: formatMove(m) });
+  $('bStepHint').textContent = t('hintStepBtn');
+}
+
+$('bUndo').onclick = undo; $('bRestart').onclick = restart; $('bHint').onclick = openHint; $('bMenu').onclick = () => { sfx.click(); openMenu(); };
 $('bSound').onclick = toggleMute; $('mSound').onclick = toggleMute; $('bLang').onclick = toggleLang; $('mLang').onclick = toggleLang;
 $('bDaily').onclick = () => {
   sfx.click();
@@ -1226,10 +1409,13 @@ $('bDaily').onclick = () => {
 $('bEndless').onclick = () => { sfx.click(); startPuzzle('endless', store.get('endless', 1)); };
 $('bHow').onclick = () => { sfx.click(); openHelp(); };
 $('bHelpOk').onclick = closeHelp;
+$('bHiClose').onclick = closeHint;
+$('bStepHint').onclick = stepHint;
+$('bCloseHint').onclick = () => { G.hintActive = false; updateHintHud(); };
 $('bShare').onclick = share;
 $('bNext').onclick = () => { sfx.click(); startPuzzle('endless', G.mode === 'daily' ? store.get('endless', 1) : G.level + 1); };
 $('bRMenu').onclick = () => { sfx.click(); openMenu(); };
-document.querySelectorAll('.ov').forEach((o) => o.addEventListener('click', (e) => { if (e.target === o && o.id !== 'menu') { if (o.id === 'help') closeHelp(); else o.classList.remove('on'); } }));
+document.querySelectorAll('.ov').forEach((o) => o.addEventListener('click', (e) => { if (e.target === o && o.id !== 'menu') { if (o.id === 'help') closeHelp(); else if (o.id === 'hint') closeHint(); else o.classList.remove('on'); } }));
 
 // ---------------------------------------------------------------- debug overlay, API, boot
 let fpsN = 0, fpsT = 0, fps = 0;
@@ -1248,6 +1434,8 @@ window.fayHatti = {
   get bot() { return G.bot ? { strategy: G.bot.strategy, planned: G.bot.plan.length, played: G.bot.i } : null; },
   get genMs() { return G.genMs; }, get fps() { return fps; }, get plan() { return G.pz ? G.pz.solution.slice() : null; },
   get board() { if (!G.pz) return null; const v = toVals(G.pz, G.ids), out = []; for (let r = 0; r < N; r++) { const row = []; for (let c = 0; c < N; c++) { const x = v[r * N + c], k = x >> 4; row.push(k === KR ? 'r' + (x & 15).toString(16) : k === KD ? 'd' + (x & 15).toString(16) : GLYPH[k]); } out.push(row.join(' ')); } return out; },
+  get hint() { return G.hintPlan ? { active: G.hintActive, used: G.hintUsed, step: G.hintStep, total: G.hintPlan.length, move: G.hintPlan[G.hintStep] } : null; },
+  showHint: () => openHint(), applyHintStep: () => stepHint(),
   move: (m) => doMove(m), undo, restart, start: (mode, arg) => startPuzzle(mode, arg, false),
 };
 addEventListener('resize', layout);
