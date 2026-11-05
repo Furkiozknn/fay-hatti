@@ -515,7 +515,7 @@ body.high-contrast .stat .par-tag.over{background:transparent;color:#f5eedd;bord
 // Pure puzzle engine: no DOM. tools/sim.mjs extracts this block to test it in Node.
 const N = 5, NN = 25;
 // tile value = kind << 4 | low nibble (edge mask N=1 E=2 S=4 W=8 for paths, need bits for villages)
-const KE = 0, KR = 1, KD = 2, KV = 3, KS = 4, KH = 5, KM = 6, KF = 7; // empty, river, road, village, spring, han, mountain, ferry (tile-ferry card)
+const KE = 0, KR = 1, KD = 2, KV = 3, KS = 4, KH = 5, KM = 6, KF = 7, KB = 8; // empty, river, road, village, spring, han, mountain, ferry (tile-ferry card), bridge (tile-bridge card)
 const NEED_RIVER = 1, NEED_ROAD = 2;
 const DR = [-1, 0, 1, 0], DC = [0, 1, 0, -1], OPP = [2, 3, 0, 1];
 const NB = new Int8Array(NN * 4);
@@ -527,7 +527,7 @@ for (let i = 0; i < NN; i++) {
   }
 }
 const tv = (k, m) => (k << 4) | m;
-const isFixedV = (v) => { const k = v >> 4; return k >= KV && k !== KF; };
+const isFixedV = (v) => { const k = v >> 4; return k >= KV && k <= KM; }; // bridge KB and ferry KF are movable
 
 function rng32(seed) {
   let a = seed >>> 0;
@@ -544,12 +544,12 @@ function hashStr(s) {
   return h >>> 0;
 }
 
-// Connector masks per tile value for each network type.
+// Connector masks per tile value for each network type (KB allows orthogonal crossings without mixing).
 const RIV = new Uint8Array(256), ROD = new Uint8Array(256);
 for (let v = 0; v < 256; v++) {
   const k = v >> 4;
-  RIV[v] = k === KR ? v & 15 : k === KS ? 15 : k === KV && v & NEED_RIVER ? 15 : k === KF ? (v & 15 || 15) : 0;
-  ROD[v] = k === KD ? v & 15 : k === KH ? 15 : k === KV && v & NEED_ROAD ? 15 : 0;
+  RIV[v] = k === KR ? v & 15 : k === KS ? 15 : k === KV && v & NEED_RIVER ? 15 : k === KF ? (v & 15 || 15) : k === KB ? ((v & 15) === 10 ? 10 : 5) : 0;
+  ROD[v] = k === KD ? v & 15 : k === KH ? 15 : k === KV && v & NEED_ROAD ? 15 : k === KB ? ((v & 15) === 10 ? 5 : 10) : 0;
 }
 
 const STK = new Int8Array(32);
@@ -1077,6 +1077,17 @@ const CARDS = [
     apply: () => {},
   },
   {
+    id: 'tile-bridge',
+    type: 'gameplay',
+    implemented: true,
+    title: { en: 'Bridge Tile', tr: 'Köprü Karosu' },
+    desc: {
+      en: 'Stone arch bridge tiles allow river water and caravan roads to cross orthogonally without mixing (endless mode).',
+      tr: 'Taş kemer köprü karoları nehir suyu ve kervan yollarının karışmadan dik kesişmesine olanak tanır (sonsuz mod).'
+    },
+    apply: () => {},
+  },
+  {
     id: 'hint-glow',
     type: 'gameplay',
     implemented: true,
@@ -1173,7 +1184,7 @@ const STR = {
     h4: 'After each move a small quake shifts one row by itself. The red band shows which row is next.',
     h5: 'Solve within par for 3 stars. Keys: WASD picks tile, arrows shift, H hint, Z undo, R restart, C contrast.',
     hFerry: 'Ferry tiles teleport river water across the map to connected ferry ports.',
-    lRiver: 'river', lRoad: 'road', lHanStop: 'caravan stop', lVillage: 'village', lMount: 'mountain', lSpring: 'spring', lHan: 'caravanserai', lFerry: 'ferry',
+    lRiver: 'river', lRoad: 'road', lBridge: 'bridge', lHanStop: 'caravan stop', lVillage: 'village', lMount: 'mountain', lSpring: 'spring', lHan: 'caravanserai', lFerry: 'ferry',
     time: 'Time', parTime: 'Par time', parTimeTag: 'par {s}s', parTimeBeat: 'Under par time!', bestTime: 'Best: {s}s', newBestTime: 'New best!',
     waterConnected: 'Water reached village!',
     motes: 'Dust motes',
@@ -1216,7 +1227,7 @@ const STR = {
     h4: 'Her hamleden sonra küçük bir deprem bir satırı kendiliğinden kaydırır. Kırmızı bant sıradaki satırı gösterir.',
     h5: 'Hedef hamlede çöz, 3 yıldız al. Tuşlar: WASD taş seçer, oklar kaydırır, H ipucu, Z geri alır, R baştan, C kontrast.',
     hFerry: 'Feribot karoları nehir suyunu haritanın öbür ucundaki bağlı feribota taşır.',
-    lRiver: 'nehir', lRoad: 'yol', lHanStop: 'kervansaray durağı', lVillage: 'köy', lMount: 'dağ', lSpring: 'pınar', lHan: 'kervansaray', lFerry: 'feribot',
+    lRiver: 'nehir', lRoad: 'yol', lBridge: 'köprü', lHanStop: 'kervansaray durağı', lVillage: 'köy', lMount: 'dağ', lSpring: 'pınar', lHan: 'kervansaray', lFerry: 'feribot',
     time: 'Süre', parTime: 'Hedef süre', parTimeTag: 'hedef {s} sn', parTimeBeat: 'Hedef sürenin altında!', bestTime: 'En iyi: {s} sn', newBestTime: 'Yeni rekor!',
     waterConnected: 'Köye su ulaştı!',
     motes: 'Toz zerrecikleri',
@@ -1499,6 +1510,13 @@ const sfx = {
     tone(t0 + 0.02, 220, 0.42, 'sine', 0.14);
     noise(t0, 0.25, 'lowpass', 400, 120, 0.08, 1.5);
   },
+  bridge() {
+    if (!audio()) return;
+    const t0 = AC.currentTime;
+    tone(t0, 329.63, 0.28, 'sine', 0.2); // E4 warm stone arch resonance
+    tone(t0 + 0.03, 493.88, 0.22, 'triangle', 0.12); // B4 harmonic overtone
+    noise(t0, 0.14, 'bandpass', 800, 350, 0.1, 2.2); // water under arch
+  },
   // Resonant Anatolian camel bell (kervan çanı): dual-tone bronze chime (E5: 659.3 Hz, B5: 987.8 Hz)
   caravanBell() {
     if (!audio()) return;
@@ -1699,6 +1717,8 @@ function resumeTimer() {
   }
 }
 const isKervansarayActive = () => G.mode !== 'daily' && (G.mode === 'endless' || !!(G.pz && G.pz.cfg && G.pz.cfg.kervansaray));
+// Gameplay card: tile-bridge (active in endless/level modes, never in daily)
+const isBridgeActive = () => G.mode !== 'daily' && (G.mode === 'endless' || G.mode === 'level' || !!(G.pz && G.pz.cfg && G.pz.cfg.bridge));
 let prevConnectedStops = 0;
 let anims = [], shake = 0, quakeTrauma = 0, quakeDir = 1, quakeRow = 0, particles = [], ripples = [], botTimer = 0, disp = null;
 let ripplesEnabled = true;
@@ -2024,7 +2044,10 @@ function doMove(m) {
     }
   }
   updateHintHud();
-  sfx.slide(); vibe(22); updateHud();
+  const line = m >> 1;
+  const hasBridge = isBridgeActive() && pz && lineCells(pz.fixed, line).some((i) => (toVals(pz, cur)[i] >> 4) === KB);
+  if (hasBridge) sfx.bridge(); else sfx.slide();
+  vibe(22); updateHud();
   tutOnMove();
   return true;
 }
@@ -2367,6 +2390,125 @@ function drawFerryDetail(c, s, highCon, th) {
   c.fillStyle = '#d6453d'; c.fillRect(cx - s * 0.015, cy - s * 0.07, s * 0.03, s * 0.035);
   c.fillStyle = '#2b2118'; c.fillRect(cx - s * 0.015, cy - s * 0.075, s * 0.03, s * 0.012);
 }
+// Stone arch bridge tile: river flows underneath; stone arch bridge with road deck crosses above (tile-bridge card)
+function drawBridgeTile(c, s, m, highCon, th) {
+  const rivMask = (m === 10 ? 10 : 5), rodMask = (m === 10 ? 5 : 10);
+  // 1. River channel & water underneath
+  if (highCon) {
+    strokePath(c, rivMask, s, s * 0.44, '#041e2f');
+    strokePath(c, rivMask, s, s * 0.32, '#0077b6');
+    strokePath(c, rivMask, s, s * 0.22, '#00b4d8');
+    strokePath(c, rivMask, s, s * 0.06, '#ffffff');
+  } else if (th === 'gece') {
+    strokePath(c, rivMask, s, s * 0.46, 'rgba(25,100,165,.35)');
+    strokePath(c, rivMask, s, s * 0.32, '#124c77');
+    strokePath(c, rivMask, s, s * 0.22, '#30bde2');
+    c.save(); c.translate(-s * 0.025, -s * 0.025); strokePath(c, rivMask, s, s * 0.05, 'rgba(230,250,255,.55)'); c.restore();
+  } else if (th === 'kagit') {
+    strokePath(c, rivMask, s, s * 0.42, '#18649c');
+    c.save(); c.translate(0, s * 0.015); strokePath(c, rivMask, s, s * 0.3, 'rgba(20,50,80,.25)'); c.restore();
+    strokePath(c, rivMask, s, s * 0.28, '#268ec7');
+    strokePath(c, rivMask, s, s * 0.16, '#46bfe0');
+  } else {
+    const isKrd = G.biome === 'karadeniz', isEge = G.biome === 'ege', isK = G.biome === 'kapadokya';
+    if (isKrd) {
+      strokePath(c, rivMask, s, s * 0.44, 'rgba(40,110,90,.38)');
+      strokePath(c, rivMask, s, s * 0.3, '#196b75');
+      strokePath(c, rivMask, s, s * 0.22, '#2ea8b8');
+      c.save(); c.translate(-s * 0.03, -s * 0.03); strokePath(c, rivMask, s, s * 0.05, 'rgba(235,255,255,.32)'); c.restore();
+    } else if (isEge) {
+      strokePath(c, rivMask, s, s * 0.44, 'rgba(92,126,56,.45)');
+      strokePath(c, rivMask, s, s * 0.3, '#1c7295');
+      strokePath(c, rivMask, s, s * 0.22, '#2bb1c9');
+      c.save(); c.translate(-s * 0.03, -s * 0.03); strokePath(c, rivMask, s, s * 0.05, 'rgba(255,255,255,.32)'); c.restore();
+    } else {
+      strokePath(c, rivMask, s, s * 0.44, isK ? 'rgba(185,92,62,.36)' : 'rgba(105,140,62,.40)');
+      strokePath(c, rivMask, s, s * 0.3, isK ? '#226b96' : '#2a6c99');
+      strokePath(c, rivMask, s, s * 0.22, isK ? '#3ca6d8' : '#3d95cf');
+      c.save(); c.translate(-s * 0.03, -s * 0.03); strokePath(c, rivMask, s, s * 0.05, isK ? 'rgba(255,255,255,.24)' : 'rgba(255,255,255,.22)'); c.restore();
+    }
+  }
+  // 2. Stone arch bridge structure across the river
+  const bw = s * 0.36;
+  if (highCon) {
+    if (rodMask === 10) {
+      c.fillStyle = '#120c04'; c.fillRect(0, s * 0.32 - 1, s, bw + 2);
+      c.fillStyle = '#ffb703'; c.fillRect(0, s * 0.32, s, bw);
+      c.fillStyle = '#120c04'; c.fillRect(0, s * 0.32, s, s * 0.05); c.fillRect(0, s * 0.68 - s * 0.05, s, s * 0.05);
+      c.setLineDash([s * 0.08, s * 0.08]); strokePath(c, rodMask, s, s * 0.1, '#120c04');
+      c.setLineDash([s * 0.04, s * 0.12]); strokePath(c, rodMask, s, s * 0.04, '#ffffff'); c.setLineDash([]);
+    } else {
+      c.fillStyle = '#120c04'; c.fillRect(s * 0.32 - 1, 0, bw + 2, s);
+      c.fillStyle = '#ffb703'; c.fillRect(s * 0.32, 0, bw, s);
+      c.fillStyle = '#120c04'; c.fillRect(s * 0.32, 0, s * 0.05, s); c.fillRect(s * 0.68 - s * 0.05, 0, s * 0.05, s);
+      c.setLineDash([s * 0.08, s * 0.08]); strokePath(c, rodMask, s, s * 0.1, '#120c04');
+      c.setLineDash([s * 0.04, s * 0.12]); strokePath(c, rodMask, s, s * 0.04, '#ffffff'); c.setLineDash([]);
+    }
+  } else if (th === 'gece') {
+    if (rodMask === 10) {
+      c.fillStyle = 'rgba(0,4,14,.55)'; c.fillRect(s * 0.34, s * 0.36, s * 0.32, s * 0.28);
+      c.fillStyle = 'rgba(10,16,26,.6)'; c.fillRect(0, s * 0.32 + 2, s, bw);
+      const bg = c.createLinearGradient(0, s * 0.32, 0, s * 0.32 + bw);
+      bg.addColorStop(0, '#263750'); bg.addColorStop(0.5, '#3b4b66'); bg.addColorStop(1, '#1e2b40');
+      c.fillStyle = bg; c.fillRect(0, s * 0.32, s, bw);
+      c.fillStyle = 'rgba(140,190,240,.35)'; c.fillRect(0, s * 0.32, s, s * 0.04); c.fillRect(0, s * 0.68 - s * 0.04, s, s * 0.04);
+      c.setLineDash([s * 0.07, s * 0.07]); strokePath(c, rodMask, s, s * 0.03, 'rgba(255,225,130,.9)'); c.setLineDash([]);
+    } else {
+      c.fillStyle = 'rgba(0,4,14,.55)'; c.fillRect(s * 0.36, s * 0.34, s * 0.28, s * 0.32);
+      c.fillStyle = 'rgba(10,16,26,.6)'; c.fillRect(s * 0.32 + 2, 0, bw, s);
+      const bg = c.createLinearGradient(s * 0.32, 0, s * 0.32 + bw, 0);
+      bg.addColorStop(0, '#263750'); bg.addColorStop(0.5, '#3b4b66'); bg.addColorStop(1, '#1e2b40');
+      c.fillStyle = bg; c.fillRect(s * 0.32, 0, bw, s);
+      c.fillStyle = 'rgba(140,190,240,.35)'; c.fillRect(s * 0.32, 0, s * 0.04, s); c.fillRect(s * 0.68 - s * 0.04, 0, s * 0.04, s);
+      c.setLineDash([s * 0.07, s * 0.07]); strokePath(c, rodMask, s, s * 0.03, 'rgba(255,225,130,.9)'); c.setLineDash([]);
+    }
+  } else if (th === 'kagit') {
+    if (rodMask === 10) {
+      c.fillStyle = 'rgba(60,40,20,.25)'; c.fillRect(0, s * 0.32 + 3, s, bw);
+      c.fillStyle = '#bca27c'; c.fillRect(0, s * 0.32, s, bw);
+      c.fillStyle = '#dfd3be'; c.fillRect(0, s * 0.32, s, s * 0.05); c.fillRect(0, s * 0.68 - s * 0.05, s, s * 0.05);
+      c.setLineDash([s * 0.07, s * 0.06]); strokePath(c, rodMask, s, s * 0.04, '#fdfbf4'); c.setLineDash([]);
+    } else {
+      c.fillStyle = 'rgba(60,40,20,.25)'; c.fillRect(s * 0.32 + 3, 0, bw, s);
+      c.fillStyle = '#bca27c'; c.fillRect(s * 0.32, 0, bw, s);
+      c.fillStyle = '#dfd3be'; c.fillRect(s * 0.32, 0, s * 0.05, s); c.fillRect(s * 0.68 - s * 0.05, 0, s * 0.05, s);
+      c.setLineDash([s * 0.07, s * 0.06]); strokePath(c, rodMask, s, s * 0.04, '#fdfbf4'); c.setLineDash([]);
+    }
+  } else {
+    // Classic Seljuk ashlar stone bridge deck
+    if (rodMask === 10) {
+      c.fillStyle = 'rgba(20,35,45,.48)'; c.fillRect(s * 0.34, s * 0.36, s * 0.32, s * 0.28);
+      c.fillStyle = 'rgba(60,45,28,.35)'; c.fillRect(0, s * 0.32 + 2, s, bw);
+      const bg = c.createLinearGradient(0, s * 0.32, 0, s * 0.32 + bw);
+      bg.addColorStop(0, '#a8936e'); bg.addColorStop(0.5, '#c79a5e'); bg.addColorStop(1, '#8e7956');
+      c.fillStyle = bg; c.fillRect(0, s * 0.32, s, bw);
+      c.fillStyle = '#f1e0b3'; c.fillRect(0, s * 0.32, s, s * 0.05);
+      c.fillStyle = '#6f5a3e'; c.fillRect(0, s * 0.32 + s * 0.05, s, s * 0.02);
+      c.fillStyle = '#6f5a3e'; c.fillRect(0, s * 0.68 - s * 0.07, s, s * 0.02);
+      c.fillStyle = '#8e7956'; c.fillRect(0, s * 0.68 - s * 0.05, s, s * 0.05);
+      c.strokeStyle = 'rgba(70,50,30,.3)'; c.lineWidth = 1;
+      for (let px = s * 0.15; px < s; px += s * 0.2) {
+        c.beginPath(); c.moveTo(px, s * 0.32); c.lineTo(px, s * 0.37); c.moveTo(px, s * 0.63); c.lineTo(px, s * 0.68); c.stroke();
+      }
+      c.setLineDash([s * 0.07, s * 0.07]); strokePath(c, rodMask, s, s * 0.03, 'rgba(248,234,200,.95)'); c.setLineDash([]);
+    } else {
+      c.fillStyle = 'rgba(20,35,45,.48)'; c.fillRect(s * 0.36, s * 0.34, s * 0.28, s * 0.32);
+      c.fillStyle = 'rgba(60,45,28,.35)'; c.fillRect(s * 0.32 + 2, 0, bw, s);
+      const bg = c.createLinearGradient(s * 0.32, 0, s * 0.32 + bw, 0);
+      bg.addColorStop(0, '#a8936e'); bg.addColorStop(0.5, '#c79a5e'); bg.addColorStop(1, '#8e7956');
+      c.fillStyle = bg; c.fillRect(s * 0.32, 0, bw, s);
+      c.fillStyle = '#f1e0b3'; c.fillRect(s * 0.32, 0, s * 0.05, s);
+      c.fillStyle = '#6f5a3e'; c.fillRect(s * 0.32 + s * 0.05, 0, s * 0.02, s);
+      c.fillStyle = '#6f5a3e'; c.fillRect(s * 0.68 - s * 0.07, 0, s * 0.02, s);
+      c.fillStyle = '#8e7956'; c.fillRect(s * 0.68 - s * 0.05, 0, s * 0.05, s);
+      c.strokeStyle = 'rgba(70,50,30,.3)'; c.lineWidth = 1;
+      for (let py = s * 0.15; py < s; py += s * 0.2) {
+        c.beginPath(); c.moveTo(s * 0.32, py); c.lineTo(s * 0.37, py); c.moveTo(s * 0.63, py); c.lineTo(s * 0.68, py); c.stroke();
+      }
+      c.setLineDash([s * 0.07, s * 0.07]); strokePath(c, rodMask, s, s * 0.03, 'rgba(248,234,200,.95)'); c.setLineDash([]);
+    }
+  }
+}
 // Seljuk Kervansaray Stop: roadside distribution waystation at 3-way and 4-way road junctions (tile-kervansaray card)
 function drawKervansarayStop(c, s, m, R) {
   const cx = s / 2, cy = s / 2;
@@ -2481,6 +2623,8 @@ function drawPlate(c, v, id) {
       strokePath(c, m, s, s * 0.22, '#00b4d8');
       strokePath(c, m, s, s * 0.06, '#ffffff');
       drawFerryDetail(c, s, true, 'contrast');
+    } else if (k === KB) {
+      drawBridgeTile(c, s, m, true, 'contrast');
     }
   } else if (currentTheme === 'gece') {
     // Gece: Night plate with dark indigo ground, moonlit bevel, glowing river & lantern-lit road
@@ -2519,6 +2663,8 @@ function drawPlate(c, v, id) {
       strokePath(c, m, s, s * 0.22, '#30bde2');
       c.save(); c.translate(-s * 0.025, -s * 0.025); strokePath(c, m, s, s * 0.05, 'rgba(230,250,255,.55)'); c.restore();
       drawFerryDetail(c, s, false, 'gece');
+    } else if (k === KB) {
+      drawBridgeTile(c, s, m, false, 'gece');
     }
   } else if (currentTheme === 'kagit') {
     // Kâğıt: Layered paper-cut tile with soft physical drop shadows
@@ -2547,6 +2693,8 @@ function drawPlate(c, v, id) {
       strokePath(c, m, s, s * 0.28, '#268ec7');
       strokePath(c, m, s, s * 0.16, '#46bfe0');
       drawFerryDetail(c, s, false, 'kagit');
+    } else if (k === KB) {
+      drawBridgeTile(c, s, m, false, 'kagit');
     }
   } else {
     // Classic default / regional biomes (Kapadokya, Karadeniz, Ege, Bozkır)
@@ -2640,6 +2788,8 @@ function drawPlate(c, v, id) {
         strokePath(c, m, s, s * 0.22, isK ? '#3ca6d8' : '#3d95cf');
       }
       drawFerryDetail(c, s, false, 'classic');
+    } else if (k === KB) {
+      drawBridgeTile(c, s, m, false, 'classic');
     }
   }
   if (isKervansarayActive() && k === KD && popcount(m) >= 3) {
@@ -3423,6 +3573,11 @@ function frame(now) {
         ctx.beginPath(); ctx.arc(cx, cy, cs * (0.15 + wR * 0.16), 0, 7); ctx.stroke();
       }
     }
+    else if (k === KB) {
+      const rm = (v & 15) === 10 ? 10 : 5, dm = 15 ^ rm;
+      if (disp.dR[i] >= 0) drawFlow(X, Y, tv(KR, rm), i, disp.dR, true, time, wave > -9 ? Math.max(0, 1 - Math.abs(disp.dR[i] - wave) / 1.6) : 0);
+      if (disp.dD[i] >= 0) drawFlow(X, Y, tv(KD, dm), i, disp.dD, false, time, wave > -9 ? Math.max(0, 1 - Math.abs(disp.dD[i] - wave) / 1.6) : 0);
+    }
     if (k === KV || k === KS || k === KH) {
       for (let e2 = 0; e2 < 4; e2++) {
         const j = NB[i * 4 + e2];
@@ -4043,6 +4198,7 @@ function openHelp() {
   const hanCol = isKrd ? '#8b968c' : isEge ? '#cfc1a5' : '#b8a07a';
   const mntCol = isKrd ? '#46614c' : isEge ? '#7a6852' : '#7a6551';
   const leg = [[rivCol, 'lRiver'], [rodCol, 'lRoad']];
+  if (isBridgeActive()) leg.push([highContrast ? '#ffb703' : '#a8936e', 'lBridge']);
   if (isKervansarayActive()) leg.push([highContrast ? '#ffb703' : '#d4a359', 'lHanStop']);
   leg.push([vilCol, 'lVillage'], [sprCol, 'lSpring'], [hanCol, 'lHan'], [mntCol, 'lMount']);
   if (G.pz && G.pz.cfg && G.pz.cfg.ferry) leg.push([highContrast ? '#00b4d8' : '#206894', 'lFerry']);
@@ -4358,6 +4514,18 @@ function renderShareCard(c = $('rCard')) {
       cx.fillStyle = '#f7f3e8'; cx.beginPath(); cx.ellipse(fcx, fcy, mcs * 0.14, mcs * 0.07, 0, 0, 7); cx.fill();
       cx.fillStyle = '#a63f27'; cx.fillRect(fcx - mcs * 0.1, fcy + mcs * 0.01, mcs * 0.2, mcs * 0.03);
       cx.fillStyle = '#1b2830'; cx.fillRect(fcx - mcs * 0.03, fcy - mcs * 0.05, mcs * 0.06, mcs * 0.045);
+    } else if (k === KB) {
+      const rm = (m === 10 ? 10 : 5), dm = (m === 10 ? 5 : 10);
+      cx.lineWidth = mcs * 0.32; cx.strokeStyle = '#2a6c99'; cx.lineCap = 'butt'; cx.lineJoin = 'round';
+      tracePath(cx, rm, mcs, px, py); cx.stroke();
+      cx.lineWidth = mcs * 0.2; cx.strokeStyle = '#3d95cf';
+      tracePath(cx, rm, mcs, px, py); cx.stroke();
+      const bw = mcs * 0.36;
+      cx.fillStyle = '#c79a5e';
+      if (dm === 10) cx.fillRect(px, py + mcs * 0.32, mcs, bw);
+      else cx.fillRect(px + mcs * 0.32, py, bw, mcs);
+      cx.save(); cx.setLineDash([mcs * 0.08, mcs * 0.08]); cx.lineWidth = mcs * 0.05; cx.strokeStyle = 'rgba(248,234,200,.95)';
+      tracePath(cx, dm, mcs, px, py); cx.stroke(); cx.restore();
     } else if (k === KM) drawMountain(cx, px, py, mcs);
     else if (k === KS) drawSpring(cx, px, py, mcs);
     else if (k === KH) drawHan(cx, px, py, mcs);
@@ -4694,7 +4862,7 @@ function dbg() {
   el.style.display = 'block';
   el.textContent = `fps ${fps}  dpr ${DPR}  cell ${cs}px\nseed ${G.seed}  K ${pz ? pz.K : '-'}  par ${pz ? pz.par : '-'}\ngen ${G.genMs} ms  nodes ${pz ? pz.solveNodes : '-'}\nmoves ${G.moves}  quake ${G.moves % 5}  motes ${motes.length}\nevents ${telemetryLog.length}` + (G.bot ? `\nbot ${G.bot.strategy} plan ${G.bot.plan.length} (${G.bot.ms} ms)` : '');
 }
-const GLYPH = { 0: '..', 3: 'VV', 4: 'SS', 5: 'HH', 6: 'MM', 7: 'FF' };
+const GLYPH = { 0: '..', 3: 'VV', 4: 'SS', 5: 'HH', 6: 'MM', 7: 'FF', 8: 'BB' };
 window.fayHatti = {
   get seed() { return G.seed; }, get moves() { return G.moves; }, get solved() { return G.won; }, get state() { return G.state; },
   get mode() { return G.mode; }, get level() { return G.level; }, get par() { return G.pz ? G.pz.par : null; }, get stars() { return G.stars; },
@@ -4737,7 +4905,28 @@ window.fayHatti = {
   },
   get motes() { return motes; }, get motesCount() { return motes.length; }, get motesEnabled() { return motesEnabled; }, setMotes: (v) => setMotes(v),
   get ripples() { return ripples.length; }, get ripplesEnabled() { return ripplesEnabled; }, setRipples: (v) => setRipples(v), ripple: (cell) => spawnWaterRipple(cell),
-  get board() { if (!G.pz) return null; const v = toVals(G.pz, G.ids), out = []; for (let r = 0; r < N; r++) { const row = []; for (let c = 0; c < N; c++) { const x = v[r * N + c], k = x >> 4; row.push(k === KR ? 'r' + (x & 15).toString(16) : k === KD ? 'd' + (x & 15).toString(16) : k === KF ? 'f' + (x & 15).toString(16) : GLYPH[k]); } out.push(row.join(' ')); } return out; },
+  get board() { if (!G.pz) return null; const v = toVals(G.pz, G.ids), out = []; for (let r = 0; r < N; r++) { const row = []; for (let c = 0; c < N; c++) { const x = v[r * N + c], k = x >> 4; row.push(k === KR ? 'r' + (x & 15).toString(16) : k === KD ? 'd' + (x & 15).toString(16) : k === KF ? 'f' + (x & 15).toString(16) : k === KB ? 'b' + (x & 15).toString(16) : GLYPH[k]); } out.push(row.join(' ')); } return out; },
+  KB,
+  loadBridgeDemo() {
+    const fixed = new Uint8Array(NN), vals = new Uint8Array(NN);
+    fixed[2] = 1; vals[2] = tv(KS, 0); fixed[10] = 1; vals[10] = tv(KH, 0);
+    fixed[22] = 1; vals[22] = tv(KV, NEED_RIVER); fixed[14] = 1; vals[14] = tv(KV, NEED_ROAD);
+    fixed[0] = 1; vals[0] = tv(KM, 0); fixed[24] = 1; vals[24] = tv(KM, 0);
+    vals[7] = tv(KR, 5); vals[17] = tv(KR, 5); vals[11] = tv(KD, 10); vals[13] = tv(KD, 10); vals[12] = tv(KB, 5);
+    for (let i = 0; i < NN; i++) if (!vals[i]) vals[i] = tv(KE, 0);
+    const villages = [{ cell: 22, need: NEED_RIVER }, { cell: 14, need: NEED_ROAD }];
+    const { perms, lens } = buildPerms(fixed);
+    const moveList = [];
+    for (let l = 0; l < 2 * N; l++) if (lens[l] >= 2) moveList.push(l * 2);
+    const quakes = [0, 4, 8];
+    const pz = { seed: 'bridge-demo', cfg: { K: 2, nv: 2, nm: 2, minPar: 1, bridge: true }, tiles: vals, fixed, spring: 2, han: 10, villages, needRiver: true, needRoad: true, perms, lens, moveList, quakes, K: 2, par: 1, attempts: 1 };
+    const scrambled = applyPerm(new Uint8Array(NN).map((_, i) => i), perms[2 * 2]);
+    pz.start = scrambled; pz.solution = [2 * 2 + 1]; pz.solveNodes = 1;
+    clearTimeout(botTimer); G.bot = null; G.mode = 'level'; G.level = 1; G.seed = 'bridge-demo'; G.state = 'play'; G.pz = pz;
+    G.ids = scrambled.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.place = 'Köprü';
+    closeAll(); buildCaches(); settle(true); updateHud();
+    return true;
+  },
   get highContrast() { return highContrast; }, setContrast, toggleContrast,
   get haptic() { return haptic; }, setHaptic, toggleHaptic, vibe,
   verifySeeds: (from, to) => runSeedVerification(from, to),
