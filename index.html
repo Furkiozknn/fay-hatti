@@ -239,7 +239,7 @@ body.high-contrast .tut-badge{box-shadow:inset 0 0 0 1px #ffffff}
 .badge-banner .bb-info{flex:1;min-width:0;text-align:left}
 .badge-banner .bb-info b{display:block;font-size:14px;color:#5a2a18;line-height:1.2}
 .badge-banner .bb-info span{display:block;font-size:12px;color:#7a5638;line-height:1.2;margin-top:2px}
-@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on,.seal-svg,#tutTip,.badge-banner,.streak-pop{animation:none}.badge-btn{transition:none}.tut-dot{transition:none}#quake.quaking{transition:background .2s}.tb.active{box-shadow:none}.hint-hud{box-shadow:0 2px 6px rgba(0,0,0,.5)}.stat .par-tag{transition:none}}
+@media (prefers-reduced-motion:reduce){#quake .dot{animation:none}.panel,.big-stars svg.on,.seal-svg,#tutTip,.badge-banner,.streak-pop{animation:none}.badge-btn{transition:none}.tut-dot{transition:none}#quake.quaking{transition:background .2s}.tb.active{box-shadow:none}.hint-hud{box-shadow:0 2px 6px rgba(0,0,0,.5)}.stat .par-tag{transition:none}.cp-card-inner{transition:none}.cp-card.flipped .cp-card-inner{transform:none}.cp-card.flipped .cp-card-back{display:none}.cp-card.flipped .cp-card-front{transform:none}.cp-card-stamp{animation:none}}
 /* Themes: Gece (night) and Kâğıt (paper-cut) */
 :root[data-theme="gece"]{--bg:#0b111a;--bg2:#141f2e;--ink:#e5eef8;--ink2:#8ea4be;--paper:#162234;--paper-ink:#e8f0fa;--terra:#2a6ab0;--gold:#f5be47;--quake:#ff6247;--focus:#64b5f6}
 html[data-theme="gece"] body{background:radial-gradient(120% 80% at 50% 0%,#16253c 0%,#0b111a 60%)}
@@ -359,6 +359,37 @@ body.high-contrast .res-streak{color:#111111}
 body.high-contrast .res-streak .fire-ico{fill:#ff2a05}
 body.high-contrast .stat .par-tag{background:rgba(255,183,3,.2);color:#ffb703;border:1px solid #ffb703}
 body.high-contrast .stat .par-tag.over{background:transparent;color:#f5eedd;border:1px solid #f5eedd;opacity:1}
+/* Card Pick Screen: E light style (paper, black + bronze-to-gold), 3D flip */
+.cp-panel{max-width:440px;width:100%;padding:18px 16px;background:var(--paper);color:var(--paper-ink);border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.45),inset 0 0 0 2px #d4af37;text-align:center}
+.cp-cards{display:flex;justify-content:center;gap:12px;margin:14px 0 10px;perspective:1000px}
+.cp-card{flex:1 1 0;max-width:175px;min-height:235px;cursor:pointer;perspective:1000px;background:transparent;border:none;padding:0;outline:none;-webkit-tap-highlight-color:transparent}
+.cp-card:focus-visible .cp-card-inner{outline:3px solid var(--focus);outline-offset:3px}
+.cp-card-inner{position:relative;width:100%;height:100%;min-height:235px;border-radius:14px;transition:transform .65s cubic-bezier(.2,.8,.2,1),box-shadow .25s,opacity .3s;transform-style:preserve-3d;box-shadow:0 8px 24px rgba(40,25,15,.22)}
+.cp-card:hover:not(.flipped):not(.cp-dim) .cp-card-inner{transform:translateY(-4px);box-shadow:0 12px 30px rgba(184,134,11,.35)}
+.cp-card.flipped .cp-card-inner{transform:rotateY(180deg)}
+.cp-card.cp-dim{opacity:.4;pointer-events:none}
+.cp-card-face{position:absolute;inset:0;width:100%;height:100%;border-radius:14px;-webkit-backface-visibility:hidden;backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:12px 10px;box-sizing:border-box;overflow:hidden}
+.cp-card-back{background:linear-gradient(135deg,#7a4e18 0%,#d4af37 32%,#ffd700 50%,#d4af37 68%,#8a5a1f 100%);border:2px solid #5a3814;box-shadow:inset 0 0 0 2px rgba(255,255,255,.4),inset 0 0 14px rgba(90,56,20,.4);color:#2b1d0c}
+.cp-back-rosette-wrap{flex:1;display:flex;align-items:center;justify-content:center;width:100%}
+.cp-back-rosette{width:70px;height:70px;filter:drop-shadow(0 2px 4px rgba(70,40,10,.35))}
+.cp-back-label{font:700 11px/1.2 "Palatino Linotype",Palatino,Georgia,serif;letter-spacing:.12em;text-transform:uppercase;color:#3d260f;margin-top:4px}
+.cp-card-front{background:#fbf6ec;color:#2b2118;border:2px solid #c49a45;box-shadow:inset 0 0 0 1px #ecdab0,0 4px 14px rgba(0,0,0,.12);transform:rotateY(180deg)}
+.cp-card-type-badge{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:999px;line-height:1.2}
+.cp-card-type-badge.cosmetic{background:#e2d4bd;color:#4a341e;border:1px solid #b38f5c}
+.cp-card-type-badge.gameplay{background:#ebd3cc;color:#7a2416;border:1px solid #d4634c}
+.cp-card-icon{width:40px;height:40px;display:flex;align-items:center;justify-content:center;margin:4px 0;color:#a63f27}
+.cp-card-icon svg{width:32px;height:32px}
+.cp-card-title{font:700 13px/1.2 "Palatino Linotype",Palatino,Georgia,serif;color:#3b2211;margin:0 0 3px;text-align:center}
+.cp-card-desc{font-size:11px;line-height:1.35;color:#5b4733;margin:0;text-align:center;flex:1}
+.cp-card-stamp{margin-top:4px;padding:3px 8px;background:#2d5a31;color:#fffaf0;border-radius:6px;font:700 10px/1.2 ui-monospace,Consolas,monospace;letter-spacing:.06em;text-transform:uppercase;animation:cpStampPop .3s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes cpStampPop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.cp-teaser{font-size:12.5px;font-weight:600;color:#7a5638;margin:8px 0 4px;text-align:center;font-variant-numeric:tabular-nums}
+body.high-contrast .cp-panel{background:#ffffff;color:#111111;box-shadow:0 18px 50px rgba(0,0,0,.9),inset 0 0 0 3px #111111}
+body.high-contrast .cp-card-back{background:#ffb703;border:2px solid #111111;color:#111111}
+body.high-contrast .cp-card-front{background:#ffffff;border:2px solid #111111;color:#111111}
+body.high-contrast .cp-card-type-badge{background:#111111;color:#ffffff;border:1px solid #111111}
+body.high-contrast .cp-card-stamp{background:#0f5132;color:#ffffff;box-shadow:inset 0 0 0 1px #ffffff}
+body.high-contrast .cp-teaser{color:#111111}
 </style>
 </head>
 <body>
@@ -489,7 +520,20 @@ body.high-contrast .stat .par-tag.over{background:transparent;color:#f5eedd;bord
     <div class="share-prev" id="rShare" role="button" tabindex="0" title="Copy text"></div>
     <div class="row"><button class="btn" id="bShare" style="text-align:center"></button><button class="btn alt" id="bSaveCard" style="text-align:center"></button></div>
     <div class="row"><button class="btn alt" id="bNext"></button><button class="btn alt" id="bRMenu"></button></div>
+    <p class="note cp-teaser" id="rCardTeaser" style="margin:6px 0 0;display:none"></p>
     <p class="note" id="rNote"></p>
+  </div>
+</div>
+<div class="ov" id="cardPick" role="dialog" aria-modal="true" aria-labelledby="cpTitle">
+  <div class="panel cp-panel">
+    <h2 id="cpTitle" style="margin:0 0 4px"></h2>
+    <div class="sub" id="cpSub" style="margin:0 0 14px"></div>
+    <div class="cp-cards" id="cpCards"></div>
+    <div class="cp-teaser" id="cpTeaser"></div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn alt" id="bCardSkip" style="text-align:center"></button>
+      <button class="btn" id="bCardContinue" style="text-align:center;display:none"></button>
+    </div>
   </div>
 </div>
 <div class="ov" id="hint" role="dialog" aria-modal="true" aria-labelledby="hiTitle">
@@ -959,6 +1003,7 @@ const THEME_PARAM = (QS.get('theme') || '').toLowerCase();
 let currentTheme = (THEME_PARAM === 'gece' || THEME_PARAM === 'kagit') ? THEME_PARAM : store.get('theme', 'classic');
 if (currentTheme !== 'gece' && currentTheme !== 'kagit') currentTheme = 'classic';
 document.documentElement.dataset.theme = currentTheme;
+const CARDS_PARAM = (QS.get('cards') || '').toLowerCase();
 
 // --- Cards Registry ---
 // Cosmetic cards: theme-night, theme-paper, region-kapadokya, region-karadeniz
@@ -1168,6 +1213,206 @@ const CARDS = [
     apply: () => updateStreakHud(),
   },
 ];
+
+// ---------------------------------------------------------------- Card Unlock Core
+function getOwnedCardIds() {
+  if (CARDS_PARAM === 'all') return CARDS.map((c) => c.id);
+  if (CARDS_PARAM === 'none') return [];
+  const raw = store.get('cards', []);
+  return Array.isArray(raw) ? raw : [];
+}
+function hasCard(id) {
+  if (CARDS_PARAM === 'all') return true;
+  if (CARDS_PARAM === 'none') return false;
+  return getOwnedCardIds().includes(id);
+}
+function unlockCard(id) {
+  if (CARDS_PARAM === 'all' || CARDS_PARAM === 'none') return;
+  const owned = getOwnedCardIds();
+  if (!owned.includes(id)) {
+    owned.push(id);
+    store.set('cards', owned);
+    store.set('boardsSinceCard', 0);
+    const c = CARDS.find((card) => card.id === id);
+    if (c && typeof c.apply === 'function') {
+      try { c.apply(true); } catch (e) {}
+    }
+    trackEvent('card_unlocked', { cardId: id, totalOwned: owned.length });
+  }
+}
+function pickTwoCardsToOffer(force = false) {
+  const owned = getOwnedCardIds();
+  let unowned = CARDS.filter((c) => !owned.includes(c.id));
+  if (unowned.length === 0) {
+    if (force) unowned = CARDS.slice();
+    else return null;
+  }
+  if (unowned.length === 1) return [unowned[0]];
+  const cosmetics = unowned.filter((c) => c.type === 'cosmetic');
+  const gameplays = unowned.filter((c) => c.type === 'gameplay');
+  if (cosmetics.length > 0 && gameplays.length > 0) {
+    const c = cosmetics[Math.floor(Math.random() * cosmetics.length)];
+    const g = gameplays[Math.floor(Math.random() * gameplays.length)];
+    return [c, g];
+  }
+  const pool = unowned.slice().sort(() => Math.random() - 0.5);
+  return [pool[0], pool[1]];
+}
+function getCardTeaserText() {
+  const ownedCount = getOwnedCardIds().length;
+  if (ownedCount >= CARDS.length) return t('cardAllUnlocked');
+  return t('cardTeaser');
+}
+function updateCardTeaser() {
+  const rTeaser = $('rCardTeaser');
+  if (rTeaser) {
+    if (CARDS_PARAM === 'none') {
+      rTeaser.style.display = 'none';
+    } else {
+      rTeaser.textContent = getCardTeaserText();
+      rTeaser.style.display = 'block';
+    }
+  }
+}
+function cardRosetteSvg() {
+  return `<svg viewBox="0 0 100 100" class="cp-rosette-svg" aria-hidden="true">
+    <circle cx="50" cy="50" r="46" fill="none" stroke="#8c6239" stroke-width="1.5" stroke-dasharray="3 2"/>
+    <circle cx="50" cy="50" r="41" fill="none" stroke="#d4a754" stroke-width="1.8"/>
+    <polygon points="50,14 60,38 86,50 60,62 50,86 40,62 14,50 40,38" fill="rgba(140,98,57,.12)" stroke="#b88338" stroke-width="1.4"/>
+    <polygon points="50,22 57,41 78,50 57,59 50,78 43,59 22,50 43,41" fill="rgba(242,179,61,.18)" stroke="#8c6239" stroke-width="1.2"/>
+    <circle cx="50" cy="50" r="14" fill="#a63f27" stroke="#f2b33d" stroke-width="1.6"/>
+    <circle cx="50" cy="50" r="5" fill="#fef8eb"/>
+    <path d="M50 2 V12 M50 88 V98 M2 50 H12 M88 50 H98" stroke="#8c6239" stroke-width="1.2"/>
+  </svg>`;
+}
+function cardIconSvg(id) {
+  switch (id) {
+    case 'theme-night':
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/><circle cx="17" cy="6" r="1" fill="currentColor"/><circle cx="19" cy="10" r="0.7" fill="currentColor"/></svg>';
+    case 'theme-paper':
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
+    case 'region-kapadokya':
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L17 14 L14 22 H10 L7 14 Z"/><path d="M12 2 A3 3 0 0 1 15 5 L14 7 H10 L9 5 A3 3 0 0 1 12 2 Z" fill="currentColor" fill-opacity=".2"/><circle cx="12" cy="13" r="1.5" fill="currentColor"/></svg>';
+    case 'region-karadeniz':
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20 L9 8 L14 16 L17 12 L21 20 Z"/><path d="M16 4 C19 4 21 7 19 10 C17 10 15 8 16 4 Z" fill="currentColor" fill-opacity=".2"/></svg>';
+    case 'region-ege':
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21 C7 17 11 15 21 9"/><path d="M9 14 C7 11 8 8 11 9 C12 11 11 13 9 14 Z" fill="currentColor"/><circle cx="16" cy="11" r="2.5" fill="currentColor"/><circle cx="13" cy="15" r="2" fill="currentColor"/></svg>';
+    case 'juice-dust':
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="6" r="2" fill="currentColor"/><circle cx="19" cy="14" r="1.5" fill="currentColor"/><circle cx="9" cy="18" r="1" fill="currentColor"/><circle cx="16" cy="19" r="1.8" fill="currentColor"/><path d="M4 8 C8 7 11 9 15 8 M8 14 C12 13 16 15 20 13"/></svg>';
+    case 'juice-ripples':
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5" stroke-dasharray="3 3"/></svg>';
+    case 'juice-quake-shake':
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13 L6 7 L10 15 L14 9 L18 17 L22 11"/><path d="M5 21 L19 21" stroke-width="1.5"/><line x1="12" y1="3" x2="12" y2="6"/></svg>';
+    case 'share-card-art':
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><polyline points="21 15 16 10 5 21"/></svg>';
+    case 'tile-bridge':
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 C7 11 7 17 12 17 C17 17 17 11 21 11"/><path d="M3 7 H21"/><path d="M5 7 V17 M19 7 V17"/><path d="M3 20 C8 18 16 18 21 20"/></svg>';
+    case 'tile-ferry':
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16 L5 10 H19 L21 16 Z"/><path d="M8 10 V6 H16 V10"/><line x1="2" y1="20" x2="22" y2="20"/><path d="M12 6 V3"/></svg>';
+    case 'tile-kervansaray':
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="13" rx="1"/><path d="M9 21 V14 A3 3 0 0 1 15 14 V21"/><path d="M4 8 L6 4 H18 L20 8"/><circle cx="12" cy="11" r="1" fill="currentColor"/></svg>';
+    case 'hint-glow':
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-7 7c0 2.6 1.4 4.5 3 6v1h8v-1c1.6-1.5 3-3.4 3-6a7 7 0 0 0-7-7z"/><path d="M12 6v3"/></svg>';
+    case 'hint-solution-path':
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 9 12 13 16 20 7"/><polyline points="15 7 20 7 20 12"/></svg>';
+    case 'endless-marathon':
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.178 8c5.096 0 5.096 8 0 8-5.095 0-7.133-8-12.739-8-4.585 0-4.585 8 0 8 5.606 0 7.644-8 12.74-8z"/><polygon points="12,10 13,12 15,12 13.5,13.2 14,15 12,14 10,15 10.5,13.2 9,12 11,12" fill="currentColor"/></svg>';
+    case 'milestone-badges':
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><polygon points="12,5 13,7 15,7 13.5,8.2 14,10 12,9 10,10 10.5,8.2 9,7 11,7" fill="currentColor"/><path d="M8.21 13.89L7 22l5-3 5 3-1.21-8.12"/></svg>';
+    case 'par-speedrun':
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2"/><path d="M10 2h4"/><path d="M18 5l1.5-1.5"/></svg>';
+    case 'streak':
+      return '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c-.3 2.2-1.8 4.2-3.2 5.8C7 9.8 6 12 6 14.5a6 6 0 0 0 12 0c0-3.2-1.8-5.8-4-8-.3 2-1.7 3.5-3.5 3.5.8-2.6 1.5-5.3 1.5-8z"/></svg>';
+    default:
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>';
+  }
+}
+let currentOfferedCards = null;
+let cardPickPicked = false;
+function showCardPick(cardsToOffer = null) {
+  if (BOT || AUTO || DEMO != null || CARDS_PARAM === 'none') {
+    showResult();
+    return;
+  }
+  const pair = cardsToOffer || pickTwoCardsToOffer(false);
+  if (!pair || pair.length === 0) {
+    showResult();
+    return;
+  }
+  currentOfferedCards = pair;
+  cardPickPicked = false;
+  pauseTimer();
+  closeAll(false);
+  $('cpTitle').textContent = t('cardPickTitle');
+  $('cpSub').textContent = t('cardPickSub');
+  $('bCardSkip').textContent = t('cardSkip');
+  $('bCardSkip').style.display = 'inline-block';
+  $('bCardContinue').textContent = t('cardContinue');
+  $('bCardContinue').style.display = 'none';
+  const ownedCount = getOwnedCardIds().length;
+  $('cpTeaser').textContent = t('cardProgress', { cur: ownedCount, tot: CARDS.length }) + ' · ' + t('cardTeaser');
+  const container = $('cpCards');
+  container.innerHTML = pair.map((c) => {
+    const info = c[lang] || c.en;
+    const typeLabel = c.type === 'gameplay' ? t('cardGameplay') : t('cardCosmetic');
+    return `<div class="cp-card" data-id="${c.id}" role="button" tabindex="0" aria-label="${info.title} (${typeLabel})">
+      <div class="cp-card-inner">
+        <div class="cp-card-back">
+          ${cardRosetteSvg()}
+          <span class="cp-card-back-label">FAY HATTI</span>
+        </div>
+        <div class="cp-card-front">
+          <span class="cp-card-type-badge ${c.type}">${typeLabel}</span>
+          <div class="cp-card-icon">${cardIconSvg(c.id)}</div>
+          <h3 class="cp-card-title">${info.title}</h3>
+          <p class="cp-card-desc">${info.desc}</p>
+          <span class="cp-card-stamp">${t('cardUnlocked')}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const cardEls = container.querySelectorAll('.cp-card');
+  const selectCard = (cardEl, c) => {
+    if (cardPickPicked) return;
+    cardPickPicked = true;
+    sfx.cardChime();
+    vibe([25, 40, 25]);
+    cardEl.classList.add('flipped');
+    cardEls.forEach((other) => {
+      if (other !== cardEl) {
+        other.style.opacity = '0.35';
+        other.style.pointerEvents = 'none';
+        other.tabIndex = -1;
+      }
+    });
+    unlockCard(c.id);
+    const updatedCount = getOwnedCardIds().length;
+    $('cpTeaser').textContent = t('cardProgress', { cur: updatedCount, tot: CARDS.length }) + ' · ' + (updatedCount >= CARDS.length ? t('cardAllUnlocked') : t('cardTeaser'));
+    $('bCardSkip').style.display = 'none';
+    $('bCardContinue').style.display = 'inline-block';
+    if (!COARSE) setTimeout(() => $('bCardContinue').focus(), 40);
+  };
+
+  cardEls.forEach((cardEl, idx) => {
+    const c = pair[idx];
+    cardEl.onclick = () => selectCard(cardEl, c);
+    cardEl.onkeydown = (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        selectCard(cardEl, c);
+      }
+    };
+  });
+
+  $('cardPick').classList.add('on');
+  if (!COARSE) setTimeout(() => cardEls[0] && cardEls[0].focus(), 30);
+}
+function closeCardPick() {
+  sfx.click();
+  $('cardPick').classList.remove('on');
+  showResult();
+}
 const STR = {
   en: {
     sub: 'Shift the land of Anatolia. Bring water and roads to every village.',
@@ -1212,6 +1457,9 @@ const STR = {
     tutTitle2: 'Fault Line Quake', tutBody2: 'The red band marks the fault line. After each move you make, that row shifts automatically!',
     tutTitle3: 'Connect Villages', tutBody3: 'Route river water from the spring and roads from the caravanserai to each village.',
     tutStep: '{s} of {t}', tutNext: 'Next', tutPrev: 'Back', tutGotIt: 'Got it', tutDismiss: 'Dismiss tips', tutReplay: 'Tutorial tips',
+    cardPickTitle: 'Choose a Card', cardPickSub: 'You cleared the board! Pick a new skill for your journey.',
+    cardCosmetic: 'Cosmetic', cardGameplay: 'Gameplay', cardUnlocked: 'Unlocked', cardSkip: 'Skip for now', cardContinue: 'Continue',
+    cardTeaser: 'Next card in 1 board', cardTeaserPlural: 'Next card in {n} boards', cardAllUnlocked: 'All 18 skill cards unlocked', cardProgress: '{cur}/{tot} cards collected',
   },
   tr: {
     sub: 'Anadolu toprağını kaydır. Her köye su ve yol götür.',
@@ -1256,6 +1504,9 @@ const STR = {
     tutTitle2: 'Fay Hattı Depremi', tutBody2: 'Kırmızı şerit fay hattıdır. Yaptığın her hamleden sonra o satır kendiliğinden kayar!',
     tutTitle3: 'Köylere Su ve Yol', tutBody3: 'Pınardan nehri, kervansaraydan yolu köylerin istediği simgelere ulaştır.',
     tutStep: '{s} / {t}', tutNext: 'İleri', tutPrev: 'Geri', tutGotIt: 'Anladım', tutDismiss: 'İpuçlarını kapat', tutReplay: 'Rehber ipuçları',
+    cardPickTitle: 'Yeni Bir Hüner Keşfet', cardPickSub: 'Tahtayı tamamladın! Yolculuğunda sana eşlik edecek bir kart seç.',
+    cardCosmetic: 'Görsel', cardGameplay: 'Hüner', cardUnlocked: 'Kazanıldı', cardSkip: 'Şimdilik Geç', cardContinue: 'Devam Et',
+    cardTeaser: 'Sıradaki kart 1 tahta sonra', cardTeaserPlural: 'Sıradaki kart {n} tahta sonra', cardAllUnlocked: 'Tüm 18 hüner kartı açıldı', cardProgress: '{cur}/{tot} kart toplandı',
   },
 };
 let lang = (QS.get('lang') || '').toLowerCase();
@@ -1548,6 +1799,15 @@ const sfx = {
     tone(t0, 587.3, 0.35, 'sine', 0.18);
     tone(t0 + 0.07, 880, 0.45, 'sine', 0.14);
     tone(t0 + 0.07, 1760, 0.2, 'triangle', 0.05);
+  },
+  cardChime() {
+    if (!audio()) return;
+    const t0 = AC.currentTime;
+    pluck(t0, 587.33, 0.18);
+    pluck(t0 + 0.06, 739.99, 0.16);
+    pluck(t0 + 0.12, 880.00, 0.14);
+    tone(t0 + 0.18, 1174.66, 0.65, 'sine', 0.18);
+    tone(t0 + 0.20, 1760.00, 0.45, 'triangle', 0.08);
   },
 };
 
@@ -2166,7 +2426,15 @@ function win() {
   }
   if (!RM) for (const v of pz.villages) burst(v.cell);
   if (streakIncreased) triggerStreakPop();
-  setTimeout(showResult, AUTO || RM ? 500 : 1400);
+  let bsc = store.get('boardsSinceCard', 0) + 1;
+  store.set('boardsSinceCard', bsc);
+  const shouldOfferCards = !BOT && !AUTO && DEMO == null && CARDS_PARAM !== 'none';
+  const cardsToOffer = shouldOfferCards ? pickTwoCardsToOffer(false) : null;
+  if (cardsToOffer && cardsToOffer.length > 0) {
+    setTimeout(() => showCardPick(cardsToOffer), AUTO || RM ? 500 : 1400);
+  } else {
+    setTimeout(showResult, AUTO || RM ? 500 : 1400);
+  }
   const msAnnounce = newMilestone ? ' · ' + t('badgeNew') + ' ' + (newMilestone[lang] || newMilestone.en).name : '';
   $('live').textContent = t('solvedT') + ' ' + t('resLine', { m: G.moves, p: pz.par }) + msAnnounce;
   updateHud();
@@ -3988,6 +4256,7 @@ addEventListener('keydown', (e) => {
   if ($('help').classList.contains('on') && (e.key === 'Escape' || e.key === 'Enter')) { closeHelp(); e.preventDefault(); return; }
   if ($('hint') && $('hint').classList.contains('on') && (e.key === 'Escape' || e.key === 'Enter')) { closeHint(); e.preventDefault(); return; }
   if ($('verify').classList.contains('on') && (e.key === 'Escape' || e.key === 'Enter')) { closeVerify(); e.preventDefault(); return; }
+  if ($('cardPick') && $('cardPick').classList.contains('on') && e.key === 'Escape') { closeCardPick(); e.preventDefault(); return; }
   if (document.querySelector('.ov.on')) return;
   if (G.state !== 'play' || G.bot) return;
   const k = e.key.toLowerCase();
@@ -4775,6 +5044,7 @@ function showResult() {
   $('bNext').textContent = G.mode === 'marathon' ? t('nextStage') : G.mode === 'daily' ? t('toEndless') : t('next');
   $('bRMenu').textContent = t('back');
   $('rNote').textContent = G.mode === 'marathon' ? t('marathonStageDone', { s: G.marathonStage }) : G.mode === 'daily' ? t('tomorrow') : t('endlessNote', { n: G.level });
+  updateCardTeaser();
   $('result').classList.add('on');
   if (!BOT && !COARSE) setTimeout(() => $('bShare').focus(), 30);
 }
@@ -4879,10 +5149,12 @@ $('bNext').onclick = () => {
   else startPuzzle('endless', G.level + 1);
 };
 $('bRMenu').onclick = () => { sfx.click(); openMenu(); };
+$('bCardSkip').onclick = closeCardPick;
+$('bCardContinue').onclick = closeCardPick;
 $('thClassic').onclick = () => { sfx.click(); applyTheme('classic'); };
 $('thGece').onclick = () => { sfx.click(); applyTheme('gece'); };
 $('thKagit').onclick = () => { sfx.click(); applyTheme('kagit'); };
-document.querySelectorAll('.ov').forEach((o) => o.addEventListener('click', (e) => { if (e.target === o && o.id !== 'menu') { if (o.id === 'help') closeHelp(); else if (o.id === 'verify') closeVerify(); else if (o.id === 'hint') closeHint(); else { o.classList.remove('on'); resumeTimer(); } } }));
+document.querySelectorAll('.ov').forEach((o) => o.addEventListener('click', (e) => { if (e.target === o && o.id !== 'menu') { if (o.id === 'help') closeHelp(); else if (o.id === 'verify') closeVerify(); else if (o.id === 'hint') closeHint(); else if (o.id === 'cardPick') closeCardPick(); else { o.classList.remove('on'); resumeTimer(); } } }));
 
 // ---------------------------------------------------------------- debug overlay, API, boot
 let fpsN = 0, fpsT = 0, fps = 0;
@@ -4903,7 +5175,21 @@ window.fayHatti = {
   get theme() { return (G.biome === 'karadeniz' && currentTheme === 'classic') ? 'karadeniz' : (G.biome === 'ege' && currentTheme === 'classic') ? 'ege' : currentTheme; }, setTheme: (t) => (t === 'karadeniz' || t === 'ege') ? applyBiome(t) : applyTheme(t),
   get biome() { return G.biome || 'bozkir'; }, setBiome: (b) => applyBiome(b),
   get region() { return G.biome === 'ege' || (G.place && EGE_PLACES_SET.has(G.place)) ? 'ege' : (G.biome || 'bozkir'); },
-  get cards() { return CARDS; }, get cardRegistry() { return CARDS; },
+  get cards() {
+    return CARDS.map((c) => ({
+      ...c,
+      owned: hasCard(c.id),
+    }));
+  },
+  get cardRegistry() { return this.cards; },
+  offer: (force = true) => {
+    const pair = pickTwoCardsToOffer(force);
+    if (pair && pair.length > 0) {
+      showCardPick(pair);
+      return pair;
+    }
+    return null;
+  },
   get badges() {
     const highest = store.get('endless', 1), completed = Math.max(0, highest - 1);
     return MILESTONES.map((m) => ({
