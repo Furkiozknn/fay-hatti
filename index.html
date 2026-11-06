@@ -2319,7 +2319,6 @@ function doMove(m) {
     }
   }
   updateHintHud();
-  const line = m >> 1;
   const hasBridge = pz && lineCells(pz.fixed, line).some((i) => (toVals(pz, cur)[i] >> 4) === KB);
   if (hasBridge) sfx.bridge(); else sfx.slide();
   vibe(22); updateHud();
