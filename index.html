@@ -1434,7 +1434,7 @@ const STR = {
     hintStepMsg: 'Step {cur}/{tot}: {desc}', hintTangled: 'Board is tangled. Restart map to view initial solution path?',
     hintRestartBtn: 'Restart & Show Path', hintRow: 'Row {r} {dir}', hintCol: 'Col {c} {dir}',
     dirRight: 'Right →', dirLeft: 'Left ←', dirDown: 'Down ↓', dirUp: 'Up ↑',
-    hintGlowRow: 'Hint: Row {n} glowing', hintGlowCol: 'Hint: Column {n} glowing', hintNone: 'Already on track',
+    hintGlowRow: 'Hint: Row {n} glowing', hintGlowCol: 'Hint: Column {n} glowing', hintNone: 'Already on track', hintAgain: 'tap Hint again for the full path',
     menu: 'Menu', sound: 'Sound', haptic: 'Haptic', on: 'on', off: 'off', level: 'Level {n}', dailyTag: 'Daily · {d}',
     quakeNext: 'Next quake: row {r} {a}', quakeActive: 'Earthquake!', calm: 'The ground is calm', loading: 'Drawing the map…', solvedT: 'Connected!',
     resLine: '{m} moves · par {p}', share: 'Share result', saveCard: 'Save card', cardCopied: 'Card image copied to clipboard', cardSaved: 'Card saved to device', next: 'Next level', toEndless: 'Play endless', back: 'Menu',
@@ -1482,7 +1482,7 @@ const STR = {
     hintStepMsg: 'Adım {cur}/{tot}: {desc}', hintTangled: 'Tahta karıştı. Baştan başlayıp çözüm yolunu görmek ister misin?',
     hintRestartBtn: 'Baştan Başla & Yolu Gör', hintRow: '{r}. Satır {dir}', hintCol: '{c}. Sütun {dir}',
     dirRight: 'Sağa →', dirLeft: 'Sola ←', dirDown: 'Aşağı ↓', dirUp: 'Yukarı ↑',
-    hintGlowRow: 'İpucu: {n}. satır parıldıyor', hintGlowCol: 'İpucu: {n}. sütun parıldıyor', hintNone: 'Doğru yoldasın',
+    hintGlowRow: 'İpucu: {n}. satır parıldıyor', hintGlowCol: 'İpucu: {n}. sütun parıldıyor', hintNone: 'Doğru yoldasın', hintAgain: 'tüm yol için İpucu\'ya tekrar bas',
     menu: 'Menü', sound: 'Ses', haptic: 'Titreşim', on: 'açık', off: 'kapalı', level: 'Bölüm {n}', dailyTag: 'Günlük · {d}',
     quakeNext: 'Sıradaki deprem: {r}. satır {a}', quakeActive: 'Deprem!', calm: 'Yer sakin', loading: 'Harita çiziliyor…', solvedT: 'Bağlandı!',
     resLine: '{m} hamle · hedef {p}', share: 'Sonucu paylaş', saveCard: 'Kartı kaydet', cardCopied: 'Kart panoya kopyalandı', cardSaved: 'Kart cihaza kaydedildi', next: 'Sonraki bölüm', toEndless: 'Sonsuz moda geç', back: 'Menü',
@@ -2053,14 +2053,20 @@ function computeHint() {
   if (isSolved(pz, v0, 0)) return null;
   if (G.moves === 0 && pz.solution && pz.solution.length > 0) {
     const m = pz.solution[0];
-    return { move: m, line: m >> 1, dir: moveDir(m) };
+    return { move: m, line: m >> 1, dir: moveDir(m), optimal: true };
   }
-  const maxD = Math.min(8, Math.max(pz.par + 2, 6));
-  const sol = solveOptimal(pz, v0, G.moves, maxD, 150000);
+  // T243: ask the optimal planner (bot A) first, with room for a board the player has tangled.
+  // 1e7 nodes covers 6-move tangles (measured ~2 s worst case in headless Chromium); deeper ones fall back.
+  const maxD = Math.max(8, pz.par + 4);
+  const sol = solveOptimal(pz, v0, G.moves, maxD, 1e7);
   if (sol && sol.path.length > 0) {
     const m = sol.path[0];
-    return { move: m, line: m >> 1, dir: moveDir(m) };
+    return { move: m, line: m >> 1, dir: moveDir(m), optimal: true };
   }
+  return computeHintFallback(pz, v0);
+}
+// Planner gave up (node cap): fall back to the beam search, then to the best greedy single move.
+function computeHintFallback(pz, v0) {
   const b = solveBeam(pz, v0, G.moves, 11);
   if (b && b.path.length > 0) {
     const m = b.path[0];
@@ -2075,10 +2081,13 @@ function computeHint() {
   if (bestM >= 0) return { move: bestM, line: bestM >> 1, dir: moveDir(bestM) };
   return null;
 }
+// T243: the Hint button glows the solver's next move for 2 s; a second tap while it glows opens the solution path
+const HINT_GLOW_MS = 2000;
 function triggerHint() {
   if (!isHintActive() || !G.pz || G.won || G.state !== 'play' || G.bot) return null;
   if (hint && performance.now() < hint.until) {
     clearHint();
+    openHint();
     return null;
   }
   const res = computeHint();
@@ -2087,11 +2096,11 @@ function triggerHint() {
     return null;
   }
   const now = performance.now();
-  hint = { line: res.line, dir: res.dir, move: res.move, until: now + 4200 };
+  hint = { line: res.line, dir: res.dir, move: res.move, optimal: !!res.optimal, until: now + HINT_GLOW_MS };
   sfx.hint();
   vibe(18);
   const isRow = res.line < N, num = isRow ? res.line + 1 : res.line - N + 1;
-  const msg = t(isRow ? 'hintGlowRow' : 'hintGlowCol', { n: num });
+  const msg = t(isRow ? 'hintGlowRow' : 'hintGlowCol', { n: num }) + ' · ' + t('hintAgain');
   toast(msg);
   const liveEl = $('live');
   if (liveEl) liveEl.textContent = msg;
@@ -4319,7 +4328,7 @@ addEventListener('keydown', (e) => {
   const am = { arrowright: r * 2, arrowleft: r * 2 + 1, arrowdown: (N + c) * 2, arrowup: (N + c) * 2 + 1 }[k];
   if (am != null) { doMove(am); e.preventDefault(); return; }
   if (k === 'z' || k === 'backspace') { undo(); e.preventDefault(); }
-  else if (k === 'h' && isHintActive()) { openHint(); e.preventDefault(); }
+  else if (k === 'h' && isHintActive()) { triggerHint(); e.preventDefault(); }
   else if (k === 'r') restart();
   else if (k === 'm') toggleMute();
   else if (k === 'c') { toggleContrast(); sfx.click(); }
@@ -5152,7 +5161,7 @@ async function share() {
 function toggleMute() { muted = !muted; store.set('mute', muted); if (AC) master.gain.value = muted ? 0 : 0.55; updateHud(); fillMenu(); if (!muted) sfx.click(); }
 function toggleLang() { sfx.click(); lang = lang === 'tr' ? 'en' : 'tr'; store.set('lang', lang); updateHud(); fillMenu(); updateHintHud(); if ($('result').classList.contains('on')) showResult(); if ($('help').classList.contains('on')) { const r = helpReturn; openHelp(); helpReturn = r; } if ($('verify').classList.contains('on')) { const r = verifyReturn; openVerify(); verifyReturn = r; } if ($('hint') && $('hint').classList.contains('on')) openHint(); if (tutActive) setTutStep(tutStep); }
 
-$('bUndo').onclick = undo; $('bRestart').onclick = restart; $('bHint').onclick = () => { if (G.mode === 'daily') return; openHint(); }; $('bMenu').onclick = () => { sfx.click(); openMenu(); };
+$('bUndo').onclick = undo; $('bRestart').onclick = restart; $('bHint').onclick = () => { if (G.mode === 'daily') return; triggerHint(); }; $('bMenu').onclick = () => { sfx.click(); openMenu(); };
 $('bSound').onclick = toggleMute; $('mSound').onclick = toggleMute; $('mHaptic').onclick = toggleHaptic; $('bLang').onclick = toggleLang; $('mLang').onclick = toggleLang;
 $('bContrast').onclick = () => { toggleContrast(); sfx.click(); };
 $('bDaily').onclick = () => {
@@ -5317,7 +5326,7 @@ window.fayHatti = {
   triggerHint: () => triggerHint(),
   get currentHint() {
     if (!isHintActive()) return null;
-    return hint && performance.now() < hint.until ? { line: hint.line, isRow: hint.line < N, index: hint.line < N ? hint.line : hint.line - N, dir: hint.dir } : null;
+    return hint && performance.now() < hint.until ? { line: hint.line, isRow: hint.line < N, index: hint.line < N ? hint.line : hint.line - N, dir: hint.dir, move: hint.move, optimal: hint.optimal, msLeft: Math.round(hint.until - performance.now()) } : null;
   },
   get hintActive() { return G.hintActive || (hint && performance.now() < hint.until); },
 };
