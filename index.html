@@ -368,6 +368,8 @@ html[data-theme="gece"] .theme-box{border-top-color:#263852}
 html[data-theme="kagit"] .theme-box{border-top-color:#c9bda5}
 .theme-lbl{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--paper-ink);opacity:.75;margin-bottom:6px;text-align:center}
 .theme-pills{display:flex;gap:6px}
+.theme-pills.wrap{flex-wrap:wrap}
+.theme-pills.wrap .th-pill{flex:1 1 28%}
 .tier-box{margin:4px 0 8px;padding-top:8px}
 .tier-hint{margin:6px 0 0;font-size:13px;line-height:1.35;color:var(--paper-ink);opacity:.85;text-align:center}
 .th-pill{flex:1;min-height:44px;padding:6px 4px;border-radius:10px;border:1px solid #b8935a;background:transparent;color:var(--paper-ink);font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
@@ -914,6 +916,16 @@ body.high-contrast .cp-teaser{color:#111111}
         <button type="button" class="th-pill" id="thClassic" role="radio"></button>
         <button type="button" class="th-pill" id="thGece" role="radio"></button>
         <button type="button" class="th-pill" id="thKagit" role="radio"></button>
+      </div>
+    </div>
+    <div class="theme-box">
+      <div class="theme-lbl" id="mBiomeLabel"></div>
+      <div class="theme-pills wrap" role="radiogroup" aria-labelledby="mBiomeLabel">
+        <button type="button" class="th-pill" id="bmAuto" role="radio"></button>
+        <button type="button" class="th-pill" id="bmBozkir" role="radio"></button>
+        <button type="button" class="th-pill" id="bmKapadokya" role="radio"></button>
+        <button type="button" class="th-pill" id="bmKaradeniz" role="radio"></button>
+        <button type="button" class="th-pill" id="bmEge" role="radio"></button>
       </div>
     </div>
   </div>
@@ -1763,10 +1775,12 @@ function pickTwoCardsToOffer(force = false) {
   const pool = unowned.slice().sort(() => Math.random() - 0.5);
   return [pool[0], pool[1]];
 }
+const CARD_EVERY = 3; // KARARLAR #7: a card is offered once every 3 solved boards
 function getCardTeaserText() {
   const ownedCount = getOwnedCardIds().length;
   if (ownedCount >= CARDS.length) return t('cardAllUnlocked');
-  return t('cardTeaser');
+  const n = Math.max(1, CARD_EVERY - (+store.get('boardsSinceCard', 0) || 0));
+  return n === 1 ? t('cardTeaser') : t('cardTeaserPlural', { n });
 }
 function updateCardTeaser() {
   const rTeaser = $('rCardTeaser');
@@ -1855,7 +1869,7 @@ function showCardPick(cardsToOffer = null) {
   $('bCardContinue').textContent = t('cardContinue');
   $('bCardContinue').style.display = 'none';
   const ownedCount = getOwnedCardIds().length;
-  $('cpTeaser').textContent = t('cardProgress', { cur: ownedCount, tot: CARDS.length }) + ' · ' + t('cardTeaser');
+  $('cpTeaser').textContent = t('cardProgress', { cur: ownedCount, tot: CARDS.length }) + ' · ' + getCardTeaserText();
   const container = $('cpCards');
   container.innerHTML = pair.map((c) => {
     const info = { title: (c.title && (c.title[lang] || c.title.en)) || c.id, desc: (c.desc && (c.desc[lang] || c.desc.en)) || '' };
@@ -1893,7 +1907,7 @@ function showCardPick(cardsToOffer = null) {
     });
     unlockCard(c.id);
     const updatedCount = getOwnedCardIds().length;
-    $('cpTeaser').textContent = t('cardProgress', { cur: updatedCount, tot: CARDS.length }) + ' · ' + (updatedCount >= CARDS.length ? t('cardAllUnlocked') : t('cardTeaser'));
+    $('cpTeaser').textContent = t('cardProgress', { cur: updatedCount, tot: CARDS.length }) + ' · ' + getCardTeaserText();
     $('bCardSkip').style.display = 'none';
     $('bCardContinue').style.display = 'inline-block';
     if (!COARSE) setTimeout(() => $('bCardContinue').focus(), 40);
@@ -1939,7 +1953,7 @@ const STR = {
     badgesTitle: 'Endless Milestones', badgeUnlocked: 'Unlocked', badgeLocked: '{rem} levels left',
     badgeProgress: '{cur}/{tot}', badgeNew: 'Milestone Unlocked!', nextMilestone: 'Next: {name} ({rem} left)',
     allMilestonesDone: 'All milestones achieved!',
-    biomeKapadokya: 'Cappadocia', biomeKaradeniz: 'Karadeniz', biomeEge: 'Aegean', biomeBozkir: 'Steppe', regEge: 'Aegean',
+    biomeKapadokya: 'Cappadocia', biomeKaradeniz: 'Karadeniz', biomeEge: 'Aegean', biomeBozkir: 'Steppe', biomeLabel: 'Region', biomeAuto: 'Automatic', regEge: 'Aegean',
     contrast: 'High contrast', contrastSub: 'Distinguish rivers from roads',
     a11y: 'Accessibility', a11ySub: 'Text size, reduced motion, auto-pause', anotherGame: 'Try another game ↗',
     awFirstWin: 'Fay Hattı: first map solved', awPerfect: 'Fay Hattı: 3 stars', awMilestone: 'Fay Hattı: endless badge',
@@ -2003,7 +2017,7 @@ const STR = {
     badgesTitle: 'Sonsuz Mod Aşamaları', badgeUnlocked: 'Kazanıldı', badgeLocked: '{rem} seviye kaldı',
     badgeProgress: '{cur}/{tot}', badgeNew: 'Yeni Aşama Rozeti!', nextMilestone: 'Sıradaki: {name} ({rem} seviye kaldı)',
     allMilestonesDone: 'Tüm aşamalar tamamlandı!',
-    biomeKapadokya: 'Kapadokya', biomeKaradeniz: 'Karadeniz', biomeEge: 'Ege', biomeBozkir: 'Bozkır', regEge: 'Ege',
+    biomeKapadokya: 'Kapadokya', biomeKaradeniz: 'Karadeniz', biomeEge: 'Ege', biomeBozkir: 'Bozkır', biomeLabel: 'Bölge', biomeAuto: 'Otomatik', regEge: 'Ege',
     contrast: 'Yüksek kontrast', contrastSub: 'Nehir ve yolları belirginleştir',
     a11y: 'Erişilebilirlik', a11ySub: 'Yazı boyutu, az hareket, otomatik duraklatma', anotherGame: 'Başka oyun dene ↗',
     awFirstWin: 'Fay Hattı: ilk harita çözüldü', awPerfect: 'Fay Hattı: 3 yıldız', awMilestone: 'Fay Hattı: sonsuz mod rozeti',
@@ -2090,7 +2104,16 @@ const EGE_PLACES = ['Assos', 'Şirince', 'Adatepe', 'Kayaköy', 'Trilye', 'Birgi
 const EGE_PLACES_SET = new Set(EGE_PLACES);
 
 // Regional biome rotation: Kapadokya debuts week of Nov 9-15 2026 (Nov 12). Karadeniz debuts week of Nov 16-22. Ege debuts week of Nov 23-29.
+// Save migration v1 (KARARLAR #7): before this version the region card silently wrote a permanent
+// biome override and froze the weekly rotation; there was no UI to undo it and no way to tell an
+// explicit choice from the card side effect, so every stored override is reset to automatic once.
+const BIOME_MIG = 1;
+if (!NOSAVE && !AUTO && DEMO == null && store.get('biomeMig', 0) < BIOME_MIG) {
+  try { localStorage.removeItem('fayhatti.biome'); } catch (e) {}
+  store.set('biomeMig', BIOME_MIG);
+}
 let biomeOverride = store.get('biome', null);
+if (biomeOverride !== 'kapadokya' && biomeOverride !== 'karadeniz' && biomeOverride !== 'ege' && biomeOverride !== 'bozkir') biomeOverride = null;
 function getBiome(mode, seed, level) {
   if (biomeOverride) return biomeOverride;
   const q = (QS.get('theme') || QS.get('biome') || QS.get('region') || '').toLowerCase();
@@ -3125,8 +3148,9 @@ function win() {
   if (streakIncreased) triggerStreakPop();
   let bsc = store.get('boardsSinceCard', 0) + 1;
   store.set('boardsSinceCard', bsc);
-  const shouldOfferCards = !BOT && !AUTO && DEMO == null && CARDS_PARAM !== 'none';
+  const shouldOfferCards = !BOT && !AUTO && DEMO == null && CARDS_PARAM !== 'none' && bsc >= CARD_EVERY;
   const cardsToOffer = shouldOfferCards ? pickTwoCardsToOffer(false) : null;
+  if (cardsToOffer && cardsToOffer.length > 0) store.set('boardsSinceCard', 0);
   if (cardsToOffer && cardsToOffer.length > 0) {
     setTimeout(() => showCardPick(cardsToOffer), AUTO || RM ? 500 : 1400);
   } else {
@@ -5243,6 +5267,15 @@ function fillMenu() {
     el.classList.toggle('active', on);
     el.setAttribute('aria-checked', String(on));
   });
+  $('mBiomeLabel').textContent = t('biomeLabel');
+  [['bmAuto', null, 'biomeAuto'], ['bmBozkir', 'bozkir', 'biomeBozkir'], ['bmKapadokya', 'kapadokya', 'biomeKapadokya'], ['bmKaradeniz', 'karadeniz', 'biomeKaradeniz'], ['bmEge', 'ege', 'biomeEge']].forEach(([id, k, key]) => {
+    const el = $(id);
+    if (!el) return;
+    el.textContent = t(key);
+    const on = (biomeOverride || null) === k;
+    el.classList.toggle('active', on);
+    el.setAttribute('aria-checked', String(on));
+  });
 }
 function closeAll(resume = true) { document.querySelectorAll('.ov').forEach((o) => o.classList.remove('on')); if (resume) resumeTimer(); }
 const COARSE = matchMedia('(pointer:coarse)').matches;
@@ -5983,6 +6016,9 @@ $('bCardContinue').onclick = closeCardPick;
 $('thClassic').onclick = () => { sfx.click(); applyTheme('classic'); };
 $('thGece').onclick = () => { sfx.click(); applyTheme('gece'); };
 $('thKagit').onclick = () => { sfx.click(); applyTheme('kagit'); };
+[['bmAuto', null], ['bmBozkir', 'bozkir'], ['bmKapadokya', 'kapadokya'], ['bmKaradeniz', 'karadeniz'], ['bmEge', 'ege']].forEach(([id, b]) => {
+  $(id).onclick = () => { sfx.click(); applyBiome(b); fillMenu(); };
+});
 document.querySelectorAll('.ov').forEach((o) => o.addEventListener('click', (e) => { if (e.target === o && o.id !== 'menu') { if (o.id === 'help') closeHelp(); else if (o.id === 'verify') closeVerify(); else if (o.id === 'hint') closeHint(); else if (o.id === 'cardPick') closeCardPick(); else { o.classList.remove('on'); resumeTimer(); } } }));
 
 // ---------------------------------------------------------------- debug overlay, API, boot
