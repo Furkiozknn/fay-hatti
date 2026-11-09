@@ -186,6 +186,25 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
 .hh-btn:hover{background:#fcd172}
 .hh-close{border:0;background:transparent;color:var(--ink2);font-size:16px;padding:2px 6px;cursor:pointer;border-radius:50%;line-height:1;min-width:28px;min-height:28px;display:inline-flex;align-items:center;justify-content:center}
 .hh-close:hover{color:var(--ink)}
+/* Köylüler (villagers): "Sağ mı? / Are they safe?" report after a quake */
+.vill-rep{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);width:calc(100% - 24px);max-width:400px;box-sizing:border-box;background:var(--paper);color:var(--paper-ink);border-radius:14px;padding:8px 12px 9px;box-shadow:0 10px 30px rgba(0,0,0,.45),inset 0 0 0 2px #d9c596;z-index:5;font-size:13px;line-height:1.35;display:none}
+.vill-rep.on{display:block;animation:villIn .22s ease-out}
+@keyframes villIn{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+.vill-rep .vr-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
+.vill-rep .vr-head b{font:700 15px/1.2 "Palatino Linotype",Palatino,Georgia,serif;color:#5a2a18}
+.vill-rep .vr-close{border:0;background:transparent;color:#7a5638;font-size:15px;min-width:32px;min-height:32px;border-radius:50%}
+.vill-rep ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.vill-rep li{display:flex;gap:6px;align-items:baseline}
+.vill-rep .vr-dot{flex:none;width:8px;height:8px;border-radius:50%;background:#7fb26a;transform:translateY(-1px)}
+.vill-rep li.cut .vr-dot{background:#e0553a}
+.vill-rep .vr-st{font-weight:700;white-space:nowrap}
+.vill-rep li.safe .vr-st{color:#3f7a32}.vill-rep li.cut .vr-st{color:#a63f27}.vill-rep li.back .vr-st{color:#9c6a12}
+.vill-names{width:100%;min-height:64px;box-sizing:border-box;border:1px solid #b8935a;border-radius:10px;background:rgba(255,255,255,.55);color:var(--paper-ink);font:14px/1.35 inherit;padding:8px;resize:vertical;-webkit-user-select:text;user-select:text}
+.vill-box summary{cursor:pointer;font-weight:700;padding:10px 2px;min-height:24px}
+.vill-box .note{margin:4px 0 6px;font-size:13px;opacity:.85}
+body.high-contrast .vill-rep{background:#ffffff;color:#111111;box-shadow:inset 0 0 0 3px #111111}
+body.high-contrast .vill-rep li.safe .vr-st{color:#0f5132}body.high-contrast .vill-rep li.cut .vr-st{color:#8a200a}
+@media (prefers-reduced-motion:reduce){.vill-rep.on{animation:none}}
 body.high-contrast .hint-cost{background:#ffffff;border:2px solid #ff2a05;color:#ff2a05}
 body.high-contrast .hint-cost svg{stroke:#ff2a05}
 body.high-contrast .hint-steps{background:#ffffff;border:2px solid #111111}
@@ -450,6 +469,10 @@ body.high-contrast .cp-teaser{color:#111111}
       <button id="bStepHint" class="hh-btn"></button>
       <button id="bCloseHint" class="hh-close" aria-label="Dismiss hint">✕</button>
     </div>
+    <div id="villRep" class="vill-rep" role="status" aria-live="polite">
+      <div class="vr-head"><b id="villRepTitle"></b><button class="vr-close" id="bVillClose" aria-label="Close">✕</button></div>
+      <ul id="villRepList"></ul>
+    </div>
     <div id="tutTip" role="region" aria-live="polite" aria-label="Tutorial">
       <div class="tut-head">
         <div class="tut-title-wrap">
@@ -513,6 +536,12 @@ body.high-contrast .cp-teaser{color:#111111}
     <button class="btn alt" id="bContrast" aria-pressed="false"></button>
     <div class="mini"><button id="mSound"></button><button id="mHaptic" aria-pressed="false"></button></div>
     <div class="mini"><button id="mLang"></button><button id="mReach"></button></div>
+    <details class="theme-box vill-box" id="villBox">
+      <summary id="villSum"></summary>
+      <p class="note" id="villNote"></p>
+      <textarea id="villNames" class="vill-names" rows="3" maxlength="900" spellcheck="false"></textarea>
+      <div class="row"><button class="btn alt" id="bVillSave" style="text-align:center"></button><button class="btn alt" id="bVillReset" style="text-align:center"></button></div>
+    </details>
     <div class="theme-box">
       <div class="theme-lbl" id="mThemeLabel"></div>
       <div class="theme-pills" role="radiogroup" aria-labelledby="mThemeLabel">
@@ -1564,6 +1593,10 @@ const STR = {
     reach: 'One hand', reachRight: 'right', reachLeft: 'left',
     close: 'Close', starsLabel: '{n} of 3 stars', rowName: 'Row {r}', colName: 'Column {c}', lineMoved: '{line} shifted',
     undoDone: 'Move undone', restartDone: 'Restarted',
+    villTitle: 'Are they safe?', villSafe: 'safe', villCut: 'cut off', villBack: 'reconnected', villAllSafe: 'Everyone is safe',
+    villVillage: 'Village {n}', villSettings: 'Villager names',
+    villNote: 'Comma-separated. Leave empty to use the built-in names. Saved on this device only.',
+    villSave: 'Save', villReset: 'Default', villSaved: 'Villager names saved', villCleared: 'Built-in names restored',
     integrity: 'Seed Integrity', freezeTitle: 'Code Freeze & Integrity', freezeSub: 'Seeds verified through Dec 31',
     freezeRange: 'Range: {from} → {to}', freezeStatus: '{ok}/{total} daily seeds verified solvable',
     freezePar: 'Par range: {min}–{max} moves (avg {avg})', freezeSeal: 'CODE FREEZE LOCKED · SEED INTEGRITY VERIFIED',
@@ -1622,6 +1655,10 @@ const STR = {
     reach: 'Tek el', reachRight: 'sağ', reachLeft: 'sol',
     close: 'Kapat', starsLabel: '3 üzerinden {n} yıldız', rowName: '{r}. satır', colName: '{c}. sütun', lineMoved: '{line} kaydırıldı',
     undoDone: 'Hamle geri alındı', restartDone: 'Baştan başlatıldı',
+    villTitle: 'Sağ mı?', villSafe: 'güvende', villCut: 'yolu kesik', villBack: 'yeniden bağlandı', villAllSafe: 'Herkes güvende',
+    villVillage: '{n}. köy', villSettings: 'Köylü adları',
+    villNote: 'Virgülle ayır. Boş bırakırsan hazır adlar kullanılır. Yalnız bu cihazda saklanır.',
+    villSave: 'Kaydet', villReset: 'Varsayılan', villSaved: 'Köylü adları kaydedildi', villCleared: 'Hazır adlara dönüldü',
     integrity: 'Tohum Doğrulama', freezeTitle: 'Kod Dondurma & Doğrulama', freezeSub: '31 Aralık\'a kadar çözülebilirlik onaylandı',
     freezeRange: 'Aralık: {from} → {to}', freezeStatus: '{ok}/{total} günlük tohum çözülebilir',
     freezePar: 'Hedef hamle: {min}–{max} (ort. {avg})', freezeSeal: 'KOD DONDURULDU · TOHUM GÜVENLİĞİ ONAYLANDI',
@@ -2016,6 +2053,7 @@ function getDropOffReport() {
 // ---------------------------------------------------------------- game state & dynamic tutorial
 const G = { mode: 'daily', seed: '', level: 1, tier: normTier(QS.get('tier') || store.get('tier', 'normal')), marathonStage: 1, marathonDate: '', pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], riv: [], bot: null, celebrateAt: 0, place: '', biome: 'bozkir', ferryActive: false, hintActive: false, hintUsed: false, hintPlan: null, hintStep: 0, newMilestone: null, parTime: null, timerStart: 0, timerOffset: 0, timerPaused: false, pauseTime: 0, finalTime: null, isUnderParTime: false, isNewBest: false };
 let streakIncreased = false;
+let lastMoveQuaked = false; // Köylüler report: did the last player move end with a quake?
 // difficulty tiers: per-tier endless progress; Normal keeps the original keys so old saves load unchanged
 const tierKey = (tr) => { const x = normTier(tr); return x === 'normal' ? 'endless' : 'endless_' + x; };
 const tierSeed = (level) => (G.tier === 'normal' ? 'L' : 'L' + G.tier[0].toUpperCase()) + level;
@@ -2163,6 +2201,95 @@ function updateLinkChip() {
   }
   linkShown = { key, linked: c.linked };
 }
+
+// Signature mechanic "Köylüler" (villagers): every village has named residents. After a quake a short
+// "Sağ mı? / Are they safe?" report lists who is connected (safe) and who is cut off; reconnecting a
+// village later updates the report. Names come ONLY from this generic built-in list or from the player's
+// own list typed into the menu (stored locally). Nothing is fetched.
+const VILLAGER_NAMES = ['Ayşe Teyze', 'Hasan Amca', 'Fatma Nine', 'Mehmet Dede', 'Zeynep', 'Ali Usta', 'Emine Hala', 'Mustafa Çoban',
+  'Elif', 'Hüseyin Dayı', 'Hatice', 'İbrahim Efendi', 'Meryem Ebe', 'Osman Kahveci', 'Hacer', 'Yusuf', 'Gülsüm Abla', 'Ömer', 'Nuriye',
+  'Halil Demirci', 'Şerife', 'Kemal Muhtar', 'Sultan Nine', 'Rıza Bakkal', 'Hanife', 'Cemile', 'Durmuş', 'Kezban', 'Veli', 'Saliha'];
+const VILL_KEY = 'villagerNames';
+function cleanVillagerList(raw) {
+  const out = [];
+  for (const x of String(raw || '').split(/[,\n;]/)) {
+    const n = x.replace(/<[^>]*>/g, '').replace(/[<>&"`]/g, '').replace(/\s+/g, ' ').trim().slice(0, 24);
+    if (n && !out.includes(n)) out.push(n);
+    if (out.length >= 40) break;
+  }
+  return out;
+}
+function customVillagers() {
+  let v = null;
+  try { v = store.get(VILL_KEY, null); } catch (e) { v = null; }
+  return Array.isArray(v) ? cleanVillagerList(v.join(',')) : [];
+}
+function setCustomVillagers(raw) {
+  const list = cleanVillagerList(raw);
+  try {
+    if (list.length) store.set(VILL_KEY, list);
+    else if (!NOSAVE) localStorage.removeItem('fayhatti.' + VILL_KEY);
+  } catch (e) {}
+  villagersOf.cache = null;
+  return list;
+}
+// deterministic residents per puzzle: 2-3 per village, no name repeated within a map
+function villagersOf() {
+  if (!G.pz) return [];
+  const key = G.seed + '|' + G.pz.villages.length;
+  if (villagersOf.cache && villagersOf.cache.key === key) return villagersOf.cache.list;
+  const custom = customVillagers(), src = custom.length ? custom : VILLAGER_NAMES;
+  let pool = src.slice();
+  const R = rng32(hashStr('koy' + G.seed));
+  const list = G.pz.villages.map((vg, i) => {
+    const want = 2 + (R() < 0.5 ? 1 : 0), names = [];
+    for (let k = 0; k < want; k++) {
+      if (!pool.length) pool = src.filter((n) => !names.includes(n)); // a short player list is reused across villages
+      if (!pool.length) break;
+      names.push(pool.splice((R() * pool.length) | 0, 1)[0]);
+    }
+    return { index: i, cell: vg.cell, names };
+  });
+  villagersOf.cache = { key, list };
+  return list;
+}
+let villRep = { shown: false, until: 0, lastSat: null, back: [] };
+function hideVillReport() { villRep.shown = false; const el = $('villRep'); if (el) el.classList.remove('on'); }
+function renderVillReport(sat) {
+  const el = $('villRep'); if (!el) return;
+  const vs = villagersOf();
+  $('villRepTitle').textContent = t('villTitle');
+  const allSafe = sat.length && sat.every(Boolean);
+  $('villRepList').innerHTML = '';
+  vs.forEach((v, i) => {
+    const li = document.createElement('li');
+    const st = sat[i] ? (villRep.back.includes(i) ? 'back' : 'safe') : 'cut';
+    li.className = st === 'cut' ? 'cut' : st === 'back' ? 'safe back' : 'safe';
+    const dot = document.createElement('span'); dot.className = 'vr-dot';
+    const txt = document.createElement('span');
+    txt.textContent = t('villVillage', { n: i + 1 }) + ': ' + (v.names.join(', ') || '—') + ' · ';
+    const stEl = document.createElement('span'); stEl.className = 'vr-st';
+    stEl.textContent = t(st === 'cut' ? 'villCut' : st === 'back' ? 'villBack' : 'villSafe');
+    txt.appendChild(stEl); li.append(dot, txt);
+    $('villRepList').appendChild(li);
+  });
+  if (allSafe) { const li = document.createElement('li'); li.className = 'safe'; li.textContent = '✓ ' + t('villAllSafe'); $('villRepList').appendChild(li); }
+}
+// called when the board comes to rest after a player move; quaked = a quake actually shifted the ground
+function updateVillReport(sat, quaked) {
+  if (!G.pz || BOT) return;
+  const prev = villRep.lastSat;
+  const reconnected = prev ? sat.map((ok, i) => ok && !prev[i]).reduce((a, x, i) => (x ? a.concat(i) : a), []) : [];
+  const shouldShow = quaked || (villRep.shown && reconnected.length) || (prev && prev.some((ok) => !ok) && reconnected.length && villRep.everShown);
+  villRep.back = reconnected.length ? reconnected : quaked ? [] : villRep.back;
+  villRep.lastSat = sat.slice();
+  if (!shouldShow) return;
+  renderVillReport(sat);
+  villRep.shown = true; villRep.everShown = true; villRep.until = performance.now() + 4500;
+  const el = $('villRep');
+  if (el && !tutActive) { el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); }
+}
+function resetVillReport() { hideVillReport(); villRep = { shown: false, until: 0, lastSat: null, back: [] }; villagersOf.cache = null; }
 
 // Gameplay card: hint-glow (active in endless/level modes, never in daily)
 let hint = null;
@@ -2409,7 +2536,7 @@ function startPuzzle(mode, arg, opt = true) {
     let pz = null;
     for (let k = 0; !pz && k < 5; k++) pz = makePuzzle(seed + k * 7919, cfg);
     G.genMs = Math.round(performance.now() - t0);
-    G.pz = pz; G.ids = pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.sat = []; G.riv = []; G.ferryActive = false; prevConnectedStops = 0; G.newMilestone = null; villagePulse.length = 0;
+    G.pz = pz; G.ids = pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.sat = []; G.riv = []; G.ferryActive = false; prevConnectedStops = 0; G.newMilestone = null; villagePulse.length = 0; resetVillReport();
     G.biome = biomeOverride || getBiome(mode, G.seed, mode === 'marathon' ? G.marathonStage : G.level);
     const isKrd = G.biome === 'karadeniz' && currentTheme === 'classic';
     const isEge = G.biome === 'ege' && currentTheme === 'classic';
@@ -2460,6 +2587,7 @@ function doMove(m) {
   if (pz.lens[line] === 2) m = line * 2; // a 2-tile line swaps either way
   flushAnims();
   G.undo.push({ ids: G.ids, moves: G.moves });
+  lastMoveQuaked = false;
   const before = G.ids, a = applyPerm(before, pz.perms[m]);
   G.moves++;
   const moveElapsed = puzzleStartTime ? Math.round(performance.now() - puzzleStartTime) : 0;
@@ -2475,6 +2603,7 @@ function doMove(m) {
     const q = pz.quakes[(G.moves - 1) % pz.quakes.length];
     if (!isCalmQuake(pz, q)) { // a calm turn (Kolay tier) leaves the ground still
       cur = applyPerm(a, pz.perms[q]);
+      lastMoveQuaked = true;
       const qr = quakeRows(pz, q);
       trackEvent('quake', { move: G.moves, q, row: qr[0].row, dir: qr[0].dir, rows: qr.length });
       pushAnim('quake', a, cur, q);
@@ -2526,7 +2655,7 @@ function restart() {
   puzzleRestarts++;
   trackEvent('restart', { movesAtRestart: G.moves, restartsInPuzzle: puzzleRestarts });
   flushAnims(); closeAll();
-  G.ids = G.pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.state = 'play'; particles = []; ripples = []; G.riv = []; G.ferryActive = false; prevConnectedStops = 0; G.newMilestone = null; villagePulse.length = 0;
+  G.ids = G.pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.state = 'play'; particles = []; ripples = []; G.riv = []; G.ferryActive = false; prevConnectedStops = 0; G.newMilestone = null; villagePulse.length = 0; resetVillReport();
   G.hintActive = false; G.hintUsed = false; G.hintPlan = null; G.hintStep = 0;
   updateHintHud();
   if (isSpeedrunActive()) {
@@ -2724,6 +2853,9 @@ function settle(silent) {
   const stops = (isKervansarayActive() && G.pz) ? disp.vals.reduce((a, v, i) => a + (((v >> 4) === KD && popcount(v & 15) >= 3 && disp.dD[i] >= 0) ? 1 : 0), 0) : 0;
   if (!silent && isKervansarayActive() && stops > prevConnectedStops && st.sat.every((ok, i) => prevSat[i] || !ok)) sfx.caravanBell();
   prevConnectedStops = stops;
+  if (!silent && !G.won) { updateVillReport(st.sat, lastMoveQuaked); lastMoveQuaked = false; }
+  else if (silent) { villRep.lastSat = st.sat.slice(); hideVillReport(); }
+  if (G.won) hideVillReport();
   G.sat = st.sat.slice();
   G.riv = curRiv.slice();
   if (!silent && G.pz) {
@@ -3926,6 +4058,7 @@ function frame(now) {
   updateTimerHud(now);
   stepAnims(dt);
   if (hint && now >= hint.until) { hint = null; updateHud(); }
+  if (villRep.shown && now >= villRep.until) hideVillReport();
   // Directional screen shake decay and transform (cosmetic card: juice-quake-shake)
   if (quakeTrauma > 0) {
     quakeTrauma *= Math.exp(-dt / 130);
@@ -4702,6 +4835,12 @@ function fillMenu() {
   $('bContrast').setAttribute('aria-pressed', String(highContrast));
   $('mLang').textContent = lang === 'tr' ? 'English' : 'Türkçe';
   $('mReach').textContent = t('reach') + ': ' + t(reach === 'left' ? 'reachLeft' : 'reachRight');
+  $('villSum').textContent = t('villSettings');
+  $('villNote').textContent = t('villNote');
+  $('bVillSave').textContent = t('villSave'); $('bVillReset').textContent = t('villReset');
+  $('villNames').placeholder = VILLAGER_NAMES.slice(0, 4).join(', ') + ', …';
+  if (document.activeElement !== $('villNames')) $('villNames').value = customVillagers().join(', ');
+  $('bVillClose').setAttribute('aria-label', t('close'));
   $('mSound').textContent = t('sound') + ': ' + (muted ? t('off') : t('on'));
   $('mHaptic').textContent = t('haptic') + ': ' + (haptic ? t('on') : t('off'));
   $('mHaptic').setAttribute('aria-pressed', String(haptic));
@@ -5384,6 +5523,9 @@ $('bUndo').onclick = undo; $('bRestart').onclick = restart; $('bHint').onclick =
 $('bSound').onclick = toggleMute; $('mSound').onclick = toggleMute; $('mHaptic').onclick = toggleHaptic; $('bLang').onclick = toggleLang; $('mLang').onclick = toggleLang;
 $('bContrast').onclick = () => { toggleContrast(); sfx.click(); };
 $('mReach').onclick = () => { sfx.click(); setReach(reach === 'right' ? 'left' : 'right'); };
+$('bVillSave').onclick = () => { sfx.click(); const l = setCustomVillagers($('villNames').value); $('villNames').value = l.join(', '); toast(l.length ? t('villSaved') : t('villCleared')); };
+$('bVillReset').onclick = () => { sfx.click(); setCustomVillagers(''); $('villNames').value = ''; toast(t('villCleared')); };
+$('bVillClose').onclick = () => { sfx.click(); hideVillReport(); };
 $('bDaily').onclick = () => {
   sfx.click();
   if (G.mode === 'daily' && G.seed === todaySeed() && G.pz && !G.won) {
@@ -5492,6 +5634,9 @@ window.fayHatti = {
   },
   get milestones() { return this.badges; },
   get nextQuake() { const q = nextQuake(); if (q < 0) return null; const qr = quakeRows(G.pz, q); return { row: qr[0].row, dir: qr[0].dir, double: qr.length > 1, rows: qr.map((o) => o.row), dirs: qr.map((o) => o.dir) }; },
+  get villagers() { const sat = G.pz && G.ids ? countLinked().sat : []; return villagersOf().map((v, i) => ({ village: i + 1, cell: v.cell, names: v.names.slice(), safe: !!sat[i] })); },
+  get villagerReport() { const el = $('villRep'); return { visible: !!(el && el.classList.contains('on')), lines: el ? [...el.querySelectorAll('li')].map((li) => li.textContent) : [] }; },
+  setVillagerNames: (raw) => setCustomVillagers(Array.isArray(raw) ? raw.join(',') : raw),
   get linked() { const c = countLinked(); return { linked: c.linked, total: c.total, sat: c.sat.slice() }; },
   get linkChip() { const el = $('linkChip'); return el && el.style.display !== 'none' ? el.textContent : null; },
   get trauma() { return quakeTrauma; },
