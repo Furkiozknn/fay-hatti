@@ -1364,7 +1364,7 @@ function showCardPick(cardsToOffer = null) {
   $('cpTeaser').textContent = t('cardProgress', { cur: ownedCount, tot: CARDS.length }) + ' · ' + t('cardTeaser');
   const container = $('cpCards');
   container.innerHTML = pair.map((c) => {
-    const info = c[lang] || c.en;
+    const info = { title: (c.title && (c.title[lang] || c.title.en)) || c.id, desc: (c.desc && (c.desc[lang] || c.desc.en)) || '' };
     const typeLabel = c.type === 'gameplay' ? t('cardGameplay') : t('cardCosmetic');
     return `<div class="cp-card" data-id="${c.id}" role="button" tabindex="0" aria-label="${info.title} (${typeLabel})">
       <div class="cp-card-inner">
@@ -1437,7 +1437,7 @@ const STR = {
     hintGlowRow: 'Hint: Row {n} glowing', hintGlowCol: 'Hint: Column {n} glowing', hintNone: 'Already on track', hintAgain: 'tap Hint again for the full path',
     menu: 'Menu', sound: 'Sound', haptic: 'Haptic', on: 'on', off: 'off', level: 'Level {n}', dailyTag: 'Daily · {d}',
     quakeNext: 'Next quake: row {r} {a}', quakeActive: 'Earthquake!', calm: 'The ground is calm', loading: 'Drawing the map…', solvedT: 'Connected!',
-    resLine: '{m} moves · par {p}', share: 'Share result', saveCard: 'Save card', cardCopied: 'Card image copied to clipboard', cardSaved: 'Card saved to device', next: 'Next level', toEndless: 'Play endless', back: 'Menu',
+    resLine: '{m} moves · par {p}', share: 'Share result', shareSaved: 'Result card saved (PNG)', saveCard: 'Save card', cardCopied: 'Card image copied to clipboard', cardSaved: 'Card saved to device', next: 'Next level', toEndless: 'Play endless', back: 'Menu',
     copied: 'Copied to clipboard', tomorrow: 'A new map tomorrow.', endlessNote: 'Level {n} done.', movesWord: 'moves',
     marathon: 'Endless Marathon', marathonTag: 'Marathon · {d} · Stage {s}', marathonStageDone: 'Stage {s} cleared in today’s marathon!', nextStage: 'Next stage',
     gotIt: 'Got it', solvedOn: 'Solved', playTag: 'same map for everyone', board: 'Puzzle board',
@@ -1485,7 +1485,7 @@ const STR = {
     hintGlowRow: 'İpucu: {n}. satır parıldıyor', hintGlowCol: 'İpucu: {n}. sütun parıldıyor', hintNone: 'Doğru yoldasın', hintAgain: 'tüm yol için İpucu\'ya tekrar bas',
     menu: 'Menü', sound: 'Ses', haptic: 'Titreşim', on: 'açık', off: 'kapalı', level: 'Bölüm {n}', dailyTag: 'Günlük · {d}',
     quakeNext: 'Sıradaki deprem: {r}. satır {a}', quakeActive: 'Deprem!', calm: 'Yer sakin', loading: 'Harita çiziliyor…', solvedT: 'Bağlandı!',
-    resLine: '{m} hamle · hedef {p}', share: 'Sonucu paylaş', saveCard: 'Kartı kaydet', cardCopied: 'Kart panoya kopyalandı', cardSaved: 'Kart cihaza kaydedildi', next: 'Sonraki bölüm', toEndless: 'Sonsuz moda geç', back: 'Menü',
+    resLine: '{m} hamle · hedef {p}', share: 'Paylaş', shareSaved: 'Sonuç kartı kaydedildi (PNG)', saveCard: 'Kartı kaydet', cardCopied: 'Kart panoya kopyalandı', cardSaved: 'Kart cihaza kaydedildi', next: 'Sonraki bölüm', toEndless: 'Sonsuz moda geç', back: 'Menü',
     copied: 'Panoya kopyalandı', tomorrow: 'Yarın yeni bir harita.', endlessNote: '{n}. bölüm tamam.', movesWord: 'hamle',
     marathon: 'Sonsuz Maraton', marathonTag: 'Maraton · {d} · {s}. Aşama', marathonStageDone: 'Günün maratonunda {s}. aşama tamamlandı!', nextStage: 'Sonraki aşama',
     gotIt: 'Anladım', solvedOn: 'Çözüldü', playTag: 'herkes için aynı harita', board: 'Bulmaca tahtası',
@@ -5112,50 +5112,72 @@ function showResult() {
 }
 let toastT = 0;
 function toast(msg) { const el = $('toast'); el.textContent = msg; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 1800); }
+// T263: 640x640 offscreen result card (solved board, stars, date, #FayHattı).
+// Reuses the share-card-art drawing (560x420) and adds a footer; never touches the on-screen card.
+const SHARE_SQ = 640;
+function solveDateLabel() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function renderShareSquare() {
+  if (!G.pz) return null;
+  const c = document.createElement('canvas');
+  c.width = SHARE_SQ; c.height = SHARE_SQ;
+  const cx = c.getContext('2d');
+  const bg = cx.createLinearGradient(0, 0, SHARE_SQ, SHARE_SQ);
+  bg.addColorStop(0, '#2a1c14'); bg.addColorStop(1, '#17120b');
+  cx.fillStyle = bg; cx.fillRect(0, 0, SHARE_SQ, SHARE_SQ);
+  const inner = document.createElement('canvas');
+  inner.width = 560; inner.height = 420;
+  renderShareCard(inner);
+  cx.drawImage(inner, 40, 28);
+  // footer: big stars, mode/date line, hashtag
+  for (let s = 0; s < 3; s++) drawCardStar(cx, SHARE_SQ / 2 + (s - 1) * 54, 492, 20, s < G.stars);
+  cx.textAlign = 'center'; cx.textBaseline = 'middle';
+  cx.fillStyle = '#f3e3c3';
+  cx.font = '700 22px "Palatino Linotype",Palatino,Georgia,serif';
+  const modeStr = G.mode === 'daily' ? t('dailyTag', { d: seedLabel(G.seed) }) : G.mode === 'marathon' ? t('marathonTag', { d: seedLabel(G.marathonDate), s: G.marathonStage }) : t('endless') + ' · ' + t('level', { n: G.level });
+  cx.fillText(modeStr, SHARE_SQ / 2, 540);
+  cx.font = '600 16px "Segoe UI",system-ui,sans-serif';
+  cx.fillStyle = '#d4c3a2';
+  // daily: the date is already in the mode line; other modes add the solve date
+  cx.fillText(t('resLine', { m: G.moves, p: G.pz.par }) + (G.mode === 'daily' ? '' : ' · ' + solveDateLabel()), SHARE_SQ / 2, 570);
+  cx.font = '800 24px "Segoe UI",system-ui,sans-serif';
+  cx.fillStyle = '#f2b33d';
+  cx.fillText('#FayHattı', SHARE_SQ / 2, 608);
+  return c;
+}
+function shareFileName() { return `fay-hatti-${String(G.seed).replace(/[^\w-]/g, '')}.png`; }
+// returns 'shared' | 'aborted' | 'downloaded' | 'failed' (also exposed for tests)
 async function share() {
   sfx.click();
   vibe(20);
   trackEvent('share', { mode: G.mode, seed: G.seed, level: G.level, moves: G.moves, stars: G.stars });
-  const text = shareText() + '\n' + shareUrl();
-  const c = $('rCard');
-  if (shareCardArtEnabled && navigator.share && c && c.toBlob) {
+  const text = shareText() + '\n#FayHattı\n' + shareUrl();
+  const sq = renderShareSquare();
+  const blob = sq && sq.toBlob ? await new Promise((res) => sq.toBlob(res, 'image/png')) : null;
+  if (!blob) return 'failed';
+  const name = shareFileName();
+  let file = null;
+  try { file = new File([blob], name, { type: 'image/png' }); } catch (e) {}
+  if (file && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
-      const blob = await new Promise((res) => c.toBlob(res, 'image/png'));
-      if (blob) {
-        const file = new File([blob], `fay-hatti-${G.seed}.png`, { type: 'image/png' });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ title: 'Fay Hattı', text, files: [file] });
-          return;
-        }
-      }
+      await navigator.share({ title: 'Fay Hattı', text, files: [file] });
+      return 'shared';
     } catch (e) {
-      if (e && e.name === 'AbortError') return;
+      if (e && e.name === 'AbortError') return 'aborted';
     }
   }
-  if (shareCardArtEnabled && navigator.clipboard && window.ClipboardItem && c && c.toBlob) {
-    try {
-      const blob = await new Promise((res) => c.toBlob(res, 'image/png'));
-      if (blob) {
-        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-        toast(t('cardCopied'));
-        return;
-      }
-    } catch (e) {}
-  }
-  if (navigator.share && matchMedia('(pointer:coarse)').matches) {
-    try { await navigator.share({ text }); return; }
-    catch (e) { if (e && e.name === 'AbortError') return; }
-  }
   try {
-    await navigator.clipboard.writeText(text);
-    toast(t('copied'));
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    toast(t('shareSaved'));
+    return 'downloaded';
   } catch (e) {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
-    try { document.execCommand('copy'); toast(t('copied')); } catch (e2) {}
-    ta.remove();
+    return 'failed';
   }
 }
 function toggleMute() { muted = !muted; store.set('mute', muted); if (AC) master.gain.value = muted ? 0 : 0.55; updateHud(); fillMenu(); if (!muted) sfx.click(); }
@@ -5265,6 +5287,7 @@ window.fayHatti = {
   get linkChip() { const el = $('linkChip'); return el && el.style.display !== 'none' ? el.textContent : null; },
   get trauma() { return quakeTrauma; },
   get shareCard() { return $('rCard'); }, renderShareCard: () => renderShareCard($('rCard')), saveShareCard, share,
+  shareSquare: () => renderShareSquare(),
   get shareCardArt() { return shareCardArtEnabled; }, setShareCardArt,
   get quakeJuice() { return quakeJuiceEnabled; }, get quakeShakeEnabled() { return quakeJuiceEnabled; }, setQuakeShake: (v) => setQuakeJuice(v), setQuakeJuice: (v) => setQuakeJuice(v),
   quakeShake: (m) => triggerQuakeHit(m != null ? m : (nextQuake() >= 0 ? nextQuake() : 0)),
