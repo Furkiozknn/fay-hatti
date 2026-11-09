@@ -9,7 +9,7 @@
 <style>
 :root{--bg:#1b2830;--bg2:#23343d;--ink:#f3ead8;--ink2:#c9bda4;--paper:#f3e7cc;--paper-ink:#2b2118;--terra:#a63f27;--gold:#f2b33d;--quake:#e0553a;--focus:#7cc4f0}
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.4 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.4 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
 body{background:radial-gradient(120% 80% at 50% 0%,#2a3f49 0%,var(--bg) 60%)}
 body.biome-kapadokya{background:radial-gradient(120% 80% at 50% 0%,#35262c 0%,#1f161a 60%);--bg:#1f161a;--bg2:#2a1e24;--ink:#f6ede2;--ink2:#cdbdae;--paper:#f5ebd8;--paper-ink:#2d1e16;--terra:#b54c30;--gold:#e8a436;--quake:#e45838}
 /* Karadeniz region visual theme: mist-tinted deep greens, highland paper, tea plantation tones */
@@ -47,7 +47,7 @@ body.biome-ege .res-speedrun b,body.theme-ege .res-speedrun b{color:#2a2016}
 body.biome-ege .tb,body.theme-ege .tb{border-color:#384f3c;background:var(--bg2)}
 body.biome-ege .tb:hover,body.theme-ege .tb:hover{background:#2f4233}
 body.biome-ege #bot,body.theme-ege #bot{background:#3a543e;color:#e8f4ea}
-button{font:inherit;color:inherit;cursor:pointer}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
 button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 body.high-contrast{--bg:#081014;--bg2:#101a20;--ink:#ffffff;--ink2:#f5eedd;--paper:#ffffff;--paper-ink:#111111;--terra:#8a200a;--gold:#ffb703;--quake:#ff2a05;--focus:#00e5ff;background:#081014}
 body.high-contrast .tb{border:2px solid #7899ab;color:#ffffff}
@@ -63,7 +63,7 @@ body.high-contrast .share-card-wrap{border:2px solid #111111;box-shadow:none}
 body.high-contrast .share-prev{border:2px solid #111111;background:#ffffff;color:#111111}
 body.high-contrast .share-prev:hover{background:#f0f0f0}
 body.high-contrast button:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
-#app{position:fixed;inset:0;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto 1fr auto;grid-template-areas:"hud" "quake" "stage" "bar";padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left)}
+#app{position:fixed;inset:0;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto 1fr auto;grid-template-areas:"hud" "quake" "stage" "bar";padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) 0 env(safe-area-inset-left,0px)}
 #hud{grid-area:hud;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px 4px;max-width:620px;width:100%;margin:0 auto}
 .brand{min-width:0}
 .brand-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -91,21 +91,48 @@ body.high-contrast button:focus-visible{outline:3px solid var(--focus);outline-o
 #quake.calm{color:var(--ink2)}#quake.calm .dot{background:#6f8f6a;animation:none}
 #quake.quaking{color:#fff;background:rgba(224,85,58,.28);border-radius:8px}
 #quake.quaking .dot{background:#ff7a59;box-shadow:0 0 10px #ff7a59}
+/* T203: live village connection counter chip (above the board) */
+.link-chip{display:inline-flex;align-items:center;gap:5px;flex:none;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;background:rgba(111,143,106,.18);color:#d7ecd0;border:1px solid rgba(111,143,106,.5);line-height:1.3;font-variant-numeric:tabular-nums;white-space:nowrap}
+.link-chip::before{content:'';width:7px;height:7px;border-radius:50%;background:#8d7f69}
+.link-chip.some::before{background:#f2b33d}
+.link-chip.full{background:rgba(242,179,61,.22);color:#fff3d6;border-color:rgba(242,179,61,.7)}
+.link-chip.full::before{background:#7fb26a}
+.link-chip.bump{animation:linkbump .3s ease-out}
+@keyframes linkbump{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+body.high-contrast .link-chip{background:#081014;color:#ffffff;border:2px solid #ffffff}
+body.high-contrast .link-chip.full{border-color:#ffb703;color:#ffb703}
+@media (prefers-reduced-motion:reduce){.link-chip.bump{animation:none}}
 #bot{display:none;margin-left:8px;padding:2px 8px;border-radius:999px;background:#33505c;color:#e7f4fb;font-size:13px;font-weight:700;letter-spacing:.05em}
 @keyframes pulse{70%{box-shadow:0 0 0 8px rgba(224,85,58,0)}100%{box-shadow:0 0 0 0 rgba(224,85,58,0)}}
 #stage{grid-area:stage;position:relative;min-height:0;min-width:0}
 #cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
-#bar{grid-area:bar;display:flex;justify-content:center;gap:6px;padding:6px 8px calc(10px + env(safe-area-inset-bottom));max-width:620px;margin:0 auto;width:100%}
+#bar{grid-area:bar;display:flex;justify-content:center;gap:6px;padding:6px 8px calc(10px + env(safe-area-inset-bottom,0px));max-width:620px;margin:0 auto;width:100%}
 .tb{flex:1 1 0;max-width:64px;min-width:44px;min-height:48px;padding:4px 4px;border:1px solid #3d5561;border-radius:12px;background:var(--bg2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:12px;color:var(--ink)}
 .tb svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .tb:hover{background:#2c434e}.tb:disabled{opacity:.4;cursor:default}
+/* mobile touch (ported from feature/mobile-touch): press feedback + one-hand reach order of the bottom bar */
+.tb{transition:transform .08s,background .12s}
+.tb:active:not(:disabled){transform:scale(.95);background:#35505e}
+.reach-right #bar #bLang{order:1}.reach-right #bar #bSound{order:2}.reach-right #bar #bMenu{order:3}.reach-right #bar #bHint{order:4}.reach-right #bar #bRestart{order:5}.reach-right #bar #bUndo{order:6}
+.reach-left #bar #bUndo{order:1}.reach-left #bar #bRestart{order:2}.reach-left #bar #bHint{order:3}.reach-left #bar #bMenu{order:4}.reach-left #bar #bSound{order:5}.reach-left #bar #bLang{order:6}
+@media (prefers-reduced-motion:reduce){.tb{transition:none}.tb:active:not(:disabled){transform:none}}
 .tb.active{color:var(--gold);border-color:var(--gold);box-shadow:0 0 10px rgba(242,179,61,.3)}
 .tb b{font-size:15px;line-height:22px}
-.ov{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(14,22,27,.74);z-index:10}
-.ov.on{display:flex}
-.panel{width:100%;max-width:380px;max-height:100%;overflow:auto;background:var(--paper);color:var(--paper-ink);border-radius:18px;padding:22px 20px;box-shadow:0 18px 50px rgba(0,0,0,.45),inset 0 0 0 2px #d9c596;animation:pop .22s ease-out}
+.ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));background:rgba(14,22,27,.78);z-index:10;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility 0s linear .2s}
+.ov.on{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .2s ease,visibility 0s}
+.panel{position:relative;width:100%;max-width:380px;max-height:100%;overflow:auto;overscroll-behavior:contain;background:var(--paper);color:var(--paper-ink);border-radius:18px;padding:22px 20px;box-shadow:0 18px 50px rgba(0,0,0,.45),inset 0 0 0 2px #d9c596;transform:translateY(14px) scale(.97);opacity:0;transition:transform .24s cubic-bezier(.2,.9,.3,1.15),opacity .2s ease}
+.ov.on .panel{transform:none;opacity:1}
 @keyframes pop{from{transform:scale(.94);opacity:0}to{transform:none;opacity:1}}
-.panel h1{margin:0;font:700 34px/1.05 "Palatino Linotype",Palatino,Georgia,serif;color:#5a2a18}
+/* menu polish (ported from feature/polish-menus): close buttons, press feedback, focus ring */
+.panel-close{position:absolute;top:10px;right:10px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid #c9b485;border-radius:50%;background:#ede0bf;color:#5a2a18;font-size:18px;line-height:1;z-index:2}
+.panel-close:hover{background:#f6ecce}.panel-close:active{transform:translateY(1px)}
+body.high-contrast .panel-close{border:2px solid #111111;background:#ffffff;color:#111111}
+.btn{transition:transform .08s,background .12s,box-shadow .08s}
+.btn:active{transform:translateY(2px)}
+.mini button:active{transform:translateY(1px)}
+button:focus:not(:focus-visible){outline:none}
+@media (prefers-reduced-motion:reduce){.ov,.ov.on{transition:none}.panel{transform:none;transition:opacity .12s linear}.btn,.mini button,.panel-close{transition:none;transform:none !important}}
+.panel h1{margin:0;padding-right:40px;font:700 34px/1.05 "Palatino Linotype",Palatino,Georgia,serif;color:#5a2a18}
 .panel h1 small{display:block;font-size:17px;font-weight:400;color:#7a5638;margin-top:2px}
 .panel h2{margin:0 0 6px;font:700 26px/1.1 "Palatino Linotype",Palatino,Georgia,serif;color:#5a2a18;text-align:center}
 .panel .sub{margin:8px 0 14px;color:#5b4a36;font-size:15px}
@@ -159,6 +186,25 @@ ol.help{padding-left:20px;margin:8px 0 12px}ol.help li{margin:6px 0}
 .hh-btn:hover{background:#fcd172}
 .hh-close{border:0;background:transparent;color:var(--ink2);font-size:16px;padding:2px 6px;cursor:pointer;border-radius:50%;line-height:1;min-width:28px;min-height:28px;display:inline-flex;align-items:center;justify-content:center}
 .hh-close:hover{color:var(--ink)}
+/* Köylüler (villagers): "Sağ mı? / Are they safe?" report after a quake */
+.vill-rep{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);width:calc(100% - 24px);max-width:400px;box-sizing:border-box;background:var(--paper);color:var(--paper-ink);border-radius:14px;padding:8px 12px 9px;box-shadow:0 10px 30px rgba(0,0,0,.45),inset 0 0 0 2px #d9c596;z-index:5;font-size:13px;line-height:1.35;display:none}
+.vill-rep.on{display:block;animation:villIn .22s ease-out}
+@keyframes villIn{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+.vill-rep .vr-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
+.vill-rep .vr-head b{font:700 15px/1.2 "Palatino Linotype",Palatino,Georgia,serif;color:#5a2a18}
+.vill-rep .vr-close{border:0;background:transparent;color:#7a5638;font-size:15px;min-width:32px;min-height:32px;border-radius:50%}
+.vill-rep ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.vill-rep li{display:flex;gap:6px;align-items:baseline}
+.vill-rep .vr-dot{flex:none;width:8px;height:8px;border-radius:50%;background:#7fb26a;transform:translateY(-1px)}
+.vill-rep li.cut .vr-dot{background:#e0553a}
+.vill-rep .vr-st{font-weight:700;white-space:nowrap}
+.vill-rep li.safe .vr-st{color:#3f7a32}.vill-rep li.cut .vr-st{color:#a63f27}.vill-rep li.back .vr-st{color:#9c6a12}
+.vill-names{width:100%;min-height:64px;box-sizing:border-box;border:1px solid #b8935a;border-radius:10px;background:rgba(255,255,255,.55);color:var(--paper-ink);font:14px/1.35 inherit;padding:8px;resize:vertical;-webkit-user-select:text;user-select:text}
+.vill-box summary{cursor:pointer;font-weight:700;padding:10px 2px;min-height:24px}
+.vill-box .note{margin:4px 0 6px;font-size:13px;opacity:.85}
+body.high-contrast .vill-rep{background:#ffffff;color:#111111;box-shadow:inset 0 0 0 3px #111111}
+body.high-contrast .vill-rep li.safe .vr-st{color:#0f5132}body.high-contrast .vill-rep li.cut .vr-st{color:#8a200a}
+@media (prefers-reduced-motion:reduce){.vill-rep.on{animation:none}}
 body.high-contrast .hint-cost{background:#ffffff;border:2px solid #ff2a05;color:#ff2a05}
 body.high-contrast .hint-cost svg{stroke:#ff2a05}
 body.high-contrast .hint-steps{background:#ffffff;border:2px solid #111111}
@@ -170,8 +216,8 @@ body.high-contrast .hint-hud .hh-txt{color:#ffb703}
 body.high-contrast .hh-btn{background:#ffb703;color:#111111;box-shadow:inset 0 0 0 1px #111111}
 body.high-contrast .hh-btn:hover{background:#ffc933}
 body.high-contrast .hh-close{color:#ffffff}
-#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#0e171c;color:var(--ink);padding:10px 16px;border-radius:10px;font-size:15px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
-#toast.on{opacity:1}
+#toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(10px);background:#0e171c;color:var(--ink);padding:10px 16px;border-radius:10px;font-size:15px;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:20;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 #debug{position:fixed;left:6px;top:6px;z-index:30;font:12px/1.3 ui-monospace,Consolas,monospace;background:rgba(0,0,0,.6);color:#9f9;padding:4px 6px;border-radius:6px;display:none;white-space:pre;pointer-events:none}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @media (orientation:landscape) and (max-height:540px){
@@ -321,6 +367,8 @@ html[data-theme="gece"] .theme-box{border-top-color:#263852}
 html[data-theme="kagit"] .theme-box{border-top-color:#c9bda5}
 .theme-lbl{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--paper-ink);opacity:.75;margin-bottom:6px;text-align:center}
 .theme-pills{display:flex;gap:6px}
+.tier-box{margin:4px 0 8px;padding-top:8px}
+.tier-hint{margin:6px 0 0;font-size:13px;line-height:1.35;color:var(--paper-ink);opacity:.85;text-align:center}
 .th-pill{flex:1;min-height:44px;padding:6px 4px;border-radius:10px;border:1px solid #b8935a;background:transparent;color:var(--paper-ink);font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
 .th-pill:hover{background:rgba(184,147,90,.15)}
 .th-pill.active{background:var(--terra);color:#fff8ec;border-color:var(--terra);box-shadow:0 2px 6px rgba(0,0,0,.15)}
@@ -393,7 +441,7 @@ body.high-contrast .cp-teaser{color:#111111}
 </style>
 </head>
 <body>
-<div id="app">
+<div id="app" class="reach-right">
   <header id="hud">
     <div class="brand">
       <div class="brand-title"><b id="tTitle">Fay Hattı</b><span id="hudStreak" class="streak-pill" aria-label="Streak"><svg class="fire-ico" viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M12 2c-.3 2.2-1.8 4.2-3.2 5.8C7 9.8 6 12 6 14.5a6 6 0 0 0 12 0c0-3.2-1.8-5.8-4-8-.3 2-1.7 3.5-3.5 3.5.8-2.6 1.5-5.3 1.5-8z"/></svg><span id="vStreak"></span></span></div>
@@ -409,10 +457,10 @@ body.high-contrast .cp-teaser{color:#111111}
           <span id="vParTime">–</span>
         </span>
       </div>
-      <div class="stars" id="vStars" aria-hidden="true"></div>
+      <div class="stars" id="vStars" role="img" aria-label="Stars"></div>
     </div>
   </header>
-  <div id="quake" class="calm" aria-live="polite"><span class="dot"></span><span id="tQuake">…</span><span id="bot"></span></div>
+  <div id="quake" class="calm" aria-live="polite"><span class="dot"></span><span id="tQuake">…</span><span id="bot"></span><span id="linkChip" class="link-chip" role="status" aria-live="polite" style="display:none"></span></div>
   <main id="stage">
     <canvas id="cv" role="img" aria-label="Puzzle board"></canvas>
     <div id="hintHud" class="hint-hud" style="display:none" role="region" aria-label="Hint">
@@ -420,6 +468,10 @@ body.high-contrast .cp-teaser{color:#111111}
       <span id="tHintStep" class="hh-txt"></span>
       <button id="bStepHint" class="hh-btn"></button>
       <button id="bCloseHint" class="hh-close" aria-label="Dismiss hint">✕</button>
+    </div>
+    <div id="villRep" class="vill-rep" role="status" aria-live="polite">
+      <div class="vr-head"><b id="villRepTitle"></b><button class="vr-close" id="bVillClose" aria-label="Close">✕</button></div>
+      <ul id="villRepList"></ul>
     </div>
     <div id="tutTip" role="region" aria-live="polite" aria-label="Tutorial">
       <div class="tut-head">
@@ -456,10 +508,20 @@ body.high-contrast .cp-teaser{color:#111111}
 
 <div class="ov" id="menu" role="dialog" aria-modal="true" aria-labelledby="mTitle">
   <div class="panel">
+    <button class="panel-close" id="bMenuClose" aria-label="Close">✕</button>
     <h1 id="mTitle">Fay Hattı<small>Fault Line</small></h1>
     <p class="sub" id="mSub"></p>
     <button class="btn" id="bDaily"></button>
     <button class="btn" id="bEndless"></button>
+    <div class="theme-box tier-box">
+      <div class="theme-lbl" id="mTierLabel"></div>
+      <div class="theme-pills" role="radiogroup" aria-labelledby="mTierLabel" id="tierGroup">
+        <button type="button" class="th-pill" id="tierKolay" role="radio"></button>
+        <button type="button" class="th-pill" id="tierNormal" role="radio"></button>
+        <button type="button" class="th-pill" id="tierZor" role="radio"></button>
+      </div>
+      <p class="tier-hint" id="tierHint"></p>
+    </div>
     <button class="btn marathon" id="bMarathon"></button>
     <div class="badges-box" id="mBadges" role="region" aria-labelledby="tBadgesTitle">
       <div class="badges-head">
@@ -473,7 +535,13 @@ body.high-contrast .cp-teaser{color:#111111}
     <button class="btn alt" id="bVerify"></button>
     <button class="btn alt" id="bContrast" aria-pressed="false"></button>
     <div class="mini"><button id="mSound"></button><button id="mHaptic" aria-pressed="false"></button></div>
-    <div class="mini"><button id="mLang"></button></div>
+    <div class="mini"><button id="mLang"></button><button id="mReach"></button></div>
+    <details class="theme-box vill-box" id="villBox">
+      <summary id="villSum"></summary>
+      <p class="note" id="villNote"></p>
+      <textarea id="villNames" class="vill-names" rows="3" maxlength="900" spellcheck="false"></textarea>
+      <div class="row"><button class="btn alt" id="bVillSave" style="text-align:center"></button><button class="btn alt" id="bVillReset" style="text-align:center"></button></div>
+    </details>
     <div class="theme-box">
       <div class="theme-lbl" id="mThemeLabel"></div>
       <div class="theme-pills" role="radiogroup" aria-labelledby="mThemeLabel">
@@ -486,6 +554,7 @@ body.high-contrast .cp-teaser{color:#111111}
 </div>
 <div class="ov" id="help" role="dialog" aria-modal="true" aria-labelledby="hTitle">
   <div class="panel">
+    <button class="panel-close" id="bHelpClose" aria-label="Close">✕</button>
     <h2 id="hTitle"></h2>
     <ol class="help" id="hList"></ol>
     <div class="legend" id="hLegend"></div>
@@ -510,6 +579,7 @@ body.high-contrast .cp-teaser{color:#111111}
 </div>
 <div class="ov" id="result" role="dialog" aria-modal="true" aria-labelledby="rTitle">
   <div class="panel">
+    <button class="panel-close" id="bResultClose" aria-label="Close">✕</button>
     <h2 id="rTitle"></h2>
     <div class="big-stars" id="rStars"></div>
     <div id="rMilestone" class="badge-banner" style="display:none" role="status" aria-live="polite"></div>
@@ -559,7 +629,7 @@ body.high-contrast .cp-teaser{color:#111111}
 // Pure puzzle engine: no DOM. tools/sim.mjs extracts this block to test it in Node.
 const N = 5, NN = 25;
 // tile value = kind << 4 | low nibble (edge mask N=1 E=2 S=4 W=8 for paths, need bits for villages)
-const KE = 0, KR = 1, KD = 2, KV = 3, KS = 4, KH = 5, KM = 6, KF = 7, KB = 8; // empty, river, road, village, spring, han, mountain, ferry (tile-ferry card), bridge (tile-bridge card)
+const KE = 0, KR = 1, KD = 2, KV = 3, KS = 4, KH = 5, KM = 6, KF = 7, KB = 8, KX = 9; // empty, river, road, village, spring, han, mountain, ferry (tile-ferry card), bridge (tile-bridge card), ruins (endless variety: movable, carries nothing)
 const NEED_RIVER = 1, NEED_ROAD = 2;
 const DR = [-1, 0, 1, 0], DC = [0, 1, 0, -1], OPP = [2, 3, 0, 1];
 const NB = new Int8Array(NN * 4);
@@ -687,6 +757,15 @@ function buildPerms(fixed) {
   return { perms, lens };
 }
 function permOff(src, so, dst, d0, p) { for (let i = 0; i < NN; i++) dst[d0 + i] = src[so + p[i]]; }
+// Calm quake turn (difficulty tier Kolay): an identity permutation pair appended after the 20 line moves.
+const isCalmQuake = (pz, q) => pz.calm >= 0 && (q === pz.calm || q === (pz.calm ^ 1));
+// Rows a quake code shifts: [] on a calm turn, two rows for a double-fault quake (endless variety), else one row.
+function quakeRows(pz, q) {
+  if (q < 0 || !pz) return [];
+  if (isCalmQuake(pz, q)) return [];
+  if (pz.qmeta && pz.qmeta[q]) return pz.qmeta[q];
+  return [{ row: q >> 1, dir: q & 1 ? -1 : 1 }];
+}
 function applyPerm(src, p) { const o = new Uint8Array(NN); for (let i = 0; i < NN; i++) o[i] = src[p[i]]; return o; }
 const toVals = (pz, ids) => { const o = new Uint8Array(NN); for (let i = 0; i < NN; i++) o[i] = pz.tiles[ids[i]]; return o; };
 
@@ -878,16 +957,18 @@ function layoutSolved(R, cfg) {
     }
     for (const c of cells) net[T] |= 1 << c;
   }
-  let pathTiles = 0;
+  let pathTiles = 0, ruins = 0;
   for (let i = 0; i < NN; i++) {
     if (fixed[i]) continue;
     if (type[i]) { vals[i] = tv(type[i] === 1 ? KR : KD, mask[i]); pathTiles++; continue; }
+    if (cfg.blocked && ruins < cfg.blocked) { vals[i] = tv(KX, 0); ruins++; continue; } // endless variety: ancient ruins
     if (R() < cfg.decoy) {
       const shapes = [5, 10, 5, 10, 3, 6, 12, 9];
       vals[i] = tv(R() < 0.5 ? KR : KD, shapes[(R() * shapes.length) | 0]);
     } else vals[i] = tv(KE, 0);
   }
   if (pathTiles < cfg.minPath) return null;
+  if (cfg.blocked && ruins < cfg.blocked) return null;
   // tile-bridge card: place movable Bridge tile allowing orthogonal river/road crossing (endless mode)
   if (cfg.bridge) {
     const bridgeCandidates = [];
@@ -925,16 +1006,40 @@ function makePuzzle(seed, cfg) {
     const qRows = [];
     for (let r = 0; r < N; r++) if (lens[r] >= 3) qRows.push(r);
     if (qRows.length < 2) continue;
-    const quakes = [];
+    // difficulty tiers: cfg.qPattern marks calm turns (0) where no quake hits; daily/Normal never set it
+    let calm = -1;
+    if (cfg.qPattern) {
+      calm = perms.length;
+      const idp = new Uint8Array(NN);
+      for (let i = 0; i < NN; i++) idp[i] = i;
+      perms.push(idp, idp);
+    }
+    const quakes = [], qmeta = {};
     for (let k = 0; k < cfg.P; k++) {
+      if (cfg.qPattern && !cfg.qPattern[k % cfg.qPattern.length]) { quakes.push(calm); continue; }
+      if (cfg.doubleQuake && k % 2 === 1 && qRows.length >= 2) {
+        // endless variety: double-fault quake shifts two different rows at once (composite permutation pair)
+        const i1 = (R() * qRows.length) | 0;
+        let i2 = (R() * (qRows.length - 1)) | 0;
+        if (i2 >= i1) i2++;
+        const r1 = qRows[i1], r2 = qRows[i2], m1 = r1 * 2 + (R() < 0.5 ? 0 : 1), m2 = r2 * 2 + (R() < 0.5 ? 0 : 1);
+        const fwd = new Uint8Array(NN), rev = new Uint8Array(NN);
+        for (let i = 0; i < NN; i++) { fwd[i] = perms[m1][perms[m2][i]]; rev[i] = perms[m2 ^ 1][perms[m1 ^ 1][i]]; }
+        const code = perms.length;
+        perms.push(fwd, rev);
+        qmeta[code] = [{ row: r1, dir: moveDir(m1) }, { row: r2, dir: moveDir(m2) }];
+        qmeta[code ^ 1] = [{ row: r1, dir: -moveDir(m1) }, { row: r2, dir: -moveDir(m2) }];
+        quakes.push(code);
+        continue;
+      }
       let r;
-      do r = qRows[(R() * qRows.length) | 0]; while (k > 0 && r === moveLine(quakes[k - 1]) && qRows.length > 1);
+      do r = qRows[(R() * qRows.length) | 0]; while (k > 0 && quakes[k - 1] !== calm && r === moveLine(quakes[k - 1]) && qRows.length > 1);
       quakes.push(r * 2 + (R() < 0.5 ? 0 : 1));
     }
     const pz = {
       seed, cfg, tiles: L.vals, fixed: L.fixed, spring: L.spring, han: L.han, villages: L.villages,
       needRiver: L.villages.some((v) => v.need & NEED_RIVER), needRoad: L.villages.some((v) => v.need & NEED_ROAD),
-      perms, lens, moveList, quakes, K: cfg.K,
+      perms, lens, moveList, quakes, calm, qmeta, K: cfg.K,
     };
     let best = null;
     for (let s = 0; s < 8; s++) {
@@ -977,11 +1082,40 @@ function dailyConfig(seed) {
   const K = [6, 4, 4, 5, 5, 5, 6][dow];
   return { K, minPar: K - 1, nv: 3, nm: 1 + (hashStr('m' + t) % 2), decoy: 0.55, minPath: 7, P: 5 };
 }
-function endlessConfig(level) {
+// Endless difficulty tiers (ported from feature/difficulty-tiers): kolay (easy), normal (classic), zor (hard).
+function normTier(x) {
+  x = String(x || '').toLowerCase();
+  if (x === 'kolay' || x === 'easy') return 'kolay';
+  if (x === 'zor' || x === 'hard') return 'zor';
+  return 'normal';
+}
+function endlessConfig(level, tier = 'normal') {
+  tier = normTier(tier);
+  if (tier === 'kolay') {
+    // gentle par (2-4), 2 villages for longer, sparse decoys, calm turns between quakes
+    const K = level <= 3 ? 2 : level <= 7 ? 3 : level <= 12 ? 4 : Math.min(5, 3 + Math.ceil(level / 6));
+    const qPattern = level <= 4 ? [0, 0, 1, 0, 0, 1] : level <= 10 ? [0, 1, 0, 1, 0, 1] : [1, 0, 1, 1, 0, 1];
+    const cfg = { K, minPar: Math.max(2, K - 1), nv: level <= 6 ? 2 : 3, nm: level <= 6 ? 0 : 1, decoy: level <= 4 ? 0.22 : 0.35, minPath: level <= 4 ? 4 : 5, P: 6, qPattern, kervansaray: true };
+    if (level >= 8) cfg.bridge = true;
+    return cfg;
+  }
+  if (tier === 'zor') {
+    // 3 villages and mountains from level 1, steep par (3-6), tight 4-quake cycle
+    const K = level <= 2 ? 4 : level <= 5 ? 5 : 6;
+    const cfg = { K, minPar: Math.max(3, K - 1), nv: 3, nm: level <= 3 ? 1 : 2, decoy: level <= 3 ? 0.55 : 0.65, minPath: level <= 3 ? 7 : 8, P: 4, kervansaray: true, bridge: true };
+    if (level >= 3) cfg.ferry = 2;
+    if (level >= 2 && level % 2 === 0) cfg.blocked = 1;
+    if (level >= 4 && level % 2 === 0) cfg.doubleQuake = true;
+    return cfg;
+  }
   const K = Math.min(6, 2 + Math.ceil(level / 2));
   const cfg = { K, minPar: Math.max(2, K - 1), nv: level < 3 ? 2 : 3, nm: level < 4 ? 0 : level < 8 ? 1 : 2, decoy: level < 3 ? 0.35 : 0.55, minPath: level < 3 ? 5 : 7, P: 5, kervansaray: true };
   if (level >= 4) cfg.bridge = true; // tile-bridge card: active in endless/level modes, never in daily
   if (level >= 5) cfg.ferry = 2; // tile-ferry card: active in endless/level modes, never in daily
+  // endless variety (ported from feature/endless-variety): ruins from level 6, double-fault quakes from level 7
+  if (level === 6 || level === 9) cfg.blocked = 1;
+  if (level === 7 || level === 9) cfg.doubleQuake = true;
+  if (level >= 10) { const c = (level - 10) % 6; if (c === 1 || c === 3 || c === 4) cfg.blocked = 1; if (c === 1 || c === 2 || c === 5) cfg.doubleQuake = true; }
   return cfg;
 }
 // ENGINE END
@@ -1353,7 +1487,7 @@ function showCardPick(cardsToOffer = null) {
   $('cpTeaser').textContent = t('cardProgress', { cur: ownedCount, tot: CARDS.length }) + ' · ' + t('cardTeaser');
   const container = $('cpCards');
   container.innerHTML = pair.map((c) => {
-    const info = c[lang] || c.en;
+    const info = { title: (c.title && (c.title[lang] || c.title.en)) || c.id, desc: (c.desc && (c.desc[lang] || c.desc.en)) || '' };
     const typeLabel = c.type === 'gameplay' ? t('cardGameplay') : t('cardCosmetic');
     return `<div class="cp-card" data-id="${c.id}" role="button" tabindex="0" aria-label="${info.title} (${typeLabel})">
       <div class="cp-card-inner">
@@ -1423,10 +1557,10 @@ const STR = {
     hintStepMsg: 'Step {cur}/{tot}: {desc}', hintTangled: 'Board is tangled. Restart map to view initial solution path?',
     hintRestartBtn: 'Restart & Show Path', hintRow: 'Row {r} {dir}', hintCol: 'Col {c} {dir}',
     dirRight: 'Right →', dirLeft: 'Left ←', dirDown: 'Down ↓', dirUp: 'Up ↑',
-    hintGlowRow: 'Hint: Row {n} glowing', hintGlowCol: 'Hint: Column {n} glowing', hintNone: 'Already on track',
+    hintGlowRow: 'Hint: Row {n} glowing', hintGlowCol: 'Hint: Column {n} glowing', hintNone: 'Already on track', hintAgain: 'tap Hint again for the full path',
     menu: 'Menu', sound: 'Sound', haptic: 'Haptic', on: 'on', off: 'off', level: 'Level {n}', dailyTag: 'Daily · {d}',
     quakeNext: 'Next quake: row {r} {a}', quakeActive: 'Earthquake!', calm: 'The ground is calm', loading: 'Drawing the map…', solvedT: 'Connected!',
-    resLine: '{m} moves · par {p}', share: 'Share result', saveCard: 'Save card', cardCopied: 'Card image copied to clipboard', cardSaved: 'Card saved to device', next: 'Next level', toEndless: 'Play endless', back: 'Menu',
+    resLine: '{m} moves · par {p}', share: 'Share result', shareSaved: 'Result card saved (PNG)', saveCard: 'Save card', cardCopied: 'Card image copied to clipboard', cardSaved: 'Card saved to device', next: 'Next level', toEndless: 'Play endless', back: 'Menu',
     copied: 'Copied to clipboard', tomorrow: 'A new map tomorrow.', endlessNote: 'Level {n} done.', movesWord: 'moves',
     marathon: 'Endless Marathon', marathonTag: 'Marathon · {d} · Stage {s}', marathonStageDone: 'Stage {s} cleared in today’s marathon!', nextStage: 'Next stage',
     gotIt: 'Got it', solvedOn: 'Solved', playTag: 'same map for everyone', board: 'Puzzle board',
@@ -1436,6 +1570,10 @@ const STR = {
     allMilestonesDone: 'All milestones achieved!',
     biomeKapadokya: 'Cappadocia', biomeKaradeniz: 'Karadeniz', biomeEge: 'Aegean', biomeBozkir: 'Steppe', regEge: 'Aegean',
     contrast: 'High contrast', contrastSub: 'Distinguish rivers from roads',
+    tierLabel: 'Endless difficulty', tier_kolay: 'Easy', tier_normal: 'Normal', tier_zor: 'Hard',
+    tierDesc_kolay: 'Gentle par (2–4 moves), 2 villages longer, calm turns between quakes.',
+    tierDesc_normal: 'The classic balanced journey, a quake after every move.',
+    tierDesc_zor: '3 villages, mountains and bridges from level 1, tight par, a 4-quake cycle.',
     theme: 'Theme', thClassic: 'Classic', thGece: 'Gece', thKagit: 'Kâğıt',
     h1: 'Drag a row sideways or a column up or down (or tap the arrows). Tiles wrap around the edge.',
     h2: 'Villages, mountains, the spring and the caravanserai never move: tiles slide past them.',
@@ -1444,10 +1582,21 @@ const STR = {
     h5: 'Solve within par for 3 stars. Keys: WASD picks tile, arrows shift, H hint, Z undo, R restart, C contrast.',
     hBridge: 'Bridge tiles allow rivers to flow underneath while roads cross overhead on a stone arch.',
     hFerry: 'Ferry tiles teleport river water across the map to connected ferry ports.',
+    hRuins: 'Ancient ruins slide like any tile but carry neither river nor road.',
+    hDouble: 'A double-fault quake shifts two rows at once. Both are marked red.',
+    quakeDouble: 'Double quake: rows {s}', lRuins: 'ruins',
     lRiver: 'river', lRoad: 'road', lBridge: 'bridge', lHanStop: 'caravan stop', lVillage: 'village', lMount: 'mountain', lSpring: 'spring', lHan: 'caravanserai', lFerry: 'ferry',
     time: 'Time', parTime: 'Par time', parTimeTag: 'par {s}s', parTimeBeat: 'Under par time!', bestTime: 'Best: {s}s', newBestTime: 'New best!',
     waterConnected: 'Water reached village!',
+    linkChip: '{n}/{t} villages linked', linkChipAria: '{n} of {t} villages linked',
     motes: 'Dust motes',
+    reach: 'One hand', reachRight: 'right', reachLeft: 'left',
+    close: 'Close', starsLabel: '{n} of 3 stars', rowName: 'Row {r}', colName: 'Column {c}', lineMoved: '{line} shifted',
+    undoDone: 'Move undone', restartDone: 'Restarted',
+    villTitle: 'Are they safe?', villSafe: 'safe', villCut: 'cut off', villBack: 'reconnected', villAllSafe: 'Everyone is safe',
+    villVillage: 'Village {n}', villSettings: 'Villager names',
+    villNote: 'Comma-separated. Leave empty to use the built-in names. Saved on this device only.',
+    villSave: 'Save', villReset: 'Default', villSaved: 'Villager names saved', villCleared: 'Built-in names restored',
     integrity: 'Seed Integrity', freezeTitle: 'Code Freeze & Integrity', freezeSub: 'Seeds verified through Dec 31',
     freezeRange: 'Range: {from} → {to}', freezeStatus: '{ok}/{total} daily seeds verified solvable',
     freezePar: 'Par range: {min}–{max} moves (avg {avg})', freezeSeal: 'CODE FREEZE LOCKED · SEED INTEGRITY VERIFIED',
@@ -1470,10 +1619,10 @@ const STR = {
     hintStepMsg: 'Adım {cur}/{tot}: {desc}', hintTangled: 'Tahta karıştı. Baştan başlayıp çözüm yolunu görmek ister misin?',
     hintRestartBtn: 'Baştan Başla & Yolu Gör', hintRow: '{r}. Satır {dir}', hintCol: '{c}. Sütun {dir}',
     dirRight: 'Sağa →', dirLeft: 'Sola ←', dirDown: 'Aşağı ↓', dirUp: 'Yukarı ↑',
-    hintGlowRow: 'İpucu: {n}. satır parıldıyor', hintGlowCol: 'İpucu: {n}. sütun parıldıyor', hintNone: 'Doğru yoldasın',
+    hintGlowRow: 'İpucu: {n}. satır parıldıyor', hintGlowCol: 'İpucu: {n}. sütun parıldıyor', hintNone: 'Doğru yoldasın', hintAgain: 'tüm yol için İpucu\'ya tekrar bas',
     menu: 'Menü', sound: 'Ses', haptic: 'Titreşim', on: 'açık', off: 'kapalı', level: 'Bölüm {n}', dailyTag: 'Günlük · {d}',
     quakeNext: 'Sıradaki deprem: {r}. satır {a}', quakeActive: 'Deprem!', calm: 'Yer sakin', loading: 'Harita çiziliyor…', solvedT: 'Bağlandı!',
-    resLine: '{m} hamle · hedef {p}', share: 'Sonucu paylaş', saveCard: 'Kartı kaydet', cardCopied: 'Kart panoya kopyalandı', cardSaved: 'Kart cihaza kaydedildi', next: 'Sonraki bölüm', toEndless: 'Sonsuz moda geç', back: 'Menü',
+    resLine: '{m} hamle · hedef {p}', share: 'Paylaş', shareSaved: 'Sonuç kartı kaydedildi (PNG)', saveCard: 'Kartı kaydet', cardCopied: 'Kart panoya kopyalandı', cardSaved: 'Kart cihaza kaydedildi', next: 'Sonraki bölüm', toEndless: 'Sonsuz moda geç', back: 'Menü',
     copied: 'Panoya kopyalandı', tomorrow: 'Yarın yeni bir harita.', endlessNote: '{n}. bölüm tamam.', movesWord: 'hamle',
     marathon: 'Sonsuz Maraton', marathonTag: 'Maraton · {d} · {s}. Aşama', marathonStageDone: 'Günün maratonunda {s}. aşama tamamlandı!', nextStage: 'Sonraki aşama',
     gotIt: 'Anladım', solvedOn: 'Çözüldü', playTag: 'herkes için aynı harita', board: 'Bulmaca tahtası',
@@ -1483,6 +1632,10 @@ const STR = {
     allMilestonesDone: 'Tüm aşamalar tamamlandı!',
     biomeKapadokya: 'Kapadokya', biomeKaradeniz: 'Karadeniz', biomeEge: 'Ege', biomeBozkir: 'Bozkır', regEge: 'Ege',
     contrast: 'Yüksek kontrast', contrastSub: 'Nehir ve yolları belirginleştir',
+    tierLabel: 'Sonsuz mod zorluğu', tier_kolay: 'Kolay', tier_normal: 'Normal', tier_zor: 'Zor',
+    tierDesc_kolay: 'Sakin hedef (2–4 hamle), daha uzun süre 2 köy, depremler arasında sakin turlar.',
+    tierDesc_normal: 'Klasik dengeli yolculuk, her hamleden sonra deprem.',
+    tierDesc_zor: '1. bölümden itibaren 3 köy, dağlar ve köprüler, sıkı hedef, 4 depremlik döngü.',
     theme: 'Tema', thClassic: 'Klasik', thGece: 'Gece', thKagit: 'Kâğıt',
     h1: 'Bir satırı yana, bir sütunu yukarı ya da aşağı sürükle (ya da oklara dokun). Taşlar kenardan dolanır.',
     h2: 'Köyler, dağlar, pınar ve kervansaray yerinden oynamaz: taşlar onların yanından kayar.',
@@ -1491,10 +1644,21 @@ const STR = {
     h5: 'Hedef hamlede çöz, 3 yıldız al. Tuşlar: WASD taş seçer, oklar kaydırır, H ipucu, Z geri alır, R baştan, C kontrast.',
     hBridge: 'Köprü karoları nehrin alttan akmasına, yolun ise taş kemer üzerinden geçmesine imkân verir.',
     hFerry: 'Feribot karoları nehir suyunu haritanın öbür ucundaki bağlı feribota taşır.',
+    hRuins: 'Antik harabeler diğer taşlar gibi kayar ama ne nehir ne yol taşır.',
+    hDouble: 'Çifte fay depremi iki satırı birden kaydırır. İkisi de kırmızıyla işaretlenir.',
+    quakeDouble: 'Çifte deprem: {s}. satırlar', lRuins: 'harabe',
     lRiver: 'nehir', lRoad: 'yol', lBridge: 'köprü', lHanStop: 'kervansaray durağı', lVillage: 'köy', lMount: 'dağ', lSpring: 'pınar', lHan: 'kervansaray', lFerry: 'feribot',
     time: 'Süre', parTime: 'Hedef süre', parTimeTag: 'hedef {s} sn', parTimeBeat: 'Hedef sürenin altında!', bestTime: 'En iyi: {s} sn', newBestTime: 'Yeni rekor!',
     waterConnected: 'Köye su ulaştı!',
+    linkChip: '{n}/{t} Köy Bağlı', linkChipAria: '{t} köyden {n} tanesi bağlı',
     motes: 'Toz zerrecikleri',
+    reach: 'Tek el', reachRight: 'sağ', reachLeft: 'sol',
+    close: 'Kapat', starsLabel: '3 üzerinden {n} yıldız', rowName: '{r}. satır', colName: '{c}. sütun', lineMoved: '{line} kaydırıldı',
+    undoDone: 'Hamle geri alındı', restartDone: 'Baştan başlatıldı',
+    villTitle: 'Sağ mı?', villSafe: 'güvende', villCut: 'yolu kesik', villBack: 'yeniden bağlandı', villAllSafe: 'Herkes güvende',
+    villVillage: '{n}. köy', villSettings: 'Köylü adları',
+    villNote: 'Virgülle ayır. Boş bırakırsan hazır adlar kullanılır. Yalnız bu cihazda saklanır.',
+    villSave: 'Kaydet', villReset: 'Varsayılan', villSaved: 'Köylü adları kaydedildi', villCleared: 'Hazır adlara dönüldü',
     integrity: 'Tohum Doğrulama', freezeTitle: 'Kod Dondurma & Doğrulama', freezeSub: '31 Aralık\'a kadar çözülebilirlik onaylandı',
     freezeRange: 'Aralık: {from} → {to}', freezeStatus: '{ok}/{total} günlük tohum çözülebilir',
     freezePar: 'Hedef hamle: {min}–{max} (ort. {avg})', freezeSeal: 'KOD DONDURULDU · TOHUM GÜVENLİĞİ ONAYLANDI',
@@ -1887,8 +2051,19 @@ function getDropOffReport() {
 }
 
 // ---------------------------------------------------------------- game state & dynamic tutorial
-const G = { mode: 'daily', seed: '', level: 1, marathonStage: 1, marathonDate: '', pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], riv: [], bot: null, celebrateAt: 0, place: '', biome: 'bozkir', ferryActive: false, hintActive: false, hintUsed: false, hintPlan: null, hintStep: 0, newMilestone: null, parTime: null, timerStart: 0, timerOffset: 0, timerPaused: false, pauseTime: 0, finalTime: null, isUnderParTime: false, isNewBest: false };
+const G = { mode: 'daily', seed: '', level: 1, tier: normTier(QS.get('tier') || store.get('tier', 'normal')), marathonStage: 1, marathonDate: '', pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], riv: [], bot: null, celebrateAt: 0, place: '', biome: 'bozkir', ferryActive: false, hintActive: false, hintUsed: false, hintPlan: null, hintStep: 0, newMilestone: null, parTime: null, timerStart: 0, timerOffset: 0, timerPaused: false, pauseTime: 0, finalTime: null, isUnderParTime: false, isNewBest: false };
 let streakIncreased = false;
+let lastMoveQuaked = false; // Köylüler report: did the last player move end with a quake?
+// difficulty tiers: per-tier endless progress; Normal keeps the original keys so old saves load unchanged
+const tierKey = (tr) => { const x = normTier(tr); return x === 'normal' ? 'endless' : 'endless_' + x; };
+const tierSeed = (level) => (G.tier === 'normal' ? 'L' : 'L' + G.tier[0].toUpperCase()) + level;
+const timeKey = () => 'time.' + G.seed;
+function setTier(tr) {
+  G.tier = normTier(tr);
+  store.set('tier', G.tier);
+  if ($('menu') && $('menu').classList.contains('on')) fillMenu();
+  return G.tier;
+}
 
 // streak counter (fayhatti.streak)
 function prevDateStr(s) {
@@ -2001,6 +2176,121 @@ function setRipples(v) { ripplesEnabled = !!v; }
 let quakeJuiceEnabled = true;
 function setQuakeJuice(v) { quakeJuiceEnabled = !!v; }
 
+// T203: live village connection counter. Recomputed from G.ids (the board after the move and its quake)
+// with the same boardStatus() the solver's isSolved() uses, so it is exact right after every move.
+let linkShown = { key: '', linked: -1 };
+const villagePulse = []; // per-village start time of the 300 ms "just connected" pulse
+function countLinked() {
+  if (!G.pz || !G.ids) return { linked: 0, total: 0, sat: [] };
+  const sat = boardStatus(G.pz, toVals(G.pz, G.ids)).sat;
+  return { linked: sat.filter(Boolean).length, total: sat.length, sat };
+}
+function updateLinkChip() {
+  const el = $('linkChip');
+  if (!el) return;
+  if (!G.pz || G.state === 'loading') { el.style.display = 'none'; linkShown = { key: '', linked: -1 }; return; }
+  const c = countLinked();
+  el.style.display = '';
+  el.textContent = t('linkChip', { n: c.linked, t: c.total });
+  el.setAttribute('aria-label', t('linkChipAria', { n: c.linked, t: c.total }));
+  el.classList.toggle('full', c.total > 0 && c.linked === c.total);
+  el.classList.toggle('some', c.linked > 0 && c.linked < c.total);
+  const key = G.mode + ':' + G.seed;
+  if (linkShown.key === key && c.linked > linkShown.linked) {
+    el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+  }
+  linkShown = { key, linked: c.linked };
+}
+
+// Signature mechanic "Köylüler" (villagers): every village has named residents. After a quake a short
+// "Sağ mı? / Are they safe?" report lists who is connected (safe) and who is cut off; reconnecting a
+// village later updates the report. Names come ONLY from this generic built-in list or from the player's
+// own list typed into the menu (stored locally). Nothing is fetched.
+const VILLAGER_NAMES = ['Ayşe Teyze', 'Hasan Amca', 'Fatma Nine', 'Mehmet Dede', 'Zeynep', 'Ali Usta', 'Emine Hala', 'Mustafa Çoban',
+  'Elif', 'Hüseyin Dayı', 'Hatice', 'İbrahim Efendi', 'Meryem Ebe', 'Osman Kahveci', 'Hacer', 'Yusuf', 'Gülsüm Abla', 'Ömer', 'Nuriye',
+  'Halil Demirci', 'Şerife', 'Kemal Muhtar', 'Sultan Nine', 'Rıza Bakkal', 'Hanife', 'Cemile', 'Durmuş', 'Kezban', 'Veli', 'Saliha'];
+const VILL_KEY = 'villagerNames';
+function cleanVillagerList(raw) {
+  const out = [];
+  for (const x of String(raw || '').split(/[,\n;]/)) {
+    const n = x.replace(/<[^>]*>/g, '').replace(/[<>&"`]/g, '').replace(/\s+/g, ' ').trim().slice(0, 24);
+    if (n && !out.includes(n)) out.push(n);
+    if (out.length >= 40) break;
+  }
+  return out;
+}
+function customVillagers() {
+  let v = null;
+  try { v = store.get(VILL_KEY, null); } catch (e) { v = null; }
+  return Array.isArray(v) ? cleanVillagerList(v.join(',')) : [];
+}
+function setCustomVillagers(raw) {
+  const list = cleanVillagerList(raw);
+  try {
+    if (list.length) store.set(VILL_KEY, list);
+    else if (!NOSAVE) localStorage.removeItem('fayhatti.' + VILL_KEY);
+  } catch (e) {}
+  villagersOf.cache = null;
+  return list;
+}
+// deterministic residents per puzzle: 2-3 per village, no name repeated within a map
+function villagersOf() {
+  if (!G.pz) return [];
+  const key = G.seed + '|' + G.pz.villages.length;
+  if (villagersOf.cache && villagersOf.cache.key === key) return villagersOf.cache.list;
+  const custom = customVillagers(), src = custom.length ? custom : VILLAGER_NAMES;
+  let pool = src.slice();
+  const R = rng32(hashStr('koy' + G.seed));
+  const list = G.pz.villages.map((vg, i) => {
+    const want = 2 + (R() < 0.5 ? 1 : 0), names = [];
+    for (let k = 0; k < want; k++) {
+      if (!pool.length) pool = src.filter((n) => !names.includes(n)); // a short player list is reused across villages
+      if (!pool.length) break;
+      names.push(pool.splice((R() * pool.length) | 0, 1)[0]);
+    }
+    return { index: i, cell: vg.cell, names };
+  });
+  villagersOf.cache = { key, list };
+  return list;
+}
+let villRep = { shown: false, until: 0, lastSat: null, back: [] };
+function hideVillReport() { villRep.shown = false; const el = $('villRep'); if (el) el.classList.remove('on'); }
+function renderVillReport(sat) {
+  const el = $('villRep'); if (!el) return;
+  const vs = villagersOf();
+  $('villRepTitle').textContent = t('villTitle');
+  const allSafe = sat.length && sat.every(Boolean);
+  $('villRepList').innerHTML = '';
+  vs.forEach((v, i) => {
+    const li = document.createElement('li');
+    const st = sat[i] ? (villRep.back.includes(i) ? 'back' : 'safe') : 'cut';
+    li.className = st === 'cut' ? 'cut' : st === 'back' ? 'safe back' : 'safe';
+    const dot = document.createElement('span'); dot.className = 'vr-dot';
+    const txt = document.createElement('span');
+    txt.textContent = t('villVillage', { n: i + 1 }) + ': ' + (v.names.join(', ') || '—') + ' · ';
+    const stEl = document.createElement('span'); stEl.className = 'vr-st';
+    stEl.textContent = t(st === 'cut' ? 'villCut' : st === 'back' ? 'villBack' : 'villSafe');
+    txt.appendChild(stEl); li.append(dot, txt);
+    $('villRepList').appendChild(li);
+  });
+  if (allSafe) { const li = document.createElement('li'); li.className = 'safe'; li.textContent = '✓ ' + t('villAllSafe'); $('villRepList').appendChild(li); }
+}
+// called when the board comes to rest after a player move; quaked = a quake actually shifted the ground
+function updateVillReport(sat, quaked) {
+  if (!G.pz || BOT) return;
+  const prev = villRep.lastSat;
+  const reconnected = prev ? sat.map((ok, i) => ok && !prev[i]).reduce((a, x, i) => (x ? a.concat(i) : a), []) : [];
+  const shouldShow = quaked || (villRep.shown && reconnected.length) || (prev && prev.some((ok) => !ok) && reconnected.length && villRep.everShown);
+  villRep.back = reconnected.length ? reconnected : quaked ? [] : villRep.back;
+  villRep.lastSat = sat.slice();
+  if (!shouldShow) return;
+  renderVillReport(sat);
+  villRep.shown = true; villRep.everShown = true; villRep.until = performance.now() + 4500;
+  const el = $('villRep');
+  if (el && !tutActive) { el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); }
+}
+function resetVillReport() { hideVillReport(); villRep = { shown: false, until: 0, lastSat: null, back: [] }; villagersOf.cache = null; }
+
 // Gameplay card: hint-glow (active in endless/level modes, never in daily)
 let hint = null;
 const isHintActive = () => G.mode !== 'daily' && (G.mode === 'endless' || G.mode === 'level' || G.mode === 'marathon');
@@ -2014,14 +2304,20 @@ function computeHint() {
   if (isSolved(pz, v0, 0)) return null;
   if (G.moves === 0 && pz.solution && pz.solution.length > 0) {
     const m = pz.solution[0];
-    return { move: m, line: m >> 1, dir: moveDir(m) };
+    return { move: m, line: m >> 1, dir: moveDir(m), optimal: true };
   }
-  const maxD = Math.min(8, Math.max(pz.par + 2, 6));
-  const sol = solveOptimal(pz, v0, G.moves, maxD, 150000);
+  // T243: ask the optimal planner (bot A) first, with room for a board the player has tangled.
+  // 1e7 nodes covers 6-move tangles (measured ~2 s worst case in headless Chromium); deeper ones fall back.
+  const maxD = Math.max(8, pz.par + 4);
+  const sol = solveOptimal(pz, v0, G.moves, maxD, 1e7);
   if (sol && sol.path.length > 0) {
     const m = sol.path[0];
-    return { move: m, line: m >> 1, dir: moveDir(m) };
+    return { move: m, line: m >> 1, dir: moveDir(m), optimal: true };
   }
+  return computeHintFallback(pz, v0);
+}
+// Planner gave up (node cap): fall back to the beam search, then to the best greedy single move.
+function computeHintFallback(pz, v0) {
   const b = solveBeam(pz, v0, G.moves, 11);
   if (b && b.path.length > 0) {
     const m = b.path[0];
@@ -2036,10 +2332,13 @@ function computeHint() {
   if (bestM >= 0) return { move: bestM, line: bestM >> 1, dir: moveDir(bestM) };
   return null;
 }
+// T243: the Hint button glows the solver's next move for 2 s; a second tap while it glows opens the solution path
+const HINT_GLOW_MS = 2000;
 function triggerHint() {
   if (!isHintActive() || !G.pz || G.won || G.state !== 'play' || G.bot) return null;
   if (hint && performance.now() < hint.until) {
     clearHint();
+    openHint();
     return null;
   }
   const res = computeHint();
@@ -2048,11 +2347,11 @@ function triggerHint() {
     return null;
   }
   const now = performance.now();
-  hint = { line: res.line, dir: res.dir, move: res.move, until: now + 4200 };
+  hint = { line: res.line, dir: res.dir, move: res.move, optimal: !!res.optimal, until: now + HINT_GLOW_MS };
   sfx.hint();
   vibe(18);
   const isRow = res.line < N, num = isRow ? res.line + 1 : res.line - N + 1;
-  const msg = t(isRow ? 'hintGlowRow' : 'hintGlowCol', { n: num });
+  const msg = t(isRow ? 'hintGlowRow' : 'hintGlowCol', { n: num }) + ' · ' + t('hintAgain');
   toast(msg);
   const liveEl = $('live');
   if (liveEl) liveEl.textContent = msg;
@@ -2198,7 +2497,11 @@ function tutOnMove() {
 }
 
 function starsFor(moves, par) { return moves <= par ? 3 : moves <= par + 2 ? 2 : 1; }
-function nextQuake() { return G.pz && !G.won ? G.pz.quakes[G.moves % G.pz.quakes.length] : -1; }
+function nextQuake() {
+  if (!G.pz || G.won) return -1;
+  const q = G.pz.quakes[G.moves % G.pz.quakes.length];
+  return isCalmQuake(G.pz, q) ? -1 : q;
+}
 
 function startPuzzle(mode, arg, opt = true) {
   clearTimeout(botTimer); G.bot = null; clearHint();
@@ -2217,7 +2520,7 @@ function startPuzzle(mode, arg, opt = true) {
     G.marathonDate = typeof opt === 'string' ? opt : todaySeed();
     G.seed = 'M' + G.marathonDate + '-' + G.marathonStage;
   } else {
-    G.level = arg; G.seed = 'L' + arg;
+    G.level = arg; G.seed = tierSeed(arg);
   }
   updateHud();
   setTimeout(() => {
@@ -2228,11 +2531,12 @@ function startPuzzle(mode, arg, opt = true) {
       // Endless Marathon: daily seed per stage using endlessConfig progression for hardcore challenge
       seed = hashStr('marathon_' + G.marathonDate + '_' + G.marathonStage);
       cfg = endlessConfig(G.marathonStage);
-    } else { seed = hashStr('endless' + arg); cfg = endlessConfig(arg); }
+    } else if (G.tier === 'normal') { seed = hashStr('endless' + arg); cfg = endlessConfig(arg); }
+    else { seed = hashStr('endless_' + G.tier + arg); cfg = endlessConfig(arg, G.tier); }
     let pz = null;
     for (let k = 0; !pz && k < 5; k++) pz = makePuzzle(seed + k * 7919, cfg);
     G.genMs = Math.round(performance.now() - t0);
-    G.pz = pz; G.ids = pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.sat = []; G.riv = []; G.ferryActive = false; prevConnectedStops = 0; G.newMilestone = null;
+    G.pz = pz; G.ids = pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.sat = []; G.riv = []; G.ferryActive = false; prevConnectedStops = 0; G.newMilestone = null; villagePulse.length = 0; resetVillReport();
     G.biome = biomeOverride || getBiome(mode, G.seed, mode === 'marathon' ? G.marathonStage : G.level);
     const isKrd = G.biome === 'karadeniz' && currentTheme === 'classic';
     const isEge = G.biome === 'ege' && currentTheme === 'classic';
@@ -2283,6 +2587,7 @@ function doMove(m) {
   if (pz.lens[line] === 2) m = line * 2; // a 2-tile line swaps either way
   flushAnims();
   G.undo.push({ ids: G.ids, moves: G.moves });
+  lastMoveQuaked = false;
   const before = G.ids, a = applyPerm(before, pz.perms[m]);
   G.moves++;
   const moveElapsed = puzzleStartTime ? Math.round(performance.now() - puzzleStartTime) : 0;
@@ -2296,10 +2601,14 @@ function doMove(m) {
   if (isSolved(pz, toVals(pz, a), 0)) G.won = true; // solved by the move itself: the ground stays calm
   else {
     const q = pz.quakes[(G.moves - 1) % pz.quakes.length];
-    cur = applyPerm(a, pz.perms[q]);
-    trackEvent('quake', { move: G.moves, q, row: q >> 1, dir: moveDir(q) });
-    pushAnim('quake', a, cur, q);
-    if (isSolved(pz, toVals(pz, cur), 0)) G.won = true;
+    if (!isCalmQuake(pz, q)) { // a calm turn (Kolay tier) leaves the ground still
+      cur = applyPerm(a, pz.perms[q]);
+      lastMoveQuaked = true;
+      const qr = quakeRows(pz, q);
+      trackEvent('quake', { move: G.moves, q, row: qr[0].row, dir: qr[0].dir, rows: qr.length });
+      pushAnim('quake', a, cur, q);
+      if (isSolved(pz, toVals(pz, cur), 0)) G.won = true;
+    }
   }
   G.ids = cur;
   if (G.won) G.stars = (G.hintUsed && G.mode !== 'daily') ? 1 : starsFor(G.moves, pz.par);
@@ -2322,6 +2631,8 @@ function doMove(m) {
   const hasBridge = pz && lineCells(pz.fixed, line).some((i) => (toVals(pz, cur)[i] >> 4) === KB);
   if (hasBridge) sfx.bridge(); else sfx.slide();
   vibe(22); updateHud();
+  const liveEl = $('live');
+  if (liveEl && !G.won) liveEl.textContent = t('lineMoved', { line: line < N ? t('rowName', { r: line + 1 }) : t('colName', { c: line - N + 1 }) }) + ' · ' + $('tQuake').textContent;
   tutOnMove();
   return true;
 }
@@ -2335,6 +2646,7 @@ function undo() {
   if (G.hintActive && G.hintPlan && G.hintStep > 0) G.hintStep--;
   updateHintHud();
   sfx.undo(); vibe(12); settle(true); updateHud();
+  $('live').textContent = t('undoDone');
   if (tutActive && G.moves === 0) setTutStep(1);
 }
 function restart() {
@@ -2343,7 +2655,7 @@ function restart() {
   puzzleRestarts++;
   trackEvent('restart', { movesAtRestart: G.moves, restartsInPuzzle: puzzleRestarts });
   flushAnims(); closeAll();
-  G.ids = G.pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.state = 'play'; particles = []; ripples = []; G.riv = []; G.ferryActive = false; prevConnectedStops = 0; G.newMilestone = null;
+  G.ids = G.pz.start.slice(); G.moves = 0; G.undo = []; G.won = false; G.stars = 0; G.celebrateAt = 0; G.state = 'play'; particles = []; ripples = []; G.riv = []; G.ferryActive = false; prevConnectedStops = 0; G.newMilestone = null; villagePulse.length = 0; resetVillReport();
   G.hintActive = false; G.hintUsed = false; G.hintPlan = null; G.hintStep = 0;
   updateHintHud();
   if (isSpeedrunActive()) {
@@ -2357,6 +2669,7 @@ function restart() {
   puzzleStartTime = performance.now();
   puzzleFirstMoveTime = 0;
   sfx.undo(); settle(true); updateHud();
+  $('live').textContent = t('restartDone');
   if (tutActive) setTutStep(1);
 }
 function win() {
@@ -2390,16 +2703,17 @@ function win() {
   }
   else if (G.mode === 'marathon') store.set('marathon.' + G.marathonDate, Math.max(store.get('marathon.' + G.marathonDate, 1), G.marathonStage + 1));
   else {
-    const curEndless = store.get('endless', 1);
+    const tk = tierKey(G.tier);
+    const curEndless = store.get(tk, 1);
     const nextEndless = Math.max(curEndless, G.level + 1);
-    store.set('endless', nextEndless);
-    const ms = MILESTONES.find((m) => m.level === G.level);
+    store.set(tk, nextEndless);
+    const ms = G.tier === 'normal' ? MILESTONES.find((m) => m.level === G.level) : null; // milestones track the Normal journey
     if (ms && curEndless <= ms.level && nextEndless > ms.level) newMilestone = ms;
     if (isSpeedrunActive()) {
       G.finalTime = getElapsed();
       G.timerPaused = true;
       G.isUnderParTime = G.parTime != null && G.finalTime <= G.parTime;
-      const bestKey = 'time.L' + G.level;
+      const bestKey = timeKey();
       const prevBest = store.get(bestKey, null);
       if (prevBest == null || G.finalTime < prevBest) {
         store.set(bestKey, Math.round(G.finalTime * 10) / 10);
@@ -2474,12 +2788,14 @@ function quakePuff(row, dir) {
   }
 }
 function triggerQuakeHit(m) {
-  quakeRow = m >> 1; quakeDir = moveDir(m);
+  const qr = G.pz ? quakeRows(G.pz, m) : [{ row: m >> 1, dir: moveDir(m) }];
+  if (!qr.length) return;
+  quakeRow = qr[0].row; quakeDir = qr[0].dir;
   if (!RM) vibe([35, 25, 45, 25, 30]);
   if (!quakeJuiceEnabled) { if (!RM) shake = cs * 0.07; return; }
-  quakeTrauma = 1.0; shake = cs * 0.12;
+  quakeTrauma = 1.0; shake = cs * (qr.length > 1 ? 0.16 : 0.12);
   sfx.quakeHit();
-  if (!RM) quakePuff(quakeRow, quakeDir);
+  if (!RM) for (const o of qr) quakePuff(o.row, o.dir);
   const qEl = $('quake');
   if (qEl) { qEl.classList.add('quaking'); $('tQuake').textContent = t('quakeActive'); }
 }
@@ -2521,6 +2837,7 @@ function settle(silent) {
     });
     st.sat.forEach((ok, i) => {
       if (ok && !prevSat[i]) {
+        villagePulse[i] = performance.now();
         sfx.ping(i);
         trackEvent('village_connected', {
           villageIndex: i,
@@ -2536,6 +2853,9 @@ function settle(silent) {
   const stops = (isKervansarayActive() && G.pz) ? disp.vals.reduce((a, v, i) => a + (((v >> 4) === KD && popcount(v & 15) >= 3 && disp.dD[i] >= 0) ? 1 : 0), 0) : 0;
   if (!silent && isKervansarayActive() && stops > prevConnectedStops && st.sat.every((ok, i) => prevSat[i] || !ok)) sfx.caravanBell();
   prevConnectedStops = stops;
+  if (!silent && !G.won) { updateVillReport(st.sat, lastMoveQuaked); lastMoveQuaked = false; }
+  else if (silent) { villRep.lastSat = st.sat.slice(); hideVillReport(); }
+  if (G.won) hideVillReport();
   G.sat = st.sat.slice();
   G.riv = curRiv.slice();
   if (!silent && G.pz) {
@@ -2850,6 +3170,18 @@ function drawKervansarayStop(c, s, m, R) {
   c.fillStyle = highContrast ? '#ffffff' : '#f2b33d';
   c.beginPath(); c.arc(cx + pw * 0.62, py + ph * 0.35, s * 0.025, 0, 7); c.fill();
 }
+// Ancient ruins plate (endless variety): toppled ashlar blocks; carries neither river nor road
+function drawRuins(c, s, hc) {
+  c.fillStyle = hc ? 'rgba(0,0,0,.45)' : 'rgba(50,35,20,.3)';
+  c.beginPath(); c.ellipse(s / 2, s * 0.6, s * 0.36, s * 0.26, 0, 0, 7); c.fill();
+  const blk = (x, y, w, h, f, st) => { c.fillStyle = f; c.fillRect(x - w / 2, y - h / 2, w, h); c.strokeStyle = st; c.lineWidth = hc ? 1.8 : 1.2; c.strokeRect(x - w / 2, y - h / 2, w, h); };
+  blk(s * 0.42, s * 0.5, s * 0.4, s * 0.3, hc ? '#5a4a3a' : '#8a7258', hc ? '#000' : '#4d3d2c');
+  blk(s * 0.62, s * 0.64, s * 0.34, s * 0.26, hc ? '#4a3a2c' : '#735e48', hc ? '#000' : '#3d2f21');
+  blk(s * 0.36, s * 0.68, s * 0.26, s * 0.2, hc ? '#6a5a48' : '#9a8268', hc ? '#000' : '#544332');
+  c.strokeStyle = hc ? '#ffffff' : '#2b1f14'; c.lineWidth = 1.3;
+  c.beginPath(); c.moveTo(s * 0.32, s * 0.4); c.lineTo(s * 0.44, s * 0.53); c.lineTo(s * 0.4, s * 0.64); c.moveTo(s * 0.55, s * 0.53); c.lineTo(s * 0.68, s * 0.6); c.stroke();
+  if (!hc) { c.fillStyle = 'rgba(95,125,55,.6)'; c.beginPath(); c.arc(s * 0.32, s * 0.47, s * 0.055, 0, 7); c.arc(s * 0.58, s * 0.57, s * 0.045, 0, 7); c.fill(); }
+}
 function drawPlate(c, v, id) {
   const s = cs, k = v >> 4, m = v & 15, ins = Math.max(1.5, s * 0.04), r = s * 0.14, R = rng32(id * 977 + 13);
   if (highContrast) {
@@ -3082,6 +3414,7 @@ function drawPlate(c, v, id) {
   if (isKervansarayActive() && k === KD && popcount(m) >= 3) {
     drawKervansarayStop(c, s, m, R);
   }
+  if (k === KX) drawRuins(c, s, highContrast);
 }
 function drawMountain(x, X, Y, s) {
   if (highContrast) {
@@ -3725,6 +4058,7 @@ function frame(now) {
   updateTimerHud(now);
   stepAnims(dt);
   if (hint && now >= hint.until) { hint = null; updateHud(); }
+  if (villRep.shown && now >= villRep.until) hideVillReport();
   // Directional screen shake decay and transform (cosmetic card: juice-quake-shake)
   if (quakeTrauma > 0) {
     quakeTrauma *= Math.exp(-dt / 130);
@@ -3771,8 +4105,11 @@ function frame(now) {
   const ids = A ? A.from : G.ids;
   // next-quake band
   const nq = A && A.kind === 'quake' ? A.m : anims.length ? -1 : nextQuake();
-  if (nq >= 0 && G.state === 'play') {
-    const r = nq >> 1, a = A && A.kind === 'quake' ? 0.28 : (tutActive && tutStep === 2 ? 0.18 + 0.08 * Math.sin(now / 180) : 0.1 + 0.06 * Math.sin(now / 200));
+  const nqRows = G.state === 'play' ? quakeRows(pz, nq) : []; // one row, two (double-fault) or none (calm)
+  const qAnimRows = A && A.kind === 'quake' ? quakeRows(pz, A.m) : null;
+  const inQuakeRow = (y) => (qAnimRows ? qAnimRows.some((o) => o.row === y) : line === y);
+  for (const { row: r } of nqRows) {
+    const a = A && A.kind === 'quake' ? 0.28 : (tutActive && tutStep === 2 ? 0.18 + 0.08 * Math.sin(now / 180) : 0.1 + 0.06 * Math.sin(now / 200));
     ctx.fillStyle = `rgba(214,70,40,${a})`; ctx.fillRect(ox, oy + r * cs, BW, cs);
     if (quakeTrauma > 0) {
       // Visceral seismic fissure flash along the fault row
@@ -3811,10 +4148,11 @@ function frame(now) {
       const tc = A.toPos[id];
       if (tc !== i) {
         moving[i] = 1;
-        const d = moveDir(A.m);
-        if (line < N) { let x1 = tc % N; if (d > 0 && x1 < x) x1 += N; if (d < 0 && x1 > x) x1 -= N; x += (x1 - x) * e; }
+        const qr = qAnimRows ? qAnimRows.find((o) => o.row === y) : null;
+        const d = qr ? qr.dir : moveDir(A.m);
+        if (qAnimRows || line < N) { let x1 = tc % N; if (d > 0 && x1 < x) x1 += N; if (d < 0 && x1 > x) x1 -= N; x += (x1 - x) * e; }
         else { let y1 = (tc / N) | 0; if (d > 0 && y1 < y) y1 += N; if (d < 0 && y1 > y) y1 -= N; y += (y1 - y) * e; }
-      } else if (jitter && line === y) x += jitter / cs;
+      } else if (jitter && inQuakeRow(y)) x += jitter / cs;
     }
     const X = ox + x * cs, Y = oy + y * cs;
     ctx.drawImage(plates[id], X, Y, cs, cs);
@@ -3826,14 +4164,14 @@ function frame(now) {
     }
   }
   // fixed tiles stay on top while a line slides under them
-  if (A) for (let i = 0; i < NN; i++) if (pz.fixed[i] && (line < N ? ((i / N) | 0) === line : i % N === line - N))
+  if (A) for (let i = 0; i < NN; i++) if (pz.fixed[i] && (qAnimRows ? inQuakeRow((i / N) | 0) : line < N ? ((i / N) | 0) === line : i % N === line - N))
     ctx.drawImage(baseC.c, (pad + (i % N) * cs) * DPR, (pad + ((i / N) | 0) * cs) * DPR, cs * DPR, cs * DPR, ox + (i % N) * cs, oy + ((i / N) | 0) * cs, cs, cs);
   ctx.restore();
 
   // water and caravans flow along the connected network; connector stubs; village badges
   const vals = disp.vals, wave = G.celebrateAt ? (now - G.celebrateAt) / 110 : -9;
   for (let i = 0; i < NN; i++) {
-    if (moving[i] || (jitter && line === ((i / N) | 0))) continue;
+    if (moving[i] || (jitter && inQuakeRow((i / N) | 0))) continue;
     const v = vals[i], k = v >> 4, X = ox + (i % N) * cs, Y = oy + ((i / N) | 0) * cs;
     if (k === KR && disp.dR[i] >= 0) drawFlow(X, Y, v, i, disp.dR, true, time, wave > -9 ? Math.max(0, 1 - Math.abs(disp.dR[i] - wave) / 1.6) : 0);
     else if (k === KD && disp.dD[i] >= 0) {
@@ -3903,11 +4241,24 @@ function frame(now) {
       else { gl.addColorStop(0, 'rgba(255,214,120,.55)'); gl.addColorStop(1, 'rgba(255,214,120,0)'); }
       ctx.fillStyle = gl; ctx.fillRect(X, Y, cs, cs);
     }
+    // T203: 300 ms pulse on a village tile the moment it becomes connected
+    const vp = villagePulse[n] ? (now - villagePulse[n]) / 300 : 1;
+    if (vp >= 0 && vp < 1) {
+      const ringCol = highContrast ? '255,183,3' : currentTheme === 'gece' ? '255,200,60' : '255,226,140';
+      ctx.save();
+      ctx.fillStyle = `rgba(${ringCol},${(0.32 * (1 - vp)).toFixed(3)})`;
+      rr(ctx, X + 2, Y + 2, cs - 4, cs - 4, cs * 0.14); ctx.fill();
+      ctx.strokeStyle = `rgba(${ringCol},${(0.95 * (1 - vp)).toFixed(3)})`;
+      ctx.lineWidth = Math.max(2, cs * 0.05);
+      const g = RM ? 0 : vp * cs * 0.12;
+      rr(ctx, X + 2 - g, Y + 2 - g, cs - 4 + 2 * g, cs - 4 + 2 * g, cs * 0.14); ctx.stroke();
+      ctx.restore();
+    }
     if (vg.need & NEED_RIVER) drawBadge(X + cs * 0.2, Y + cs * 0.2, r, true, (disp.st.rr >> vg.cell) & 1, pulse);
     if (vg.need & NEED_ROAD) drawBadge(X + cs * 0.8, Y + cs * 0.2, r, false, (disp.st.rd >> vg.cell) & 1, pulse);
   });
   // gutter arrows (tap targets) and the quake marker
-  const qRow = nq >= 0 && G.state === 'play' ? nq >> 1 : -1, qDir = nq >= 0 ? moveDir(nq) : 0;
+  const isQuakeLine = (l) => l < N && nqRows.some((o) => o.row === l);
   const gx = (cs * GUT + pad) / 2, chs = cs * 0.13;
   const tutPulse = tutActive && tutStep === 1 && !RM ? 0.45 + 0.35 * Math.sin(now / 240) : 0;
   for (let l = 0; l < 2 * N; l++) {
@@ -3925,7 +4276,7 @@ function frame(now) {
       : G.biome === 'kapadokya'
       ? (hot ? 'rgba(246,237,226,.95)' : 'rgba(246,237,226,.45)')
       : (hot ? 'rgba(243,234,216,.95)' : 'rgba(243,234,216,.42)');
-    let col = l === qRow
+    let col = isQuakeLine(l)
       ? (highContrast ? '#ff5533' : 'rgba(255,140,110,.95)')
       : highContrast
       ? (hot ? '#ffffff' : tutPulse ? `rgba(255,183,3,${tutPulse})` : 'rgba(255,255,255,.7)')
@@ -3970,7 +4321,7 @@ function frame(now) {
     else ctx.strokeRect(ox + (hl - N) * cs + 1, oy + 1, cs - 2, BW - 2);
     ctx.restore();
   }
-  if (qRow >= 0) {
+  for (const { row: qRow, dir: qDir } of nqRows) {
     const cy = oy + qRow * cs + cs / 2, tx = qDir > 0 ? ox + BW + pad * 0.5 : ox - pad * 0.5, sz = Math.max(6, pad * 0.75);
     ctx.fillStyle = highContrast ? (quakeTrauma > 0 ? '#ff5533' : '#ff2a05') : (quakeTrauma > 0 ? '#ff7a59' : '#e0553a'); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = highContrast ? 2 : 1.5;
     ctx.beginPath(); ctx.moveTo(tx + qDir * sz * 0.7, cy); ctx.lineTo(tx - qDir * sz * 0.5, cy - sz); ctx.lineTo(tx - qDir * sz * 0.5, cy + sz); ctx.closePath(); ctx.fill(); ctx.stroke();
@@ -4209,11 +4560,23 @@ function drawMotes(dt, now) {
 }
 
 // ---------------------------------------------------------------- input
+// one-hand reach (ported from feature/mobile-touch): puts undo/restart/hint under the chosen thumb
+let reach = (QS.get('reach') || '').toLowerCase();
+if (reach !== 'left' && reach !== 'right') reach = store.get('reach', 'right') === 'left' ? 'left' : 'right';
+function setReach(r, save = true) {
+  reach = r === 'left' ? 'left' : 'right';
+  if (save) store.set('reach', reach);
+  const app = $('app');
+  if (app) { app.classList.remove('reach-left', 'reach-right'); app.classList.add('reach-' + reach); }
+  if ($('mReach')) $('mReach').textContent = t('reach') + ': ' + t(reach === 'left' ? 'reachLeft' : 'reachRight');
+  return reach;
+}
 function hitTest(px, py) {
   const bx = (px - ox) / cs, by = (py - oy) / cs;
   if (bx >= 0 && bx < N && by >= 0 && by < N) return { cell: (by | 0) * N + (bx | 0) };
-  if (by >= 0 && by < N) { if (bx < 0 && bx >= -GUT) return { m: (by | 0) * 2 + 1 }; if (bx >= N && bx < N + GUT) return { m: (by | 0) * 2 }; }
-  if (bx >= 0 && bx < N) { if (by < 0 && by >= -GUT) return { m: (N + (bx | 0)) * 2 + 1 }; if (by >= N && by < N + GUT) return { m: (N + (bx | 0)) * 2 }; }
+  const gut = Math.max(GUT, 44 / Math.max(1, cs)); // edge arrows keep at least a 44 px touch target
+  if (by >= 0 && by < N) { if (bx < 0 && bx >= -gut) return { m: (by | 0) * 2 + 1 }; if (bx >= N && bx < N + gut) return { m: (by | 0) * 2 }; }
+  if (bx >= 0 && bx < N) { if (by < 0 && by >= -gut) return { m: (N + (bx | 0)) * 2 + 1 }; if (by >= N && by < N + gut) return { m: (N + (bx | 0)) * 2 }; }
   return null;
 }
 const ptr = (e) => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
@@ -4223,22 +4586,26 @@ cv.addEventListener('pointerdown', (e) => {
   if (G.bot || G.state !== 'play') return;
   const p = ptr(e), h = hitTest(p.x, p.y);
   if (!h) return;
-  drag = { x: p.x, y: p.y, h, done: false };
+  drag = { x: p.x, y: p.y, h, done: false, touch: e.pointerType !== 'mouse' };
   try { cv.setPointerCapture(e.pointerId); } catch (err) {}
 });
 cv.addEventListener('pointermove', (e) => {
   const p = ptr(e);
-  if (e.pointerType === 'mouse') { const h = hitTest(p.x, p.y); hover = h && h.cell != null ? h.cell : -1; }
+  if (e.pointerType === 'mouse' && (!drag || drag.done)) { const h = hitTest(p.x, p.y); hover = h && h.cell != null ? h.cell : -1; }
   if (!drag || drag.done || drag.h.cell == null) return;
-  const dx = p.x - drag.x, dy = p.y - drag.y;
-  if (Math.max(Math.abs(dx), Math.abs(dy)) < cs * 0.25) return;
+  const dx = p.x - drag.x, dy = p.y - drag.y, adx = Math.abs(dx), ady = Math.abs(dy), travel = Math.max(adx, ady);
+  // intentional-swipe threshold: a resting or wobbling thumb must not shift a line
+  if (travel < (drag.touch ? Math.max(22, cs * 0.32) : Math.max(16, cs * 0.25))) return;
+  // accidental-swipe guard: one axis must dominate (1.35x) unless the finger has clearly travelled
+  const dominant = adx > ady ? adx >= ady * 1.35 || ady < 12 : ady >= adx * 1.35 || adx < 12;
+  if (!dominant && travel < cs * 0.65) return;
   const c = drag.h.cell;
-  const m = Math.abs(dx) > Math.abs(dy) ? ((c / N) | 0) * 2 + (dx > 0 ? 0 : 1) : (N + (c % N)) * 2 + (dy > 0 ? 0 : 1);
-  drag.done = true; doMove(m);
+  const m = adx >= ady ? ((c / N) | 0) * 2 + (dx > 0 ? 0 : 1) : (N + (c % N)) * 2 + (dy > 0 ? 0 : 1);
+  drag.done = true; hover = -1; doMove(m);
 });
 const endDrag = (e) => {
   if (drag && !drag.done) {
-    if (drag.h.m != null) { const p = ptr(e); if (Math.hypot(p.x - drag.x, p.y - drag.y) < cs * 0.4) doMove(drag.h.m); }
+    if (drag.h.m != null) { const p = ptr(e); if (Math.hypot(p.x - drag.x, p.y - drag.y) < Math.max(28, cs * 0.5)) doMove(drag.h.m); }
     else if (drag.h.cell != null && isKervansarayActive()) {
       // Tap on a cell: if it's a kervansaray stop, ring camel bell (tile-kervansaray card)
       const c = drag.h.cell, v = disp ? disp.vals[c] : 0;
@@ -4247,15 +4614,18 @@ const endDrag = (e) => {
   }
   drag = null;
 };
-cv.addEventListener('pointerup', endDrag);
-cv.addEventListener('pointercancel', () => { drag = null; });
-cv.addEventListener('pointerleave', () => { hover = -1; });
+cv.addEventListener('pointerup', (e) => { endDrag(e); if (e.pointerType !== 'mouse') hover = -1; });
+cv.addEventListener('pointercancel', () => { drag = null; hover = -1; });
+cv.addEventListener('lostpointercapture', () => { drag = null; });
+cv.addEventListener('pointerleave', () => { if (!drag) hover = -1; });
+addEventListener('blur', () => { drag = null; hover = -1; });
 addEventListener('keydown', (e) => {
   audio();
   if ($('help').classList.contains('on') && (e.key === 'Escape' || e.key === 'Enter')) { closeHelp(); e.preventDefault(); return; }
   if ($('hint') && $('hint').classList.contains('on') && (e.key === 'Escape' || e.key === 'Enter')) { closeHint(); e.preventDefault(); return; }
   if ($('verify').classList.contains('on') && (e.key === 'Escape' || e.key === 'Enter')) { closeVerify(); e.preventDefault(); return; }
   if ($('cardPick') && $('cardPick').classList.contains('on') && e.key === 'Escape') { closeCardPick(); e.preventDefault(); return; }
+  if (e.key === 'Escape' && (($('menu').classList.contains('on') && G.pz) || $('result').classList.contains('on'))) { sfx.click(); closeAll(); e.preventDefault(); return; }
   if (document.querySelector('.ov.on')) return;
   if (G.state !== 'play' || G.bot) return;
   const k = e.key.toLowerCase();
@@ -4266,7 +4636,7 @@ addEventListener('keydown', (e) => {
   const am = { arrowright: r * 2, arrowleft: r * 2 + 1, arrowdown: (N + c) * 2, arrowup: (N + c) * 2 + 1 }[k];
   if (am != null) { doMove(am); e.preventDefault(); return; }
   if (k === 'z' || k === 'backspace') { undo(); e.preventDefault(); }
-  else if (k === 'h' && isHintActive()) { openHint(); e.preventDefault(); }
+  else if (k === 'h' && isHintActive()) { triggerHint(); e.preventDefault(); }
   else if (k === 'r') restart();
   else if (k === 'm') toggleMute();
   else if (k === 'c') { toggleContrast(); sfx.click(); }
@@ -4280,12 +4650,14 @@ function updateHud() {
     ? t('dailyTag', { d: seedLabel(G.seed) }) + (G.place && G.pz ? ' · ' + G.place : '') + regionTag
     : G.mode === 'marathon'
     ? t('marathonTag', { d: seedLabel(G.marathonDate), s: G.marathonStage }) + (G.place && G.pz ? ' · ' + G.place : '') + regionTag
-    : t('endless') + ' · ' + t('level', { n: G.level }) + regionTag;
+    : t('endless') + ' · ' + t('tier_' + G.tier) + ' · ' + t('level', { n: G.level }) + regionTag;
   $('tMode').textContent = modeLabel;
   $('lMoves').textContent = t('moves'); $('lPar').textContent = t('par');
   $('vMoves').textContent = G.moves; $('vPar').textContent = G.pz ? G.pz.par : '–';
   const st = G.pz ? (G.won ? G.stars : ((G.hintUsed && G.mode !== 'daily') ? 1 : starsFor(G.moves, G.pz.par))) : 0;
   $('vStars').innerHTML = [0, 1, 2].map((i) => starSvg(i < st, 18)).join('');
+  $('vStars').setAttribute('aria-label', t('starsLabel', { n: st }));
+  ['bMenuClose', 'bHelpClose', 'bResultClose'].forEach((id) => $(id).setAttribute('aria-label', t('close')));
   updateStreakHud();
   const stTimer = $('statTimer');
   if (stTimer) {
@@ -4309,8 +4681,15 @@ function updateHud() {
   if (G.state === 'loading') { q.className = 'calm'; $('tQuake').textContent = t('loading'); }
   else if (nq < 0) { q.className = 'calm'; $('tQuake').textContent = t('calm'); }
   else if (quakeTrauma > 0) { q.className = 'quaking'; $('tQuake').textContent = t('quakeActive'); }
-  else { q.className = ''; $('tQuake').textContent = t('quakeNext', { r: (nq >> 1) + 1, a: moveDir(nq) > 0 ? '→' : '←' }); }
+  else {
+    q.className = '';
+    const qr = quakeRows(G.pz, nq);
+    $('tQuake').textContent = qr.length > 1
+      ? t('quakeDouble', { s: qr.map((o) => (o.row + 1) + (o.dir > 0 ? '→' : '←')).join(' & ') })
+      : t('quakeNext', { r: qr[0].row + 1, a: qr[0].dir > 0 ? '→' : '←' });
+  }
   const b = $('bot'); b.style.display = G.bot ? 'inline-block' : 'none'; b.textContent = G.bot ? 'BOT ' + G.bot.strategy.toUpperCase() : '';
+  updateLinkChip();
   ['Undo', 'Restart', 'Menu'].forEach((k) => ($('l' + k).textContent = t(k.toLowerCase())));
   $('bUndo').disabled = !G.undo.length || G.won || !!G.bot;
   $('bRestart').disabled = !G.pz || !!G.bot;
@@ -4437,7 +4816,15 @@ function fillMenu() {
   $('mSub').textContent = t('sub');
   const ds = todaySeed(), done = store.get('daily.' + ds, null);
   $('bDaily').innerHTML = `${t('daily')}<small>${seedLabel(ds)} · ${done ? t('solvedOn') + ' ' + '★'.repeat(done.s) + ' ' + done.m + ' ' + t('movesWord') : t('playTag')}</small>`;
-  $('bEndless').innerHTML = `${t('endless')}<small>${t('level', { n: store.get('endless', 1) })}</small>`;
+  $('bEndless').innerHTML = `${t('endless')}<small>${t('tier_' + G.tier)} · ${t('level', { n: store.get(tierKey(G.tier), 1) })}</small>`;
+  $('mTierLabel').textContent = t('tierLabel');
+  [['tierKolay', 'kolay'], ['tierNormal', 'normal'], ['tierZor', 'zor']].forEach(([id, k]) => {
+    const el = $(id); if (!el) return;
+    el.textContent = t('tier_' + k);
+    el.classList.toggle('active', G.tier === k);
+    el.setAttribute('aria-checked', String(G.tier === k));
+  });
+  $('tierHint').textContent = t('tierDesc_' + G.tier);
   const mStage = store.get('marathon.' + ds, 1);
   const bMarathon = $('bMarathon');
   if (bMarathon) bMarathon.innerHTML = `${t('marathon')}<small>${t('marathonTag', { d: seedLabel(ds), s: mStage })}</small>`;
@@ -4447,6 +4834,13 @@ function fillMenu() {
   $('bContrast').innerHTML = `${t('contrast')}: <b>${highContrast ? t('on') : t('off')}</b><small>${t('contrastSub')}</small>`;
   $('bContrast').setAttribute('aria-pressed', String(highContrast));
   $('mLang').textContent = lang === 'tr' ? 'English' : 'Türkçe';
+  $('mReach').textContent = t('reach') + ': ' + t(reach === 'left' ? 'reachLeft' : 'reachRight');
+  $('villSum').textContent = t('villSettings');
+  $('villNote').textContent = t('villNote');
+  $('bVillSave').textContent = t('villSave'); $('bVillReset').textContent = t('villReset');
+  $('villNames').placeholder = VILLAGER_NAMES.slice(0, 4).join(', ') + ', …';
+  if (document.activeElement !== $('villNames')) $('villNames').value = customVillagers().join(', ');
+  $('bVillClose').setAttribute('aria-label', t('close'));
   $('mSound').textContent = t('sound') + ': ' + (muted ? t('off') : t('on'));
   $('mHaptic').textContent = t('haptic') + ': ' + (haptic ? t('on') : t('off'));
   $('mHaptic').setAttribute('aria-pressed', String(haptic));
@@ -4478,6 +4872,8 @@ function openHelp() {
   const hKeys = ['h1', 'h2', 'h3', 'h4', 'h5'];
   if (isBridgeActive()) hKeys.push('hBridge');
   if (G.pz && G.pz.cfg && G.pz.cfg.ferry) hKeys.push('hFerry');
+  if (G.pz && G.pz.cfg && G.pz.cfg.blocked) hKeys.push('hRuins');
+  if (G.pz && G.pz.cfg && G.pz.cfg.doubleQuake) hKeys.push('hDouble');
   $('hList').innerHTML = hKeys.map((k) => `<li>${t(k)}</li>`).join('');
   const isKrd = G.biome === 'karadeniz' && currentTheme === 'classic';
   const isEge = G.biome === 'ege' && currentTheme === 'classic';
@@ -4492,6 +4888,7 @@ function openHelp() {
   if (isKervansarayActive()) leg.push([highContrast ? '#ffb703' : '#d4a359', 'lHanStop']);
   leg.push([vilCol, 'lVillage'], [sprCol, 'lSpring'], [hanCol, 'lHan'], [mntCol, 'lMount']);
   if (G.pz && G.pz.cfg && G.pz.cfg.ferry) leg.push([highContrast ? '#00b4d8' : '#206894', 'lFerry']);
+  if (G.pz && G.pz.cfg && G.pz.cfg.blocked) leg.push([highContrast ? '#5a4a3a' : '#8a7258', 'lRuins']);
   $('hLegend').innerHTML = leg.map(([c, k]) => `<span><i style="background:${c}${highContrast ? ';border:1px solid #111' : ''}"></i>${t(k)}</span>`).join('');
   $('bTutReplay').textContent = t('tutReplay');
   $('bHelpOk').textContent = t('gotIt');
@@ -4611,11 +5008,11 @@ function updateVerifyUi(rep) {
 function shareText() {
   if (G.mode === 'marathon') return `Fay Hattı ${t('marathon')} ${seedLabel(G.marathonDate)} #${G.marathonStage} ${'⭐'.repeat(G.stars)} ${G.moves} ${t('movesWord')}` + (G.hintUsed && G.mode !== 'daily' ? ' 💡' : '');
   const tStr = (isSpeedrunActive() && G.finalTime != null) ? ` · ${G.finalTime.toFixed(1)}s` : '';
-  return `Fay Hattı ${G.mode === 'daily' ? seedLabel(G.seed) : '#' + G.level} ${'⭐'.repeat(G.stars)} ${G.moves} ${t('movesWord')}` + (G.hintUsed && G.mode !== 'daily' ? ' 💡' : '') + tStr;
+  return `Fay Hattı ${G.mode === 'daily' ? seedLabel(G.seed) : (G.tier !== 'normal' ? t('tier_' + G.tier) + ' ' : '') + '#' + G.level} ${'⭐'.repeat(G.stars)} ${G.moves} ${t('movesWord')}` + (G.hintUsed && G.mode !== 'daily' ? ' 💡' : '') + tStr;
 }
 function shareUrl() {
   if (G.mode === 'marathon') return CANON + '?marathon=' + G.marathonDate;
-  return CANON + (G.mode === 'daily' ? '?seed=' + G.seed : '?level=' + G.level);
+  return CANON + (G.mode === 'daily' ? '?seed=' + G.seed : '?level=' + G.level + (G.tier !== 'normal' ? '&tier=' + G.tier : ''));
 }
 
 // ---------------------------------------------------------------- cosmetic card: share-card-art
@@ -4825,7 +5222,8 @@ function renderShareCard(c = $('rCard')) {
         cx.save(); cx.setLineDash([mcs * 0.1, mcs * 0.1]); cx.lineWidth = mcs * 0.06; cx.strokeStyle = 'rgba(248,234,200,.95)';
         tracePath(cx, dm, mcs, px, py); cx.stroke(); cx.restore();
       }
-    } else if (k === KM) drawMountain(cx, px, py, mcs);
+    } else if (k === KX) { cx.save(); cx.translate(px, py); drawRuins(cx, mcs, false); cx.restore(); }
+    else if (k === KM) drawMountain(cx, px, py, mcs);
     else if (k === KS) drawSpring(cx, px, py, mcs);
     else if (k === KH) drawHan(cx, px, py, mcs);
     else if (k === KV) drawVillage(cx, px, py, mcs, i * 31 + 5);
@@ -4945,7 +5343,8 @@ function renderShareCard(c = $('rCard')) {
   cx.textAlign = 'left';
   cx.font = '700 13px "Segoe UI",system-ui,sans-serif';
   cx.fillStyle = '#5a2a18';
-  const quakesWeathered = Math.max(0, G.moves - 1);
+  let quakesWeathered = 0; // calm turns (Kolay tier) do not count
+  for (let k = 0; k < G.moves - 1; k++) if (!isCalmQuake(pz, pz.quakes[k % pz.quakes.length])) quakesWeathered++;
   const quakeTxt = lang === 'tr' ? `${quakesWeathered} Deprem Atlatıldı` : `${quakesWeathered} Quakes Weathered`;
   cx.fillText(quakeTxt, rightX + 36, infoY + 28);
 
@@ -5020,7 +5419,7 @@ function showResult() {
   if (rSp) {
     if (isSpeedrunActive() && G.finalTime != null) {
       rSp.style.display = 'flex';
-      const best = store.get('time.L' + G.level, null);
+      const best = store.get(timeKey(), null);
       const icon = '<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="9" r="5.5"/><path d="M8 6.2v2.8l1.8 1M6 2h4M8 2v1.5"/></svg>';
       let extra = '';
       if (G.isUnderParTime) extra += `<span class="pill">${t('parTimeBeat')}</span>`;
@@ -5049,58 +5448,84 @@ function showResult() {
 }
 let toastT = 0;
 function toast(msg) { const el = $('toast'); el.textContent = msg; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 1800); }
+// T263: 640x640 offscreen result card (solved board, stars, date, #FayHattı).
+// Reuses the share-card-art drawing (560x420) and adds a footer; never touches the on-screen card.
+const SHARE_SQ = 640;
+function solveDateLabel() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function renderShareSquare() {
+  if (!G.pz) return null;
+  const c = document.createElement('canvas');
+  c.width = SHARE_SQ; c.height = SHARE_SQ;
+  const cx = c.getContext('2d');
+  const bg = cx.createLinearGradient(0, 0, SHARE_SQ, SHARE_SQ);
+  bg.addColorStop(0, '#2a1c14'); bg.addColorStop(1, '#17120b');
+  cx.fillStyle = bg; cx.fillRect(0, 0, SHARE_SQ, SHARE_SQ);
+  const inner = document.createElement('canvas');
+  inner.width = 560; inner.height = 420;
+  renderShareCard(inner);
+  cx.drawImage(inner, 40, 28);
+  // footer: big stars, mode/date line, hashtag
+  for (let s = 0; s < 3; s++) drawCardStar(cx, SHARE_SQ / 2 + (s - 1) * 54, 492, 20, s < G.stars);
+  cx.textAlign = 'center'; cx.textBaseline = 'middle';
+  cx.fillStyle = '#f3e3c3';
+  cx.font = '700 22px "Palatino Linotype",Palatino,Georgia,serif';
+  const modeStr = G.mode === 'daily' ? t('dailyTag', { d: seedLabel(G.seed) }) : G.mode === 'marathon' ? t('marathonTag', { d: seedLabel(G.marathonDate), s: G.marathonStage }) : t('endless') + ' · ' + t('level', { n: G.level });
+  cx.fillText(modeStr, SHARE_SQ / 2, 540);
+  cx.font = '600 16px "Segoe UI",system-ui,sans-serif';
+  cx.fillStyle = '#d4c3a2';
+  // daily: the date is already in the mode line; other modes add the solve date
+  cx.fillText(t('resLine', { m: G.moves, p: G.pz.par }) + (G.mode === 'daily' ? '' : ' · ' + solveDateLabel()), SHARE_SQ / 2, 570);
+  cx.font = '800 24px "Segoe UI",system-ui,sans-serif';
+  cx.fillStyle = '#f2b33d';
+  cx.fillText('#FayHattı', SHARE_SQ / 2, 608);
+  return c;
+}
+function shareFileName() { return `fay-hatti-${String(G.seed).replace(/[^\w-]/g, '')}.png`; }
+// returns 'shared' | 'aborted' | 'downloaded' | 'failed' (also exposed for tests)
 async function share() {
   sfx.click();
   vibe(20);
   trackEvent('share', { mode: G.mode, seed: G.seed, level: G.level, moves: G.moves, stars: G.stars });
-  const text = shareText() + '\n' + shareUrl();
-  const c = $('rCard');
-  if (shareCardArtEnabled && navigator.share && c && c.toBlob) {
+  const text = shareText() + '\n#FayHattı\n' + shareUrl();
+  const sq = renderShareSquare();
+  const blob = sq && sq.toBlob ? await new Promise((res) => sq.toBlob(res, 'image/png')) : null;
+  if (!blob) return 'failed';
+  const name = shareFileName();
+  let file = null;
+  try { file = new File([blob], name, { type: 'image/png' }); } catch (e) {}
+  if (file && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
-      const blob = await new Promise((res) => c.toBlob(res, 'image/png'));
-      if (blob) {
-        const file = new File([blob], `fay-hatti-${G.seed}.png`, { type: 'image/png' });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ title: 'Fay Hattı', text, files: [file] });
-          return;
-        }
-      }
+      await navigator.share({ title: 'Fay Hattı', text, files: [file] });
+      return 'shared';
     } catch (e) {
-      if (e && e.name === 'AbortError') return;
+      if (e && e.name === 'AbortError') return 'aborted';
     }
   }
-  if (shareCardArtEnabled && navigator.clipboard && window.ClipboardItem && c && c.toBlob) {
-    try {
-      const blob = await new Promise((res) => c.toBlob(res, 'image/png'));
-      if (blob) {
-        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-        toast(t('cardCopied'));
-        return;
-      }
-    } catch (e) {}
-  }
-  if (navigator.share && matchMedia('(pointer:coarse)').matches) {
-    try { await navigator.share({ text }); return; }
-    catch (e) { if (e && e.name === 'AbortError') return; }
-  }
   try {
-    await navigator.clipboard.writeText(text);
-    toast(t('copied'));
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    toast(t('shareSaved'));
+    return 'downloaded';
   } catch (e) {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
-    try { document.execCommand('copy'); toast(t('copied')); } catch (e2) {}
-    ta.remove();
+    return 'failed';
   }
 }
 function toggleMute() { muted = !muted; store.set('mute', muted); if (AC) master.gain.value = muted ? 0 : 0.55; updateHud(); fillMenu(); if (!muted) sfx.click(); }
 function toggleLang() { sfx.click(); lang = lang === 'tr' ? 'en' : 'tr'; store.set('lang', lang); updateHud(); fillMenu(); updateHintHud(); if ($('result').classList.contains('on')) showResult(); if ($('help').classList.contains('on')) { const r = helpReturn; openHelp(); helpReturn = r; } if ($('verify').classList.contains('on')) { const r = verifyReturn; openVerify(); verifyReturn = r; } if ($('hint') && $('hint').classList.contains('on')) openHint(); if (tutActive) setTutStep(tutStep); }
 
-$('bUndo').onclick = undo; $('bRestart').onclick = restart; $('bHint').onclick = () => { if (G.mode === 'daily') return; openHint(); }; $('bMenu').onclick = () => { sfx.click(); openMenu(); };
+$('bUndo').onclick = undo; $('bRestart').onclick = restart; $('bHint').onclick = () => { if (G.mode === 'daily') return; triggerHint(); }; $('bMenu').onclick = () => { sfx.click(); openMenu(); };
 $('bSound').onclick = toggleMute; $('mSound').onclick = toggleMute; $('mHaptic').onclick = toggleHaptic; $('bLang').onclick = toggleLang; $('mLang').onclick = toggleLang;
 $('bContrast').onclick = () => { toggleContrast(); sfx.click(); };
+$('mReach').onclick = () => { sfx.click(); setReach(reach === 'right' ? 'left' : 'right'); };
+$('bVillSave').onclick = () => { sfx.click(); const l = setCustomVillagers($('villNames').value); $('villNames').value = l.join(', '); toast(l.length ? t('villSaved') : t('villCleared')); };
+$('bVillReset').onclick = () => { sfx.click(); setCustomVillagers(''); $('villNames').value = ''; toast(t('villCleared')); };
+$('bVillClose').onclick = () => { sfx.click(); hideVillReport(); };
 $('bDaily').onclick = () => {
   sfx.click();
   if (G.mode === 'daily' && G.seed === todaySeed() && G.pz && !G.won) {
@@ -5110,11 +5535,22 @@ $('bDaily').onclick = () => {
   }
   else startPuzzle('daily', todaySeed());
 };
-$('bEndless').onclick = () => { sfx.click(); startPuzzle('endless', store.get('endless', 1)); };
+$('bEndless').onclick = () => { sfx.click(); startPuzzle('endless', store.get(tierKey(G.tier), 1)); };
+[['tierKolay', 'kolay'], ['tierNormal', 'normal'], ['tierZor', 'zor']].forEach(([id, k]) => { $(id).onclick = () => { sfx.click(); setTier(k); }; });
+$('tierGroup').addEventListener('keydown', (e) => {
+  const order = ['kolay', 'normal', 'zor'], i = order.indexOf(G.tier);
+  const d = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+  if (!d) return;
+  const nx = order[(i + d + 3) % 3];
+  setTier(nx); $('tier' + nx[0].toUpperCase() + nx.slice(1)).focus(); e.preventDefault();
+});
 $('bMarathon').onclick = () => { sfx.click(); startPuzzle('marathon', store.get('marathon.' + todaySeed(), 1)); };
 $('bHow').onclick = () => { sfx.click(); openHelp(); };
 $('bVerify').onclick = () => { sfx.click(); openVerify(); };
 $('bHelpOk').onclick = closeHelp;
+$('bHelpClose').onclick = closeHelp;
+$('bMenuClose').onclick = () => { sfx.click(); closeAll(); };
+$('bResultClose').onclick = () => { sfx.click(); closeAll(); };
 $('bTutReplay').onclick = () => { sfx.click(); helpReturn = null; closeAll(); showTut(1); };
 $('bTutNext').onclick = () => { sfx.click(); if (tutStep < 3) setTutStep(tutStep + 1); else hideTut(true); };
 $('bTutPrev').onclick = () => { sfx.click(); if (tutStep > 1) setTutStep(tutStep - 1); };
@@ -5144,7 +5580,7 @@ $('rShare').onkeydown = async (e) => { if (e.key === 'Enter' || e.key === ' ') {
 $('bNext').onclick = () => {
   sfx.click();
   if (G.mode === 'marathon') startPuzzle('marathon', G.marathonStage + 1, G.marathonDate);
-  else if (G.mode === 'daily') startPuzzle('endless', store.get('endless', 1));
+  else if (G.mode === 'daily') startPuzzle('endless', store.get(tierKey(G.tier), 1));
   else startPuzzle('endless', G.level + 1);
 };
 $('bRMenu').onclick = () => { sfx.click(); openMenu(); };
@@ -5164,7 +5600,7 @@ function dbg() {
   el.style.display = 'block';
   el.textContent = `fps ${fps}  dpr ${DPR}  cell ${cs}px\nseed ${G.seed}  K ${pz ? pz.K : '-'}  par ${pz ? pz.par : '-'}\ngen ${G.genMs} ms  nodes ${pz ? pz.solveNodes : '-'}\nmoves ${G.moves}  quake ${G.moves % 5}  motes ${motes.length}\nevents ${telemetryLog.length}` + (G.bot ? `\nbot ${G.bot.strategy} plan ${G.bot.plan.length} (${G.bot.ms} ms)` : '');
 }
-const GLYPH = { 0: '..', 3: 'VV', 4: 'SS', 5: 'HH', 6: 'MM', 7: 'FF', 8: 'BB' };
+const GLYPH = { 0: '..', 3: 'VV', 4: 'SS', 5: 'HH', 6: 'MM', 7: 'FF', 8: 'BB', 9: 'XX' };
 window.fayHatti = {
   get seed() { return G.seed; }, get moves() { return G.moves; }, get solved() { return G.won; }, get state() { return G.state; },
   get mode() { return G.mode; }, get level() { return G.level; }, get par() { return G.pz ? G.pz.par : null; }, get stars() { return G.stars; },
@@ -5197,9 +5633,15 @@ window.fayHatti = {
     }));
   },
   get milestones() { return this.badges; },
-  get nextQuake() { const q = nextQuake(); return q < 0 ? null : { row: q >> 1, dir: moveDir(q) }; },
+  get nextQuake() { const q = nextQuake(); if (q < 0) return null; const qr = quakeRows(G.pz, q); return { row: qr[0].row, dir: qr[0].dir, double: qr.length > 1, rows: qr.map((o) => o.row), dirs: qr.map((o) => o.dir) }; },
+  get villagers() { const sat = G.pz && G.ids ? countLinked().sat : []; return villagersOf().map((v, i) => ({ village: i + 1, cell: v.cell, names: v.names.slice(), safe: !!sat[i] })); },
+  get villagerReport() { const el = $('villRep'); return { visible: !!(el && el.classList.contains('on')), lines: el ? [...el.querySelectorAll('li')].map((li) => li.textContent) : [] }; },
+  setVillagerNames: (raw) => setCustomVillagers(Array.isArray(raw) ? raw.join(',') : raw),
+  get linked() { const c = countLinked(); return { linked: c.linked, total: c.total, sat: c.sat.slice() }; },
+  get linkChip() { const el = $('linkChip'); return el && el.style.display !== 'none' ? el.textContent : null; },
   get trauma() { return quakeTrauma; },
   get shareCard() { return $('rCard'); }, renderShareCard: () => renderShareCard($('rCard')), saveShareCard, share,
+  shareSquare: () => renderShareSquare(),
   get shareCardArt() { return shareCardArtEnabled; }, setShareCardArt,
   get quakeJuice() { return quakeJuiceEnabled; }, get quakeShakeEnabled() { return quakeJuiceEnabled; }, setQuakeShake: (v) => setQuakeJuice(v), setQuakeJuice: (v) => setQuakeJuice(v),
   quakeShake: (m) => triggerQuakeHit(m != null ? m : (nextQuake() >= 0 ? nextQuake() : 0)),
@@ -5207,7 +5649,8 @@ window.fayHatti = {
   get genMs() { return G.genMs; }, get fps() { return fps; }, get plan() { return G.pz ? G.pz.solution.slice() : null; },
   get time() { return isSpeedrunActive() ? (G.finalTime != null ? Math.round(G.finalTime * 10) / 10 : Math.round(getElapsed() * 10) / 10) : null; },
   get parTime() { return isSpeedrunActive() && G.pz ? G.parTime : null; },
-  get bestTime() { return isSpeedrunActive() ? store.get('time.L' + G.level, null) : null; },
+  get bestTime() { return isSpeedrunActive() ? store.get(timeKey(), null) : null; },
+  get tier() { return G.tier; }, setTier,
   get underParTime() { return isSpeedrunActive() && G.parTime != null ? (G.finalTime != null ? G.finalTime : getElapsed()) <= G.parTime : null; },
   get ferryActive() { return !!G.ferryActive; },
   get bridgeActive() { return isBridgeActive(); },
@@ -5225,6 +5668,7 @@ window.fayHatti = {
   get board() { if (!G.pz) return null; const v = toVals(G.pz, G.ids), out = []; for (let r = 0; r < N; r++) { const row = []; for (let c = 0; c < N; c++) { const x = v[r * N + c], k = x >> 4; row.push(k === KR ? 'r' + (x & 15).toString(16) : k === KD ? 'd' + (x & 15).toString(16) : k === KF ? 'f' + (x & 15).toString(16) : k === KB ? 'b' + (x & 15).toString(16) : GLYPH[k]); } out.push(row.join(' ')); } return out; },
   get highContrast() { return highContrast; }, setContrast, toggleContrast,
   get haptic() { return haptic; }, setHaptic, toggleHaptic, vibe,
+  get reach() { return reach; }, setReach,
   verifySeeds: (from, to) => runSeedVerification(from, to),
   get integrity() { return lastIntegrityReport || runSeedVerification('20261130', '20261231'); },
   // Analytics / Telemetry hooks
@@ -5261,7 +5705,7 @@ window.fayHatti = {
   triggerHint: () => triggerHint(),
   get currentHint() {
     if (!isHintActive()) return null;
-    return hint && performance.now() < hint.until ? { line: hint.line, isRow: hint.line < N, index: hint.line < N ? hint.line : hint.line - N, dir: hint.dir } : null;
+    return hint && performance.now() < hint.until ? { line: hint.line, isRow: hint.line < N, index: hint.line < N ? hint.line : hint.line - N, dir: hint.dir, move: hint.move, optimal: hint.optimal, msLeft: Math.round(hint.until - performance.now()) } : null;
   },
   get hintActive() { return G.hintActive || (hint && performance.now() < hint.until); },
 };
@@ -5293,6 +5737,8 @@ trackEvent('session_init', {
 const tc = $('metaThemeColor');
 if (tc) tc.setAttribute('content', currentTheme === 'gece' ? '#0b111a' : currentTheme === 'kagit' ? '#2e2820' : (G.biome === 'karadeniz' ? '#12241d' : G.biome === 'kapadokya' ? '#1f161a' : G.biome === 'ege' ? '#1c261e' : '#1b2830'));
 addEventListener('resize', layout);
+addEventListener('orientationchange', () => setTimeout(layout, 100));
+setReach(reach, false);
 applyContrast();
 layout();
 updateHud();
