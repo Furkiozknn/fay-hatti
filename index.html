@@ -9,7 +9,7 @@
 <style>
 :root{--bg:#1b2830;--bg2:#23343d;--ink:#f3ead8;--ink2:#c9bda4;--paper:#f3e7cc;--paper-ink:#2b2118;--terra:#a63f27;--gold:#f2b33d;--quake:#e0553a;--focus:#7cc4f0}
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.4 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.4 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
 body{background:radial-gradient(120% 80% at 50% 0%,#2a3f49 0%,var(--bg) 60%)}
 body.biome-kapadokya{background:radial-gradient(120% 80% at 50% 0%,#35262c 0%,#1f161a 60%);--bg:#1f161a;--bg2:#2a1e24;--ink:#f6ede2;--ink2:#cdbdae;--paper:#f5ebd8;--paper-ink:#2d1e16;--terra:#b54c30;--gold:#e8a436;--quake:#e45838}
 /* Karadeniz region visual theme: mist-tinted deep greens, highland paper, tea plantation tones */
@@ -47,7 +47,7 @@ body.biome-ege .res-speedrun b,body.theme-ege .res-speedrun b{color:#2a2016}
 body.biome-ege .tb,body.theme-ege .tb{border-color:#384f3c;background:var(--bg2)}
 body.biome-ege .tb:hover,body.theme-ege .tb:hover{background:#2f4233}
 body.biome-ege #bot,body.theme-ege #bot{background:#3a543e;color:#e8f4ea}
-button{font:inherit;color:inherit;cursor:pointer}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
 button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 body.high-contrast{--bg:#081014;--bg2:#101a20;--ink:#ffffff;--ink2:#f5eedd;--paper:#ffffff;--paper-ink:#111111;--terra:#8a200a;--gold:#ffb703;--quake:#ff2a05;--focus:#00e5ff;background:#081014}
 body.high-contrast .tb{border:2px solid #7899ab;color:#ffffff}
@@ -63,7 +63,7 @@ body.high-contrast .share-card-wrap{border:2px solid #111111;box-shadow:none}
 body.high-contrast .share-prev{border:2px solid #111111;background:#ffffff;color:#111111}
 body.high-contrast .share-prev:hover{background:#f0f0f0}
 body.high-contrast button:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
-#app{position:fixed;inset:0;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto 1fr auto;grid-template-areas:"hud" "quake" "stage" "bar";padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left)}
+#app{position:fixed;inset:0;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto 1fr auto;grid-template-areas:"hud" "quake" "stage" "bar";padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) 0 env(safe-area-inset-left,0px)}
 #hud{grid-area:hud;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px 4px;max-width:620px;width:100%;margin:0 auto}
 .brand{min-width:0}
 .brand-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -106,10 +106,16 @@ body.high-contrast .link-chip.full{border-color:#ffb703;color:#ffb703}
 @keyframes pulse{70%{box-shadow:0 0 0 8px rgba(224,85,58,0)}100%{box-shadow:0 0 0 0 rgba(224,85,58,0)}}
 #stage{grid-area:stage;position:relative;min-height:0;min-width:0}
 #cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
-#bar{grid-area:bar;display:flex;justify-content:center;gap:6px;padding:6px 8px calc(10px + env(safe-area-inset-bottom));max-width:620px;margin:0 auto;width:100%}
+#bar{grid-area:bar;display:flex;justify-content:center;gap:6px;padding:6px 8px calc(10px + env(safe-area-inset-bottom,0px));max-width:620px;margin:0 auto;width:100%}
 .tb{flex:1 1 0;max-width:64px;min-width:44px;min-height:48px;padding:4px 4px;border:1px solid #3d5561;border-radius:12px;background:var(--bg2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:12px;color:var(--ink)}
 .tb svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .tb:hover{background:#2c434e}.tb:disabled{opacity:.4;cursor:default}
+/* mobile touch (ported from feature/mobile-touch): press feedback + one-hand reach order of the bottom bar */
+.tb{transition:transform .08s,background .12s}
+.tb:active:not(:disabled){transform:scale(.95);background:#35505e}
+.reach-right #bar #bLang{order:1}.reach-right #bar #bSound{order:2}.reach-right #bar #bMenu{order:3}.reach-right #bar #bHint{order:4}.reach-right #bar #bRestart{order:5}.reach-right #bar #bUndo{order:6}
+.reach-left #bar #bUndo{order:1}.reach-left #bar #bRestart{order:2}.reach-left #bar #bHint{order:3}.reach-left #bar #bMenu{order:4}.reach-left #bar #bSound{order:5}.reach-left #bar #bLang{order:6}
+@media (prefers-reduced-motion:reduce){.tb{transition:none}.tb:active:not(:disabled){transform:none}}
 .tb.active{color:var(--gold);border-color:var(--gold);box-shadow:0 0 10px rgba(242,179,61,.3)}
 .tb b{font-size:15px;line-height:22px}
 .ov{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(14,22,27,.74);z-index:10}
@@ -181,7 +187,7 @@ body.high-contrast .hint-hud .hh-txt{color:#ffb703}
 body.high-contrast .hh-btn{background:#ffb703;color:#111111;box-shadow:inset 0 0 0 1px #111111}
 body.high-contrast .hh-btn:hover{background:#ffc933}
 body.high-contrast .hh-close{color:#ffffff}
-#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#0e171c;color:var(--ink);padding:10px 16px;border-radius:10px;font-size:15px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
+#toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#0e171c;color:var(--ink);padding:10px 16px;border-radius:10px;font-size:15px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
 #toast.on{opacity:1}
 #debug{position:fixed;left:6px;top:6px;z-index:30;font:12px/1.3 ui-monospace,Consolas,monospace;background:rgba(0,0,0,.6);color:#9f9;padding:4px 6px;border-radius:6px;display:none;white-space:pre;pointer-events:none}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
@@ -406,7 +412,7 @@ body.high-contrast .cp-teaser{color:#111111}
 </style>
 </head>
 <body>
-<div id="app">
+<div id="app" class="reach-right">
   <header id="hud">
     <div class="brand">
       <div class="brand-title"><b id="tTitle">Fay Hattı</b><span id="hudStreak" class="streak-pill" aria-label="Streak"><svg class="fire-ico" viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M12 2c-.3 2.2-1.8 4.2-3.2 5.8C7 9.8 6 12 6 14.5a6 6 0 0 0 12 0c0-3.2-1.8-5.8-4-8-.3 2-1.7 3.5-3.5 3.5.8-2.6 1.5-5.3 1.5-8z"/></svg><span id="vStreak"></span></span></div>
@@ -495,7 +501,7 @@ body.high-contrast .cp-teaser{color:#111111}
     <button class="btn alt" id="bVerify"></button>
     <button class="btn alt" id="bContrast" aria-pressed="false"></button>
     <div class="mini"><button id="mSound"></button><button id="mHaptic" aria-pressed="false"></button></div>
-    <div class="mini"><button id="mLang"></button></div>
+    <div class="mini"><button id="mLang"></button><button id="mReach"></button></div>
     <div class="theme-box">
       <div class="theme-lbl" id="mThemeLabel"></div>
       <div class="theme-pills" role="radiogroup" aria-labelledby="mThemeLabel">
@@ -1542,6 +1548,7 @@ const STR = {
     waterConnected: 'Water reached village!',
     linkChip: '{n}/{t} villages linked', linkChipAria: '{n} of {t} villages linked',
     motes: 'Dust motes',
+    reach: 'One hand', reachRight: 'right', reachLeft: 'left',
     integrity: 'Seed Integrity', freezeTitle: 'Code Freeze & Integrity', freezeSub: 'Seeds verified through Dec 31',
     freezeRange: 'Range: {from} → {to}', freezeStatus: '{ok}/{total} daily seeds verified solvable',
     freezePar: 'Par range: {min}–{max} moves (avg {avg})', freezeSeal: 'CODE FREEZE LOCKED · SEED INTEGRITY VERIFIED',
@@ -1597,6 +1604,7 @@ const STR = {
     waterConnected: 'Köye su ulaştı!',
     linkChip: '{n}/{t} Köy Bağlı', linkChipAria: '{t} köyden {n} tanesi bağlı',
     motes: 'Toz zerrecikleri',
+    reach: 'Tek el', reachRight: 'sağ', reachLeft: 'sol',
     integrity: 'Tohum Doğrulama', freezeTitle: 'Kod Dondurma & Doğrulama', freezeSub: '31 Aralık\'a kadar çözülebilirlik onaylandı',
     freezeRange: 'Aralık: {from} → {to}', freezeStatus: '{ok}/{total} günlük tohum çözülebilir',
     freezePar: 'Hedef hamle: {min}–{max} (ort. {avg})', freezeSeal: 'KOD DONDURULDU · TOHUM GÜVENLİĞİ ONAYLANDI',
@@ -4398,11 +4406,23 @@ function drawMotes(dt, now) {
 }
 
 // ---------------------------------------------------------------- input
+// one-hand reach (ported from feature/mobile-touch): puts undo/restart/hint under the chosen thumb
+let reach = (QS.get('reach') || '').toLowerCase();
+if (reach !== 'left' && reach !== 'right') reach = store.get('reach', 'right') === 'left' ? 'left' : 'right';
+function setReach(r, save = true) {
+  reach = r === 'left' ? 'left' : 'right';
+  if (save) store.set('reach', reach);
+  const app = $('app');
+  if (app) { app.classList.remove('reach-left', 'reach-right'); app.classList.add('reach-' + reach); }
+  if ($('mReach')) $('mReach').textContent = t('reach') + ': ' + t(reach === 'left' ? 'reachLeft' : 'reachRight');
+  return reach;
+}
 function hitTest(px, py) {
   const bx = (px - ox) / cs, by = (py - oy) / cs;
   if (bx >= 0 && bx < N && by >= 0 && by < N) return { cell: (by | 0) * N + (bx | 0) };
-  if (by >= 0 && by < N) { if (bx < 0 && bx >= -GUT) return { m: (by | 0) * 2 + 1 }; if (bx >= N && bx < N + GUT) return { m: (by | 0) * 2 }; }
-  if (bx >= 0 && bx < N) { if (by < 0 && by >= -GUT) return { m: (N + (bx | 0)) * 2 + 1 }; if (by >= N && by < N + GUT) return { m: (N + (bx | 0)) * 2 }; }
+  const gut = Math.max(GUT, 44 / Math.max(1, cs)); // edge arrows keep at least a 44 px touch target
+  if (by >= 0 && by < N) { if (bx < 0 && bx >= -gut) return { m: (by | 0) * 2 + 1 }; if (bx >= N && bx < N + gut) return { m: (by | 0) * 2 }; }
+  if (bx >= 0 && bx < N) { if (by < 0 && by >= -gut) return { m: (N + (bx | 0)) * 2 + 1 }; if (by >= N && by < N + gut) return { m: (N + (bx | 0)) * 2 }; }
   return null;
 }
 const ptr = (e) => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
@@ -4412,22 +4432,26 @@ cv.addEventListener('pointerdown', (e) => {
   if (G.bot || G.state !== 'play') return;
   const p = ptr(e), h = hitTest(p.x, p.y);
   if (!h) return;
-  drag = { x: p.x, y: p.y, h, done: false };
+  drag = { x: p.x, y: p.y, h, done: false, touch: e.pointerType !== 'mouse' };
   try { cv.setPointerCapture(e.pointerId); } catch (err) {}
 });
 cv.addEventListener('pointermove', (e) => {
   const p = ptr(e);
-  if (e.pointerType === 'mouse') { const h = hitTest(p.x, p.y); hover = h && h.cell != null ? h.cell : -1; }
+  if (e.pointerType === 'mouse' && (!drag || drag.done)) { const h = hitTest(p.x, p.y); hover = h && h.cell != null ? h.cell : -1; }
   if (!drag || drag.done || drag.h.cell == null) return;
-  const dx = p.x - drag.x, dy = p.y - drag.y;
-  if (Math.max(Math.abs(dx), Math.abs(dy)) < cs * 0.25) return;
+  const dx = p.x - drag.x, dy = p.y - drag.y, adx = Math.abs(dx), ady = Math.abs(dy), travel = Math.max(adx, ady);
+  // intentional-swipe threshold: a resting or wobbling thumb must not shift a line
+  if (travel < (drag.touch ? Math.max(22, cs * 0.32) : Math.max(16, cs * 0.25))) return;
+  // accidental-swipe guard: one axis must dominate (1.35x) unless the finger has clearly travelled
+  const dominant = adx > ady ? adx >= ady * 1.35 || ady < 12 : ady >= adx * 1.35 || adx < 12;
+  if (!dominant && travel < cs * 0.65) return;
   const c = drag.h.cell;
-  const m = Math.abs(dx) > Math.abs(dy) ? ((c / N) | 0) * 2 + (dx > 0 ? 0 : 1) : (N + (c % N)) * 2 + (dy > 0 ? 0 : 1);
-  drag.done = true; doMove(m);
+  const m = adx >= ady ? ((c / N) | 0) * 2 + (dx > 0 ? 0 : 1) : (N + (c % N)) * 2 + (dy > 0 ? 0 : 1);
+  drag.done = true; hover = -1; doMove(m);
 });
 const endDrag = (e) => {
   if (drag && !drag.done) {
-    if (drag.h.m != null) { const p = ptr(e); if (Math.hypot(p.x - drag.x, p.y - drag.y) < cs * 0.4) doMove(drag.h.m); }
+    if (drag.h.m != null) { const p = ptr(e); if (Math.hypot(p.x - drag.x, p.y - drag.y) < Math.max(28, cs * 0.5)) doMove(drag.h.m); }
     else if (drag.h.cell != null && isKervansarayActive()) {
       // Tap on a cell: if it's a kervansaray stop, ring camel bell (tile-kervansaray card)
       const c = drag.h.cell, v = disp ? disp.vals[c] : 0;
@@ -4436,9 +4460,11 @@ const endDrag = (e) => {
   }
   drag = null;
 };
-cv.addEventListener('pointerup', endDrag);
-cv.addEventListener('pointercancel', () => { drag = null; });
-cv.addEventListener('pointerleave', () => { hover = -1; });
+cv.addEventListener('pointerup', (e) => { endDrag(e); if (e.pointerType !== 'mouse') hover = -1; });
+cv.addEventListener('pointercancel', () => { drag = null; hover = -1; });
+cv.addEventListener('lostpointercapture', () => { drag = null; });
+cv.addEventListener('pointerleave', () => { if (!drag) hover = -1; });
+addEventListener('blur', () => { drag = null; hover = -1; });
 addEventListener('keydown', (e) => {
   audio();
   if ($('help').classList.contains('on') && (e.key === 'Escape' || e.key === 'Enter')) { closeHelp(); e.preventDefault(); return; }
@@ -4651,6 +4677,7 @@ function fillMenu() {
   $('bContrast').innerHTML = `${t('contrast')}: <b>${highContrast ? t('on') : t('off')}</b><small>${t('contrastSub')}</small>`;
   $('bContrast').setAttribute('aria-pressed', String(highContrast));
   $('mLang').textContent = lang === 'tr' ? 'English' : 'Türkçe';
+  $('mReach').textContent = t('reach') + ': ' + t(reach === 'left' ? 'reachLeft' : 'reachRight');
   $('mSound').textContent = t('sound') + ': ' + (muted ? t('off') : t('on'));
   $('mHaptic').textContent = t('haptic') + ': ' + (haptic ? t('on') : t('off'));
   $('mHaptic').setAttribute('aria-pressed', String(haptic));
@@ -5332,6 +5359,7 @@ function toggleLang() { sfx.click(); lang = lang === 'tr' ? 'en' : 'tr'; store.s
 $('bUndo').onclick = undo; $('bRestart').onclick = restart; $('bHint').onclick = () => { if (G.mode === 'daily') return; triggerHint(); }; $('bMenu').onclick = () => { sfx.click(); openMenu(); };
 $('bSound').onclick = toggleMute; $('mSound').onclick = toggleMute; $('mHaptic').onclick = toggleHaptic; $('bLang').onclick = toggleLang; $('mLang').onclick = toggleLang;
 $('bContrast').onclick = () => { toggleContrast(); sfx.click(); };
+$('mReach').onclick = () => { sfx.click(); setReach(reach === 'right' ? 'left' : 'right'); };
 $('bDaily').onclick = () => {
   sfx.click();
   if (G.mode === 'daily' && G.seed === todaySeed() && G.pz && !G.won) {
@@ -5468,6 +5496,7 @@ window.fayHatti = {
   get board() { if (!G.pz) return null; const v = toVals(G.pz, G.ids), out = []; for (let r = 0; r < N; r++) { const row = []; for (let c = 0; c < N; c++) { const x = v[r * N + c], k = x >> 4; row.push(k === KR ? 'r' + (x & 15).toString(16) : k === KD ? 'd' + (x & 15).toString(16) : k === KF ? 'f' + (x & 15).toString(16) : k === KB ? 'b' + (x & 15).toString(16) : GLYPH[k]); } out.push(row.join(' ')); } return out; },
   get highContrast() { return highContrast; }, setContrast, toggleContrast,
   get haptic() { return haptic; }, setHaptic, toggleHaptic, vibe,
+  get reach() { return reach; }, setReach,
   verifySeeds: (from, to) => runSeedVerification(from, to),
   get integrity() { return lastIntegrityReport || runSeedVerification('20261130', '20261231'); },
   // Analytics / Telemetry hooks
@@ -5536,6 +5565,8 @@ trackEvent('session_init', {
 const tc = $('metaThemeColor');
 if (tc) tc.setAttribute('content', currentTheme === 'gece' ? '#0b111a' : currentTheme === 'kagit' ? '#2e2820' : (G.biome === 'karadeniz' ? '#12241d' : G.biome === 'kapadokya' ? '#1f161a' : G.biome === 'ege' ? '#1c261e' : '#1b2830'));
 addEventListener('resize', layout);
+addEventListener('orientationchange', () => setTimeout(layout, 100));
+setReach(reach, false);
 applyContrast();
 layout();
 updateHud();
