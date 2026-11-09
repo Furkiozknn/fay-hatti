@@ -118,11 +118,21 @@ body.high-contrast .link-chip.full{border-color:#ffb703;color:#ffb703}
 @media (prefers-reduced-motion:reduce){.tb{transition:none}.tb:active:not(:disabled){transform:none}}
 .tb.active{color:var(--gold);border-color:var(--gold);box-shadow:0 0 10px rgba(242,179,61,.3)}
 .tb b{font-size:15px;line-height:22px}
-.ov{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(14,22,27,.74);z-index:10}
-.ov.on{display:flex}
-.panel{width:100%;max-width:380px;max-height:100%;overflow:auto;background:var(--paper);color:var(--paper-ink);border-radius:18px;padding:22px 20px;box-shadow:0 18px 50px rgba(0,0,0,.45),inset 0 0 0 2px #d9c596;animation:pop .22s ease-out}
+.ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));background:rgba(14,22,27,.78);z-index:10;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility 0s linear .2s}
+.ov.on{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .2s ease,visibility 0s}
+.panel{position:relative;width:100%;max-width:380px;max-height:100%;overflow:auto;overscroll-behavior:contain;background:var(--paper);color:var(--paper-ink);border-radius:18px;padding:22px 20px;box-shadow:0 18px 50px rgba(0,0,0,.45),inset 0 0 0 2px #d9c596;transform:translateY(14px) scale(.97);opacity:0;transition:transform .24s cubic-bezier(.2,.9,.3,1.15),opacity .2s ease}
+.ov.on .panel{transform:none;opacity:1}
 @keyframes pop{from{transform:scale(.94);opacity:0}to{transform:none;opacity:1}}
-.panel h1{margin:0;font:700 34px/1.05 "Palatino Linotype",Palatino,Georgia,serif;color:#5a2a18}
+/* menu polish (ported from feature/polish-menus): close buttons, press feedback, focus ring */
+.panel-close{position:absolute;top:10px;right:10px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid #c9b485;border-radius:50%;background:#ede0bf;color:#5a2a18;font-size:18px;line-height:1;z-index:2}
+.panel-close:hover{background:#f6ecce}.panel-close:active{transform:translateY(1px)}
+body.high-contrast .panel-close{border:2px solid #111111;background:#ffffff;color:#111111}
+.btn{transition:transform .08s,background .12s,box-shadow .08s}
+.btn:active{transform:translateY(2px)}
+.mini button:active{transform:translateY(1px)}
+button:focus:not(:focus-visible){outline:none}
+@media (prefers-reduced-motion:reduce){.ov,.ov.on{transition:none}.panel{transform:none;transition:opacity .12s linear}.btn,.mini button,.panel-close{transition:none;transform:none !important}}
+.panel h1{margin:0;padding-right:40px;font:700 34px/1.05 "Palatino Linotype",Palatino,Georgia,serif;color:#5a2a18}
 .panel h1 small{display:block;font-size:17px;font-weight:400;color:#7a5638;margin-top:2px}
 .panel h2{margin:0 0 6px;font:700 26px/1.1 "Palatino Linotype",Palatino,Georgia,serif;color:#5a2a18;text-align:center}
 .panel .sub{margin:8px 0 14px;color:#5b4a36;font-size:15px}
@@ -187,8 +197,8 @@ body.high-contrast .hint-hud .hh-txt{color:#ffb703}
 body.high-contrast .hh-btn{background:#ffb703;color:#111111;box-shadow:inset 0 0 0 1px #111111}
 body.high-contrast .hh-btn:hover{background:#ffc933}
 body.high-contrast .hh-close{color:#ffffff}
-#toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#0e171c;color:var(--ink);padding:10px 16px;border-radius:10px;font-size:15px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
-#toast.on{opacity:1}
+#toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(10px);background:#0e171c;color:var(--ink);padding:10px 16px;border-radius:10px;font-size:15px;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:20;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 #debug{position:fixed;left:6px;top:6px;z-index:30;font:12px/1.3 ui-monospace,Consolas,monospace;background:rgba(0,0,0,.6);color:#9f9;padding:4px 6px;border-radius:6px;display:none;white-space:pre;pointer-events:none}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @media (orientation:landscape) and (max-height:540px){
@@ -428,7 +438,7 @@ body.high-contrast .cp-teaser{color:#111111}
           <span id="vParTime">–</span>
         </span>
       </div>
-      <div class="stars" id="vStars" aria-hidden="true"></div>
+      <div class="stars" id="vStars" role="img" aria-label="Stars"></div>
     </div>
   </header>
   <div id="quake" class="calm" aria-live="polite"><span class="dot"></span><span id="tQuake">…</span><span id="bot"></span><span id="linkChip" class="link-chip" role="status" aria-live="polite" style="display:none"></span></div>
@@ -475,6 +485,7 @@ body.high-contrast .cp-teaser{color:#111111}
 
 <div class="ov" id="menu" role="dialog" aria-modal="true" aria-labelledby="mTitle">
   <div class="panel">
+    <button class="panel-close" id="bMenuClose" aria-label="Close">✕</button>
     <h1 id="mTitle">Fay Hattı<small>Fault Line</small></h1>
     <p class="sub" id="mSub"></p>
     <button class="btn" id="bDaily"></button>
@@ -514,6 +525,7 @@ body.high-contrast .cp-teaser{color:#111111}
 </div>
 <div class="ov" id="help" role="dialog" aria-modal="true" aria-labelledby="hTitle">
   <div class="panel">
+    <button class="panel-close" id="bHelpClose" aria-label="Close">✕</button>
     <h2 id="hTitle"></h2>
     <ol class="help" id="hList"></ol>
     <div class="legend" id="hLegend"></div>
@@ -538,6 +550,7 @@ body.high-contrast .cp-teaser{color:#111111}
 </div>
 <div class="ov" id="result" role="dialog" aria-modal="true" aria-labelledby="rTitle">
   <div class="panel">
+    <button class="panel-close" id="bResultClose" aria-label="Close">✕</button>
     <h2 id="rTitle"></h2>
     <div class="big-stars" id="rStars"></div>
     <div id="rMilestone" class="badge-banner" style="display:none" role="status" aria-live="polite"></div>
@@ -1549,6 +1562,8 @@ const STR = {
     linkChip: '{n}/{t} villages linked', linkChipAria: '{n} of {t} villages linked',
     motes: 'Dust motes',
     reach: 'One hand', reachRight: 'right', reachLeft: 'left',
+    close: 'Close', starsLabel: '{n} of 3 stars', rowName: 'Row {r}', colName: 'Column {c}', lineMoved: '{line} shifted',
+    undoDone: 'Move undone', restartDone: 'Restarted',
     integrity: 'Seed Integrity', freezeTitle: 'Code Freeze & Integrity', freezeSub: 'Seeds verified through Dec 31',
     freezeRange: 'Range: {from} → {to}', freezeStatus: '{ok}/{total} daily seeds verified solvable',
     freezePar: 'Par range: {min}–{max} moves (avg {avg})', freezeSeal: 'CODE FREEZE LOCKED · SEED INTEGRITY VERIFIED',
@@ -1605,6 +1620,8 @@ const STR = {
     linkChip: '{n}/{t} Köy Bağlı', linkChipAria: '{t} köyden {n} tanesi bağlı',
     motes: 'Toz zerrecikleri',
     reach: 'Tek el', reachRight: 'sağ', reachLeft: 'sol',
+    close: 'Kapat', starsLabel: '3 üzerinden {n} yıldız', rowName: '{r}. satır', colName: '{c}. sütun', lineMoved: '{line} kaydırıldı',
+    undoDone: 'Hamle geri alındı', restartDone: 'Baştan başlatıldı',
     integrity: 'Tohum Doğrulama', freezeTitle: 'Kod Dondurma & Doğrulama', freezeSub: '31 Aralık\'a kadar çözülebilirlik onaylandı',
     freezeRange: 'Aralık: {from} → {to}', freezeStatus: '{ok}/{total} günlük tohum çözülebilir',
     freezePar: 'Hedef hamle: {min}–{max} (ort. {avg})', freezeSeal: 'KOD DONDURULDU · TOHUM GÜVENLİĞİ ONAYLANDI',
@@ -2485,6 +2502,8 @@ function doMove(m) {
   const hasBridge = pz && lineCells(pz.fixed, line).some((i) => (toVals(pz, cur)[i] >> 4) === KB);
   if (hasBridge) sfx.bridge(); else sfx.slide();
   vibe(22); updateHud();
+  const liveEl = $('live');
+  if (liveEl && !G.won) liveEl.textContent = t('lineMoved', { line: line < N ? t('rowName', { r: line + 1 }) : t('colName', { c: line - N + 1 }) }) + ' · ' + $('tQuake').textContent;
   tutOnMove();
   return true;
 }
@@ -2498,6 +2517,7 @@ function undo() {
   if (G.hintActive && G.hintPlan && G.hintStep > 0) G.hintStep--;
   updateHintHud();
   sfx.undo(); vibe(12); settle(true); updateHud();
+  $('live').textContent = t('undoDone');
   if (tutActive && G.moves === 0) setTutStep(1);
 }
 function restart() {
@@ -2520,6 +2540,7 @@ function restart() {
   puzzleStartTime = performance.now();
   puzzleFirstMoveTime = 0;
   sfx.undo(); settle(true); updateHud();
+  $('live').textContent = t('restartDone');
   if (tutActive) setTutStep(1);
 }
 function win() {
@@ -4471,6 +4492,7 @@ addEventListener('keydown', (e) => {
   if ($('hint') && $('hint').classList.contains('on') && (e.key === 'Escape' || e.key === 'Enter')) { closeHint(); e.preventDefault(); return; }
   if ($('verify').classList.contains('on') && (e.key === 'Escape' || e.key === 'Enter')) { closeVerify(); e.preventDefault(); return; }
   if ($('cardPick') && $('cardPick').classList.contains('on') && e.key === 'Escape') { closeCardPick(); e.preventDefault(); return; }
+  if (e.key === 'Escape' && (($('menu').classList.contains('on') && G.pz) || $('result').classList.contains('on'))) { sfx.click(); closeAll(); e.preventDefault(); return; }
   if (document.querySelector('.ov.on')) return;
   if (G.state !== 'play' || G.bot) return;
   const k = e.key.toLowerCase();
@@ -4501,6 +4523,8 @@ function updateHud() {
   $('vMoves').textContent = G.moves; $('vPar').textContent = G.pz ? G.pz.par : '–';
   const st = G.pz ? (G.won ? G.stars : ((G.hintUsed && G.mode !== 'daily') ? 1 : starsFor(G.moves, G.pz.par))) : 0;
   $('vStars').innerHTML = [0, 1, 2].map((i) => starSvg(i < st, 18)).join('');
+  $('vStars').setAttribute('aria-label', t('starsLabel', { n: st }));
+  ['bMenuClose', 'bHelpClose', 'bResultClose'].forEach((id) => $(id).setAttribute('aria-label', t('close')));
   updateStreakHud();
   const stTimer = $('statTimer');
   if (stTimer) {
@@ -5382,6 +5406,9 @@ $('bMarathon').onclick = () => { sfx.click(); startPuzzle('marathon', store.get(
 $('bHow').onclick = () => { sfx.click(); openHelp(); };
 $('bVerify').onclick = () => { sfx.click(); openVerify(); };
 $('bHelpOk').onclick = closeHelp;
+$('bHelpClose').onclick = closeHelp;
+$('bMenuClose').onclick = () => { sfx.click(); closeAll(); };
+$('bResultClose').onclick = () => { sfx.click(); closeAll(); };
 $('bTutReplay').onclick = () => { sfx.click(); helpReturn = null; closeAll(); showTut(1); };
 $('bTutNext').onclick = () => { sfx.click(); if (tutStep < 3) setTutStep(tutStep + 1); else hideTut(true); };
 $('bTutPrev').onclick = () => { sfx.click(); if (tutStep > 1) setTutStep(tutStep - 1); };
