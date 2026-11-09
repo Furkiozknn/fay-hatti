@@ -332,6 +332,8 @@ html[data-theme="gece"] .theme-box{border-top-color:#263852}
 html[data-theme="kagit"] .theme-box{border-top-color:#c9bda5}
 .theme-lbl{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--paper-ink);opacity:.75;margin-bottom:6px;text-align:center}
 .theme-pills{display:flex;gap:6px}
+.tier-box{margin:4px 0 8px;padding-top:8px}
+.tier-hint{margin:6px 0 0;font-size:13px;line-height:1.35;color:var(--paper-ink);opacity:.85;text-align:center}
 .th-pill{flex:1;min-height:44px;padding:6px 4px;border-radius:10px;border:1px solid #b8935a;background:transparent;color:var(--paper-ink);font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
 .th-pill:hover{background:rgba(184,147,90,.15)}
 .th-pill.active{background:var(--terra);color:#fff8ec;border-color:var(--terra);box-shadow:0 2px 6px rgba(0,0,0,.15)}
@@ -471,6 +473,15 @@ body.high-contrast .cp-teaser{color:#111111}
     <p class="sub" id="mSub"></p>
     <button class="btn" id="bDaily"></button>
     <button class="btn" id="bEndless"></button>
+    <div class="theme-box tier-box">
+      <div class="theme-lbl" id="mTierLabel"></div>
+      <div class="theme-pills" role="radiogroup" aria-labelledby="mTierLabel" id="tierGroup">
+        <button type="button" class="th-pill" id="tierKolay" role="radio"></button>
+        <button type="button" class="th-pill" id="tierNormal" role="radio"></button>
+        <button type="button" class="th-pill" id="tierZor" role="radio"></button>
+      </div>
+      <p class="tier-hint" id="tierHint"></p>
+    </div>
     <button class="btn marathon" id="bMarathon"></button>
     <div class="badges-box" id="mBadges" role="region" aria-labelledby="tBadgesTitle">
       <div class="badges-head">
@@ -698,6 +709,8 @@ function buildPerms(fixed) {
   return { perms, lens };
 }
 function permOff(src, so, dst, d0, p) { for (let i = 0; i < NN; i++) dst[d0 + i] = src[so + p[i]]; }
+// Calm quake turn (difficulty tier Kolay): an identity permutation pair appended after the 20 line moves.
+const isCalmQuake = (pz, q) => pz.calm >= 0 && (q === pz.calm || q === (pz.calm ^ 1));
 function applyPerm(src, p) { const o = new Uint8Array(NN); for (let i = 0; i < NN; i++) o[i] = src[p[i]]; return o; }
 const toVals = (pz, ids) => { const o = new Uint8Array(NN); for (let i = 0; i < NN; i++) o[i] = pz.tiles[ids[i]]; return o; };
 
@@ -936,16 +949,25 @@ function makePuzzle(seed, cfg) {
     const qRows = [];
     for (let r = 0; r < N; r++) if (lens[r] >= 3) qRows.push(r);
     if (qRows.length < 2) continue;
+    // difficulty tiers: cfg.qPattern marks calm turns (0) where no quake hits; daily/Normal never set it
+    let calm = -1;
+    if (cfg.qPattern) {
+      calm = perms.length;
+      const idp = new Uint8Array(NN);
+      for (let i = 0; i < NN; i++) idp[i] = i;
+      perms.push(idp, idp);
+    }
     const quakes = [];
     for (let k = 0; k < cfg.P; k++) {
+      if (cfg.qPattern && !cfg.qPattern[k % cfg.qPattern.length]) { quakes.push(calm); continue; }
       let r;
-      do r = qRows[(R() * qRows.length) | 0]; while (k > 0 && r === moveLine(quakes[k - 1]) && qRows.length > 1);
+      do r = qRows[(R() * qRows.length) | 0]; while (k > 0 && quakes[k - 1] !== calm && r === moveLine(quakes[k - 1]) && qRows.length > 1);
       quakes.push(r * 2 + (R() < 0.5 ? 0 : 1));
     }
     const pz = {
       seed, cfg, tiles: L.vals, fixed: L.fixed, spring: L.spring, han: L.han, villages: L.villages,
       needRiver: L.villages.some((v) => v.need & NEED_RIVER), needRoad: L.villages.some((v) => v.need & NEED_ROAD),
-      perms, lens, moveList, quakes, K: cfg.K,
+      perms, lens, moveList, quakes, calm, K: cfg.K,
     };
     let best = null;
     for (let s = 0; s < 8; s++) {
@@ -988,7 +1010,30 @@ function dailyConfig(seed) {
   const K = [6, 4, 4, 5, 5, 5, 6][dow];
   return { K, minPar: K - 1, nv: 3, nm: 1 + (hashStr('m' + t) % 2), decoy: 0.55, minPath: 7, P: 5 };
 }
-function endlessConfig(level) {
+// Endless difficulty tiers (ported from feature/difficulty-tiers): kolay (easy), normal (classic), zor (hard).
+function normTier(x) {
+  x = String(x || '').toLowerCase();
+  if (x === 'kolay' || x === 'easy') return 'kolay';
+  if (x === 'zor' || x === 'hard') return 'zor';
+  return 'normal';
+}
+function endlessConfig(level, tier = 'normal') {
+  tier = normTier(tier);
+  if (tier === 'kolay') {
+    // gentle par (2-4), 2 villages for longer, sparse decoys, calm turns between quakes
+    const K = level <= 3 ? 2 : level <= 7 ? 3 : level <= 12 ? 4 : Math.min(5, 3 + Math.ceil(level / 6));
+    const qPattern = level <= 4 ? [0, 0, 1, 0, 0, 1] : level <= 10 ? [0, 1, 0, 1, 0, 1] : [1, 0, 1, 1, 0, 1];
+    const cfg = { K, minPar: Math.max(2, K - 1), nv: level <= 6 ? 2 : 3, nm: level <= 6 ? 0 : 1, decoy: level <= 4 ? 0.22 : 0.35, minPath: level <= 4 ? 4 : 5, P: 6, qPattern, kervansaray: true };
+    if (level >= 8) cfg.bridge = true;
+    return cfg;
+  }
+  if (tier === 'zor') {
+    // 3 villages and mountains from level 1, steep par (3-6), tight 4-quake cycle
+    const K = level <= 2 ? 4 : level <= 5 ? 5 : 6;
+    const cfg = { K, minPar: Math.max(3, K - 1), nv: 3, nm: level <= 3 ? 1 : 2, decoy: level <= 3 ? 0.55 : 0.65, minPath: level <= 3 ? 7 : 8, P: 4, kervansaray: true, bridge: true };
+    if (level >= 3) cfg.ferry = 2;
+    return cfg;
+  }
   const K = Math.min(6, 2 + Math.ceil(level / 2));
   const cfg = { K, minPar: Math.max(2, K - 1), nv: level < 3 ? 2 : 3, nm: level < 4 ? 0 : level < 8 ? 1 : 2, decoy: level < 3 ? 0.35 : 0.55, minPath: level < 3 ? 5 : 7, P: 5, kervansaray: true };
   if (level >= 4) cfg.bridge = true; // tile-bridge card: active in endless/level modes, never in daily
@@ -1447,6 +1492,10 @@ const STR = {
     allMilestonesDone: 'All milestones achieved!',
     biomeKapadokya: 'Cappadocia', biomeKaradeniz: 'Karadeniz', biomeEge: 'Aegean', biomeBozkir: 'Steppe', regEge: 'Aegean',
     contrast: 'High contrast', contrastSub: 'Distinguish rivers from roads',
+    tierLabel: 'Endless difficulty', tier_kolay: 'Easy', tier_normal: 'Normal', tier_zor: 'Hard',
+    tierDesc_kolay: 'Gentle par (2–4 moves), 2 villages longer, calm turns between quakes.',
+    tierDesc_normal: 'The classic balanced journey, a quake after every move.',
+    tierDesc_zor: '3 villages, mountains and bridges from level 1, tight par, a 4-quake cycle.',
     theme: 'Theme', thClassic: 'Classic', thGece: 'Gece', thKagit: 'Kâğıt',
     h1: 'Drag a row sideways or a column up or down (or tap the arrows). Tiles wrap around the edge.',
     h2: 'Villages, mountains, the spring and the caravanserai never move: tiles slide past them.',
@@ -1495,6 +1544,10 @@ const STR = {
     allMilestonesDone: 'Tüm aşamalar tamamlandı!',
     biomeKapadokya: 'Kapadokya', biomeKaradeniz: 'Karadeniz', biomeEge: 'Ege', biomeBozkir: 'Bozkır', regEge: 'Ege',
     contrast: 'Yüksek kontrast', contrastSub: 'Nehir ve yolları belirginleştir',
+    tierLabel: 'Sonsuz mod zorluğu', tier_kolay: 'Kolay', tier_normal: 'Normal', tier_zor: 'Zor',
+    tierDesc_kolay: 'Sakin hedef (2–4 hamle), daha uzun süre 2 köy, depremler arasında sakin turlar.',
+    tierDesc_normal: 'Klasik dengeli yolculuk, her hamleden sonra deprem.',
+    tierDesc_zor: '1. bölümden itibaren 3 köy, dağlar ve köprüler, sıkı hedef, 4 depremlik döngü.',
     theme: 'Tema', thClassic: 'Klasik', thGece: 'Gece', thKagit: 'Kâğıt',
     h1: 'Bir satırı yana, bir sütunu yukarı ya da aşağı sürükle (ya da oklara dokun). Taşlar kenardan dolanır.',
     h2: 'Köyler, dağlar, pınar ve kervansaray yerinden oynamaz: taşlar onların yanından kayar.',
@@ -1900,8 +1953,18 @@ function getDropOffReport() {
 }
 
 // ---------------------------------------------------------------- game state & dynamic tutorial
-const G = { mode: 'daily', seed: '', level: 1, marathonStage: 1, marathonDate: '', pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], riv: [], bot: null, celebrateAt: 0, place: '', biome: 'bozkir', ferryActive: false, hintActive: false, hintUsed: false, hintPlan: null, hintStep: 0, newMilestone: null, parTime: null, timerStart: 0, timerOffset: 0, timerPaused: false, pauseTime: 0, finalTime: null, isUnderParTime: false, isNewBest: false };
+const G = { mode: 'daily', seed: '', level: 1, tier: normTier(QS.get('tier') || store.get('tier', 'normal')), marathonStage: 1, marathonDate: '', pz: null, ids: null, moves: 0, undo: [], won: false, state: 'loading', stars: 0, genMs: 0, sat: [], riv: [], bot: null, celebrateAt: 0, place: '', biome: 'bozkir', ferryActive: false, hintActive: false, hintUsed: false, hintPlan: null, hintStep: 0, newMilestone: null, parTime: null, timerStart: 0, timerOffset: 0, timerPaused: false, pauseTime: 0, finalTime: null, isUnderParTime: false, isNewBest: false };
 let streakIncreased = false;
+// difficulty tiers: per-tier endless progress; Normal keeps the original keys so old saves load unchanged
+const tierKey = (tr) => { const x = normTier(tr); return x === 'normal' ? 'endless' : 'endless_' + x; };
+const tierSeed = (level) => (G.tier === 'normal' ? 'L' : 'L' + G.tier[0].toUpperCase()) + level;
+const timeKey = () => 'time.' + G.seed;
+function setTier(tr) {
+  G.tier = normTier(tr);
+  store.set('tier', G.tier);
+  if ($('menu') && $('menu').classList.contains('on')) fillMenu();
+  return G.tier;
+}
 
 // streak counter (fayhatti.streak)
 function prevDateStr(s) {
@@ -2246,7 +2309,11 @@ function tutOnMove() {
 }
 
 function starsFor(moves, par) { return moves <= par ? 3 : moves <= par + 2 ? 2 : 1; }
-function nextQuake() { return G.pz && !G.won ? G.pz.quakes[G.moves % G.pz.quakes.length] : -1; }
+function nextQuake() {
+  if (!G.pz || G.won) return -1;
+  const q = G.pz.quakes[G.moves % G.pz.quakes.length];
+  return isCalmQuake(G.pz, q) ? -1 : q;
+}
 
 function startPuzzle(mode, arg, opt = true) {
   clearTimeout(botTimer); G.bot = null; clearHint();
@@ -2265,7 +2332,7 @@ function startPuzzle(mode, arg, opt = true) {
     G.marathonDate = typeof opt === 'string' ? opt : todaySeed();
     G.seed = 'M' + G.marathonDate + '-' + G.marathonStage;
   } else {
-    G.level = arg; G.seed = 'L' + arg;
+    G.level = arg; G.seed = tierSeed(arg);
   }
   updateHud();
   setTimeout(() => {
@@ -2276,7 +2343,8 @@ function startPuzzle(mode, arg, opt = true) {
       // Endless Marathon: daily seed per stage using endlessConfig progression for hardcore challenge
       seed = hashStr('marathon_' + G.marathonDate + '_' + G.marathonStage);
       cfg = endlessConfig(G.marathonStage);
-    } else { seed = hashStr('endless' + arg); cfg = endlessConfig(arg); }
+    } else if (G.tier === 'normal') { seed = hashStr('endless' + arg); cfg = endlessConfig(arg); }
+    else { seed = hashStr('endless_' + G.tier + arg); cfg = endlessConfig(arg, G.tier); }
     let pz = null;
     for (let k = 0; !pz && k < 5; k++) pz = makePuzzle(seed + k * 7919, cfg);
     G.genMs = Math.round(performance.now() - t0);
@@ -2344,10 +2412,12 @@ function doMove(m) {
   if (isSolved(pz, toVals(pz, a), 0)) G.won = true; // solved by the move itself: the ground stays calm
   else {
     const q = pz.quakes[(G.moves - 1) % pz.quakes.length];
-    cur = applyPerm(a, pz.perms[q]);
-    trackEvent('quake', { move: G.moves, q, row: q >> 1, dir: moveDir(q) });
-    pushAnim('quake', a, cur, q);
-    if (isSolved(pz, toVals(pz, cur), 0)) G.won = true;
+    if (!isCalmQuake(pz, q)) { // a calm turn (Kolay tier) leaves the ground still
+      cur = applyPerm(a, pz.perms[q]);
+      trackEvent('quake', { move: G.moves, q, row: q >> 1, dir: moveDir(q) });
+      pushAnim('quake', a, cur, q);
+      if (isSolved(pz, toVals(pz, cur), 0)) G.won = true;
+    }
   }
   G.ids = cur;
   if (G.won) G.stars = (G.hintUsed && G.mode !== 'daily') ? 1 : starsFor(G.moves, pz.par);
@@ -2438,16 +2508,17 @@ function win() {
   }
   else if (G.mode === 'marathon') store.set('marathon.' + G.marathonDate, Math.max(store.get('marathon.' + G.marathonDate, 1), G.marathonStage + 1));
   else {
-    const curEndless = store.get('endless', 1);
+    const tk = tierKey(G.tier);
+    const curEndless = store.get(tk, 1);
     const nextEndless = Math.max(curEndless, G.level + 1);
-    store.set('endless', nextEndless);
-    const ms = MILESTONES.find((m) => m.level === G.level);
+    store.set(tk, nextEndless);
+    const ms = G.tier === 'normal' ? MILESTONES.find((m) => m.level === G.level) : null; // milestones track the Normal journey
     if (ms && curEndless <= ms.level && nextEndless > ms.level) newMilestone = ms;
     if (isSpeedrunActive()) {
       G.finalTime = getElapsed();
       G.timerPaused = true;
       G.isUnderParTime = G.parTime != null && G.finalTime <= G.parTime;
-      const bestKey = 'time.L' + G.level;
+      const bestKey = timeKey();
       const prevBest = store.get(bestKey, null);
       if (prevBest == null || G.finalTime < prevBest) {
         store.set(bestKey, Math.round(G.finalTime * 10) / 10);
@@ -4342,7 +4413,7 @@ function updateHud() {
     ? t('dailyTag', { d: seedLabel(G.seed) }) + (G.place && G.pz ? ' · ' + G.place : '') + regionTag
     : G.mode === 'marathon'
     ? t('marathonTag', { d: seedLabel(G.marathonDate), s: G.marathonStage }) + (G.place && G.pz ? ' · ' + G.place : '') + regionTag
-    : t('endless') + ' · ' + t('level', { n: G.level }) + regionTag;
+    : t('endless') + ' · ' + t('tier_' + G.tier) + ' · ' + t('level', { n: G.level }) + regionTag;
   $('tMode').textContent = modeLabel;
   $('lMoves').textContent = t('moves'); $('lPar').textContent = t('par');
   $('vMoves').textContent = G.moves; $('vPar').textContent = G.pz ? G.pz.par : '–';
@@ -4500,7 +4571,15 @@ function fillMenu() {
   $('mSub').textContent = t('sub');
   const ds = todaySeed(), done = store.get('daily.' + ds, null);
   $('bDaily').innerHTML = `${t('daily')}<small>${seedLabel(ds)} · ${done ? t('solvedOn') + ' ' + '★'.repeat(done.s) + ' ' + done.m + ' ' + t('movesWord') : t('playTag')}</small>`;
-  $('bEndless').innerHTML = `${t('endless')}<small>${t('level', { n: store.get('endless', 1) })}</small>`;
+  $('bEndless').innerHTML = `${t('endless')}<small>${t('tier_' + G.tier)} · ${t('level', { n: store.get(tierKey(G.tier), 1) })}</small>`;
+  $('mTierLabel').textContent = t('tierLabel');
+  [['tierKolay', 'kolay'], ['tierNormal', 'normal'], ['tierZor', 'zor']].forEach(([id, k]) => {
+    const el = $(id); if (!el) return;
+    el.textContent = t('tier_' + k);
+    el.classList.toggle('active', G.tier === k);
+    el.setAttribute('aria-checked', String(G.tier === k));
+  });
+  $('tierHint').textContent = t('tierDesc_' + G.tier);
   const mStage = store.get('marathon.' + ds, 1);
   const bMarathon = $('bMarathon');
   if (bMarathon) bMarathon.innerHTML = `${t('marathon')}<small>${t('marathonTag', { d: seedLabel(ds), s: mStage })}</small>`;
@@ -4674,11 +4753,11 @@ function updateVerifyUi(rep) {
 function shareText() {
   if (G.mode === 'marathon') return `Fay Hattı ${t('marathon')} ${seedLabel(G.marathonDate)} #${G.marathonStage} ${'⭐'.repeat(G.stars)} ${G.moves} ${t('movesWord')}` + (G.hintUsed && G.mode !== 'daily' ? ' 💡' : '');
   const tStr = (isSpeedrunActive() && G.finalTime != null) ? ` · ${G.finalTime.toFixed(1)}s` : '';
-  return `Fay Hattı ${G.mode === 'daily' ? seedLabel(G.seed) : '#' + G.level} ${'⭐'.repeat(G.stars)} ${G.moves} ${t('movesWord')}` + (G.hintUsed && G.mode !== 'daily' ? ' 💡' : '') + tStr;
+  return `Fay Hattı ${G.mode === 'daily' ? seedLabel(G.seed) : (G.tier !== 'normal' ? t('tier_' + G.tier) + ' ' : '') + '#' + G.level} ${'⭐'.repeat(G.stars)} ${G.moves} ${t('movesWord')}` + (G.hintUsed && G.mode !== 'daily' ? ' 💡' : '') + tStr;
 }
 function shareUrl() {
   if (G.mode === 'marathon') return CANON + '?marathon=' + G.marathonDate;
-  return CANON + (G.mode === 'daily' ? '?seed=' + G.seed : '?level=' + G.level);
+  return CANON + (G.mode === 'daily' ? '?seed=' + G.seed : '?level=' + G.level + (G.tier !== 'normal' ? '&tier=' + G.tier : ''));
 }
 
 // ---------------------------------------------------------------- cosmetic card: share-card-art
@@ -5008,7 +5087,8 @@ function renderShareCard(c = $('rCard')) {
   cx.textAlign = 'left';
   cx.font = '700 13px "Segoe UI",system-ui,sans-serif';
   cx.fillStyle = '#5a2a18';
-  const quakesWeathered = Math.max(0, G.moves - 1);
+  let quakesWeathered = 0; // calm turns (Kolay tier) do not count
+  for (let k = 0; k < G.moves - 1; k++) if (!isCalmQuake(pz, pz.quakes[k % pz.quakes.length])) quakesWeathered++;
   const quakeTxt = lang === 'tr' ? `${quakesWeathered} Deprem Atlatıldı` : `${quakesWeathered} Quakes Weathered`;
   cx.fillText(quakeTxt, rightX + 36, infoY + 28);
 
@@ -5083,7 +5163,7 @@ function showResult() {
   if (rSp) {
     if (isSpeedrunActive() && G.finalTime != null) {
       rSp.style.display = 'flex';
-      const best = store.get('time.L' + G.level, null);
+      const best = store.get(timeKey(), null);
       const icon = '<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="9" r="5.5"/><path d="M8 6.2v2.8l1.8 1M6 2h4M8 2v1.5"/></svg>';
       let extra = '';
       if (G.isUnderParTime) extra += `<span class="pill">${t('parTimeBeat')}</span>`;
@@ -5195,7 +5275,15 @@ $('bDaily').onclick = () => {
   }
   else startPuzzle('daily', todaySeed());
 };
-$('bEndless').onclick = () => { sfx.click(); startPuzzle('endless', store.get('endless', 1)); };
+$('bEndless').onclick = () => { sfx.click(); startPuzzle('endless', store.get(tierKey(G.tier), 1)); };
+[['tierKolay', 'kolay'], ['tierNormal', 'normal'], ['tierZor', 'zor']].forEach(([id, k]) => { $(id).onclick = () => { sfx.click(); setTier(k); }; });
+$('tierGroup').addEventListener('keydown', (e) => {
+  const order = ['kolay', 'normal', 'zor'], i = order.indexOf(G.tier);
+  const d = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+  if (!d) return;
+  const nx = order[(i + d + 3) % 3];
+  setTier(nx); $('tier' + nx[0].toUpperCase() + nx.slice(1)).focus(); e.preventDefault();
+});
 $('bMarathon').onclick = () => { sfx.click(); startPuzzle('marathon', store.get('marathon.' + todaySeed(), 1)); };
 $('bHow').onclick = () => { sfx.click(); openHelp(); };
 $('bVerify').onclick = () => { sfx.click(); openVerify(); };
@@ -5229,7 +5317,7 @@ $('rShare').onkeydown = async (e) => { if (e.key === 'Enter' || e.key === ' ') {
 $('bNext').onclick = () => {
   sfx.click();
   if (G.mode === 'marathon') startPuzzle('marathon', G.marathonStage + 1, G.marathonDate);
-  else if (G.mode === 'daily') startPuzzle('endless', store.get('endless', 1));
+  else if (G.mode === 'daily') startPuzzle('endless', store.get(tierKey(G.tier), 1));
   else startPuzzle('endless', G.level + 1);
 };
 $('bRMenu').onclick = () => { sfx.click(); openMenu(); };
@@ -5295,7 +5383,8 @@ window.fayHatti = {
   get genMs() { return G.genMs; }, get fps() { return fps; }, get plan() { return G.pz ? G.pz.solution.slice() : null; },
   get time() { return isSpeedrunActive() ? (G.finalTime != null ? Math.round(G.finalTime * 10) / 10 : Math.round(getElapsed() * 10) / 10) : null; },
   get parTime() { return isSpeedrunActive() && G.pz ? G.parTime : null; },
-  get bestTime() { return isSpeedrunActive() ? store.get('time.L' + G.level, null) : null; },
+  get bestTime() { return isSpeedrunActive() ? store.get(timeKey(), null) : null; },
+  get tier() { return G.tier; }, setTier,
   get underParTime() { return isSpeedrunActive() && G.parTime != null ? (G.finalTime != null ? G.finalTime : getElapsed()) <= G.parTime : null; },
   get ferryActive() { return !!G.ferryActive; },
   get bridgeActive() { return isBridgeActive(); },
