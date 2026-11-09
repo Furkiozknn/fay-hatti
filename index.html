@@ -6,6 +6,7 @@
 <title>Fay Hattı — Fault Line</title>
 <meta name="description" content="Shift rows and columns of an Anatolian map to bring rivers and caravan roads to every village. A small quake moves one row after each of your moves. Daily puzzle and endless mode.">
 <meta name="theme-color" content="#1b2830" id="metaThemeColor">
+<meta name="arena-game" content="fay-hatti">
 <style>
 :root{--bg:#1b2830;--bg2:#23343d;--ink:#f3ead8;--ink2:#c9bda4;--paper:#f3e7cc;--paper-ink:#2b2118;--terra:#a63f27;--gold:#f2b33d;--quake:#e0553a;--focus:#7cc4f0}
 *{box-sizing:border-box}
@@ -888,6 +889,7 @@ body.high-contrast .cp-teaser{color:#111111}
     <button class="btn alt" id="bHow"></button>
     <button class="btn alt" id="bVerify"></button>
     <button class="btn alt" id="bContrast" aria-pressed="false"></button>
+    <button class="btn alt" id="bA11y"></button>
     <div class="mini"><button id="mSound"></button><button id="mHaptic" aria-pressed="false"></button></div>
     <div class="mini"><button id="mLang"></button><button id="mReach"></button></div>
     <details class="theme-box vill-box" id="villBox">
@@ -944,6 +946,7 @@ body.high-contrast .cp-teaser{color:#111111}
     <div class="share-prev" id="rShare" role="button" tabindex="0" title="Copy text"></div>
     <div class="row"><button class="btn" id="bShare" style="text-align:center"></button><button class="btn alt" id="bSaveCard" style="text-align:center"></button></div>
     <div class="row"><button class="btn alt" id="bNext"></button><button class="btn alt" id="bRMenu"></button></div>
+    <a class="btn alt" id="rAnother" target="_blank" rel="noopener" style="text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center"></a>
     <p class="note cp-teaser" id="rCardTeaser" style="margin:6px 0 0;display:none"></p>
     <p class="note" id="rNote"></p>
   </div>
@@ -1479,8 +1482,12 @@ const QS = new URLSearchParams(location.search);
 const NOSAVE = QS.has('nosave'), DEBUG = QS.has('debug'), AUTO = QS.has('auto');
 const DEMO = QS.get('demo');
 const BOT = AUTO ? (DEMO === 'b' ? 'b' : 'a') : DEMO == null ? null : DEMO === 'b' ? 'b' : 'a';
-const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const RM_OS = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// arena-kit accessibility panel can also turn reduced motion on (OS preference always wins)
+let RM = RM_OS || !!(window.Arena && Arena.settings && Arena.settings.reducedMotion);
 const SPEED = AUTO ? 0.4 : 1;
+// arena-kit streak/badges are recorded only for real player runs (not bot, demo or ?nosave)
+const ARENA_OK = !!window.Arena && !BOT && DEMO == null && !NOSAVE;
 const CANON = 'https://furkiozknn.github.io/fay-hatti/';
 const store = {
   get(k, d) { try { const v = localStorage.getItem('fayhatti.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
@@ -1924,6 +1931,8 @@ const STR = {
     allMilestonesDone: 'All milestones achieved!',
     biomeKapadokya: 'Cappadocia', biomeKaradeniz: 'Karadeniz', biomeEge: 'Aegean', biomeBozkir: 'Steppe', regEge: 'Aegean',
     contrast: 'High contrast', contrastSub: 'Distinguish rivers from roads',
+    a11y: 'Accessibility', a11ySub: 'Text size, reduced motion, auto-pause', anotherGame: 'Try another game ↗',
+    awFirstWin: 'Fay Hattı: first map solved', awPerfect: 'Fay Hattı: 3 stars', awMilestone: 'Fay Hattı: endless badge',
     tierLabel: 'Endless difficulty', tier_kolay: 'Easy', tier_normal: 'Normal', tier_zor: 'Hard',
     tierDesc_kolay: 'Gentle par (2–4 moves), 2 villages longer, calm turns between quakes.',
     tierDesc_normal: 'The classic balanced journey, a quake after every move.',
@@ -1986,6 +1995,8 @@ const STR = {
     allMilestonesDone: 'Tüm aşamalar tamamlandı!',
     biomeKapadokya: 'Kapadokya', biomeKaradeniz: 'Karadeniz', biomeEge: 'Ege', biomeBozkir: 'Bozkır', regEge: 'Ege',
     contrast: 'Yüksek kontrast', contrastSub: 'Nehir ve yolları belirginleştir',
+    a11y: 'Erişilebilirlik', a11ySub: 'Yazı boyutu, az hareket, otomatik duraklatma', anotherGame: 'Başka oyun dene ↗',
+    awFirstWin: 'Fay Hattı: ilk harita çözüldü', awPerfect: 'Fay Hattı: 3 yıldız', awMilestone: 'Fay Hattı: sonsuz mod rozeti',
     tierLabel: 'Sonsuz mod zorluğu', tier_kolay: 'Kolay', tier_normal: 'Normal', tier_zor: 'Zor',
     tierDesc_kolay: 'Sakin hedef (2–4 hamle), daha uzun süre 2 köy, depremler arasında sakin turlar.',
     tierDesc_normal: 'Klasik dengeli yolculuk, her hamleden sonra deprem.',
@@ -3054,6 +3065,8 @@ function win() {
       store.set('daily.' + G.seed, { m: G.moves, s: G.stars });
       streakIncreased = recordDailyWin(G.seed);
     }
+    // arena-kit streak/badges: only today's puzzle, never bot/demo/nosave runs; the game's own seed is unchanged
+    if (ARENA_OK && G.seed === todaySeed()) { try { Arena.daily('fay-hatti').complete(G.stars); } catch (e) {} }
   }
   else if (G.mode === 'marathon') store.set('marathon.' + G.marathonDate, Math.max(store.get('marathon.' + G.marathonDate, 1), G.marathonStage + 1));
   else {
@@ -3077,6 +3090,13 @@ function win() {
       }
       if (G.isUnderParTime) sfx.speedrun();
     }
+  }
+  if (ARENA_OK) {
+    try {
+      Arena.award('fay-hatti-first-win', t('awFirstWin'));
+      if (G.stars >= 3) Arena.award('fay-hatti-3stars', t('awPerfect'));
+      if (newMilestone) Arena.award('fay-hatti-milestone', t('awMilestone'));
+    } catch (e) {}
   }
   G.celebrateAt = performance.now();
   G.newMilestone = newMilestone;
@@ -5187,6 +5207,7 @@ function fillMenu() {
   $('bVerify').innerHTML = `${t('integrity')}<small>${t('freezeSub')}</small>`;
   $('bContrast').innerHTML = `${t('contrast')}: <b>${highContrast ? t('on') : t('off')}</b><small>${t('contrastSub')}</small>`;
   $('bContrast').setAttribute('aria-pressed', String(highContrast));
+  $('bA11y').innerHTML = `${t('a11y')}<small>${t('a11ySub')}</small>`;
   $('mLang').textContent = lang === 'tr' ? 'English' : 'Türkçe';
   $('mReach').textContent = t('reach') + ': ' + t(reach === 'left' ? 'reachLeft' : 'reachRight');
   $('villSum').textContent = t('villSettings');
@@ -5795,6 +5816,14 @@ function showResult() {
   }
   $('bNext').textContent = G.mode === 'marathon' ? t('nextStage') : G.mode === 'daily' ? t('toEndless') : t('next');
   $('bRMenu').textContent = t('back');
+  const ra = $('rAnother');
+  if (ra) {
+    const others = window.Arena && Arena.games ? Arena.games.filter((g) => g !== 'fay-hatti') : [];
+    if (others.length && !BOT) {
+      if (!ra.getAttribute('href')) ra.href = 'https://furkiozknn.github.io/' + others[Math.floor(Math.random() * others.length)] + '/';
+      ra.textContent = t('anotherGame'); ra.style.display = 'flex';
+    } else ra.style.display = 'none';
+  }
   $('rNote').textContent = G.mode === 'marathon' ? t('marathonStageDone', { s: G.marathonStage }) : G.mode === 'daily' ? t('tomorrow') : t('endlessNote', { n: G.level });
   updateCardTeaser();
   $('result').classList.add('on');
@@ -5871,11 +5900,12 @@ async function share() {
   }
 }
 function toggleMute() { muted = !muted; store.set('mute', muted); if (AC) master.gain.value = muted ? 0 : 0.55; updateHud(); fillMenu(); if (!muted) sfx.click(); }
-function toggleLang() { sfx.click(); lang = lang === 'tr' ? 'en' : 'tr'; store.set('lang', lang); updateHud(); fillMenu(); updateHintHud(); if ($('result').classList.contains('on')) showResult(); if ($('help').classList.contains('on')) { const r = helpReturn; openHelp(); helpReturn = r; } if ($('verify').classList.contains('on')) { const r = verifyReturn; openVerify(); verifyReturn = r; } if ($('hint') && $('hint').classList.contains('on')) openHint(); if (tutActive) setTutStep(tutStep); }
+function toggleLang() { sfx.click(); lang = lang === 'tr' ? 'en' : 'tr'; store.set('lang', lang); if (window.Arena) Arena.lang(lang); updateHud(); fillMenu(); updateHintHud(); if ($('result').classList.contains('on')) showResult(); if ($('help').classList.contains('on')) { const r = helpReturn; openHelp(); helpReturn = r; } if ($('verify').classList.contains('on')) { const r = verifyReturn; openVerify(); verifyReturn = r; } if ($('hint') && $('hint').classList.contains('on')) openHint(); if (tutActive) setTutStep(tutStep); }
 
 $('bUndo').onclick = undo; $('bRestart').onclick = restart; $('bHint').onclick = () => { if (G.mode === 'daily') return; triggerHint(); }; $('bMenu').onclick = () => { sfx.click(); openMenu(); };
 $('bSound').onclick = toggleMute; $('mSound').onclick = toggleMute; $('mHaptic').onclick = toggleHaptic; $('bLang').onclick = toggleLang; $('mLang').onclick = toggleLang;
 $('bContrast').onclick = () => { toggleContrast(); sfx.click(); };
+$('bA11y').onclick = () => { sfx.click(); if (window.Arena) { Arena.lang(lang); Arena.openSettings(); } };
 $('mReach').onclick = () => { sfx.click(); setReach(reach === 'right' ? 'left' : 'right'); };
 $('bVillSave').onclick = () => { sfx.click(); const l = setCustomVillagers($('villNames').value); $('villNames').value = l.join(', '); toast(l.length ? t('villSaved') : t('villCleared')); };
 $('bVillReset').onclick = () => { sfx.click(); setCustomVillagers(''); $('villNames').value = ''; toast(t('villCleared')); };
@@ -6090,6 +6120,14 @@ trackEvent('session_init', {
 });
 const tc = $('metaThemeColor');
 if (tc) tc.setAttribute('content', currentTheme === 'gece' ? '#0b111a' : currentTheme === 'kagit' ? '#2e2820' : (G.biome === 'karadeniz' ? '#12241d' : G.biome === 'kapadokya' ? '#1f161a' : G.biome === 'ege' ? '#1c261e' : '#1b2830'));
+// ---------------------------------------------------------------- arena-kit (shared layer) hooks
+// No gear button: the bottom-right corner holds the toolbar, so the panel opens from the menu (bA11y).
+if (window.Arena) {
+  Arena.lang(lang);
+  Arena.on('settings', (s) => { RM = RM_OS || !!s.reducedMotion; });
+  Arena.on('pause', () => { pauseTimer(); if (AC && AC.state === 'running') AC.suspend().catch(() => {}); });
+  Arena.on('resume', () => { if (!document.querySelector('.ov.on')) resumeTimer(); if (AC && !muted && AC.state === 'suspended') AC.resume().catch(() => {}); });
+}
 addEventListener('resize', layout);
 addEventListener('orientationchange', () => setTimeout(layout, 100));
 setReach(reach, false);
