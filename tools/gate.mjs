@@ -203,6 +203,9 @@ if (only !== 'sim' && !flag('--record')) {
       page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
       page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
       page.on('requestfailed', (r) => errors.push('requestfailed: ' + r.url()));
+      // Same rule as the other 20 games' gates (smoke.mjs): the analytics counter is answered with an empty 200, so the
+      // check does not depend on a third-party host being up; every other request must still succeed.
+      await page.route(/gc\.zgo\.at|goatcounter/, (r) => r.fulfill({ status: 200, contentType: 'text/javascript', body: '' }));
       await page.goto(url, { waitUntil: 'load', timeout: 120000 });
       await page.waitForFunction(L.ready, null, { timeout: 60000, polling: 250 });
       await page.evaluate(() => document.fonts.ready);
