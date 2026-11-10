@@ -1,0 +1,20 @@
+{
+  "game": "fay-hatti",
+  "recorded": "2026-11-10T01:00:15.181Z",
+  "commit": "3529417",
+  "entrySha": "f6725519be80",
+  "args": [
+    "20261108",
+    "28",
+    "20"
+  ],
+  "metrics": {
+    "puzzles": 48,
+    "solvedBoth": 48,
+    "avgPar": 4.38,
+    "avgA": 4.38,
+    "avgB": 6.92,
+    "exit": 0,
+    "rows": "5a19daa70c79"
+  }
+}

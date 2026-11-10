@@ -1,0 +1,48 @@
+name: gate
+
+# Regression gate (tools/gate.mjs, tools/GATE.md): the engine sim and the bot on the change vs its base, the
+# card-free daily check, a file:// load with 0 errors and the phone layout. Read-only, no secrets, no deploy.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      # depth 2: on pull_request HEAD is the merge commit and HEAD^1 the tip of the base branch;
+      # on push to main HEAD^1 is the previous tip of main
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: "22"
+
+      # tools/package-lock.json pins playwright 1.63.0 with its sha512; npm ci refuses anything else.
+      - name: Playwright (lockfile) and chromium
+        run: |
+          set -euo pipefail
+          npm ci --prefix tools --ignore-scripts --no-audit --no-fund
+          tools/node_modules/.bin/playwright install --with-deps chromium
+
+      # base = HEAD^1 (PR: the base branch; push: the previous main); no parent: the committed baseline
+      - name: Regression gate
+        run: |
+          set -euo pipefail
+          if git rev-parse -q --verify HEAD^1 >/dev/null; then node tools/gate.mjs --base HEAD^1
+          else node tools/gate.mjs --baseline; fi
