@@ -20,6 +20,8 @@ engine runs in Node, so the sim part runs the game's own tools instead of a brow
    requests, and every visible `#bar button` (undo, restart, menu, sound, language; hint is hidden in daily) must be
    inside the viewport and be what `elementFromPoint` returns at its centre. `GAME.browser.known` lists reported
    offenders (none on main).
+   The analytics counter (`gc.zgo.at`, added with arena-kit v1.1) is answered with an empty 200, as in the other
+   games' gates; any other failed request still fails the check.
 
 The board's row/column arrows are drawn on the canvas and are not checked here.
 
