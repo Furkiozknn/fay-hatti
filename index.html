@@ -5614,7 +5614,7 @@ function renderShareCard(c = $('rCard')) {
   cx.fillText('FAY HATTI', cardPad + 18, cardPad + 22);
 
   const dateStr = G.mode === 'daily' ? seedLabel(G.seed) : G.mode === 'marathon' ? `${seedLabel(G.marathonDate)} #${G.marathonStage}` : t('level', { n: G.level });
-  const locStr = G.place ? ` · ${G.place.toUpperCase()}` : '';
+  const locStr = G.place ? ` · ${G.place.toLocaleUpperCase('tr-TR')}` : '';
   const modeStr = G.mode === 'daily' ? (lang === 'tr' ? 'GÜNÜN BULMACASI' : 'DAILY PUZZLE') : G.mode === 'marathon' ? (lang === 'tr' ? 'SONSUZ MARATON' : 'ENDLESS MARATHON') : (lang === 'tr' ? 'SONSUZ MOD' : 'ENDLESS');
   cx.font = '600 12px "Segoe UI",system-ui,sans-serif';
   cx.fillStyle = '#7a5638';
@@ -5629,7 +5629,7 @@ function renderShareCard(c = $('rCard')) {
   cx.font = '700 12px "Segoe UI",system-ui,sans-serif';
   cx.textAlign = 'center';
   cx.textBaseline = 'middle';
-  cx.fillText(t('solvedT').toUpperCase(), bX + bW / 2, bY + bH / 2 + 1);
+  cx.fillText(t('solvedT').toLocaleUpperCase(lang === 'tr' ? 'tr-TR' : 'en-US'), bX + bW / 2, bY + bH / 2 + 1);
 
   // Fault line separator (seismic crack motif)
   cx.strokeStyle = '#e0553a';
@@ -5804,7 +5804,7 @@ function renderShareCard(c = $('rCard')) {
 
   cx.font = '600 11px "Segoe UI",system-ui,sans-serif';
   cx.fillStyle = '#7a5638';
-  cx.fillText(t('moves').toUpperCase(), rightX + statBoxW / 2, statsY + 20);
+  cx.fillText(t('moves').toLocaleUpperCase(lang === 'tr' ? 'tr-TR' : 'en-US'), rightX + statBoxW / 2, statsY + 20);
   cx.font = '700 32px "Palatino Linotype",Palatino,serif';
   cx.fillStyle = '#5a2a18';
   cx.fillText(String(G.moves), rightX + statBoxW / 2, statsY + 52);
@@ -5821,7 +5821,7 @@ function renderShareCard(c = $('rCard')) {
 
   cx.font = '600 11px "Segoe UI",system-ui,sans-serif';
   cx.fillStyle = '#7a5638';
-  cx.fillText(t('par').toUpperCase(), parX + statBoxW / 2, statsY + 20);
+  cx.fillText(t('par').toLocaleUpperCase(lang === 'tr' ? 'tr-TR' : 'en-US'), parX + statBoxW / 2, statsY + 20);
   cx.font = '700 32px "Palatino Linotype",Palatino,serif';
   cx.fillStyle = '#5a2a18';
   cx.fillText(String(pz.par), parX + statBoxW / 2, statsY + 52);
