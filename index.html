@@ -70,6 +70,8 @@ body.high-contrast button:focus-visible{outline:3px solid var(--focus);outline-o
 .brand-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .brand b{display:block;font:700 22px/1.1 "Palatino Linotype",Palatino,Georgia,serif;letter-spacing:.02em}
 .brand span{display:block;font-size:14px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Yazı denetimi (2026-11): telefonda 'Günlük · tarih · Hopa (Karadeniz)' '…' ile kesiliyordu; dar ekranda alt satıra kayar */
+@media (max-width:600px){#tMode{white-space:normal;overflow:visible;line-height:1.25}}
 .streak-pill{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:rgba(224,85,58,.16);color:#ffd9cf;border:1px solid rgba(224,85,58,.35);line-height:1.2;font-variant-numeric:tabular-nums}
 .streak-pill span{display:inline;color:inherit;font-size:inherit;white-space:nowrap;overflow:visible}
 .streak-pill .fire-ico{flex:none;fill:#f2b33d}
