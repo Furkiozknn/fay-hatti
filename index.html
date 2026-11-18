@@ -6260,13 +6260,22 @@ $('rCard').onclick = saveShareCard;
 $('rCard').onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); saveShareCard(); } };
 $('rShare').onclick = async () => { sfx.click(); vibe(15); try { await navigator.clipboard.writeText(shareText() + '\n' + shareUrl()); toast(t('copied')); } catch (e) {} };
 $('rShare').onkeydown = async (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sfx.click(); vibe(15); try { await navigator.clipboard.writeText(shareText() + '\n' + shareUrl()); toast(t('copied')); } catch (e2) {} } };
-$('bNext').onclick = () => {
-  sfx.click();
+// Portal ad hooks (G-050). Ads only at the natural break: when the player leaves the solved-board card (next board, menu).
+// On the game's own site (no portal SDK) afterBreak() runs the action synchronously, so the site plays exactly as before.
+// The ?auto / ?demo bot never opens this card's buttons. No rewarded hook: undo, hints and the quake preview are already free.
+let breakBusy = false;
+function afterBreak(f) {
+  if (!(window.Arena && Arena.portal && Arena.portal.name !== 'none')) return f(); // own site: synchronous, as before
+  if (breakBusy) return; breakBusy = true;
+  Arena.portal.midgame().catch(() => false).then(() => { breakBusy = false; f(); });
+}
+function nextBoard() {
   if (G.mode === 'marathon') startPuzzle('marathon', G.marathonStage + 1, G.marathonDate);
   else if (G.mode === 'daily') startPuzzle('endless', store.get(tierKey(G.tier), 1));
   else startPuzzle('endless', G.level + 1);
-};
-$('bRMenu').onclick = () => { sfx.click(); openMenu(); };
+}
+$('bNext').onclick = () => { sfx.click(); afterBreak(nextBoard); };
+$('bRMenu').onclick = () => { sfx.click(); afterBreak(openMenu); };
 $('bCardSkip').onclick = closeCardPick;
 $('bCardContinue').onclick = closeCardPick;
 $('thClassic').onclick = () => { sfx.click(); applyTheme('classic'); };
