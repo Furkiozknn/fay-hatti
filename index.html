@@ -7,6 +7,19 @@
 <meta name="description" content="Shift rows and columns of an Anatolian map to bring rivers and caravan roads to every village. A small quake moves one row after each of your moves. Daily puzzle and endless mode.">
 <meta name="theme-color" content="#1b2830" id="metaThemeColor">
 <meta name="arena-game" content="fay-hatti">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231b2830'/%3E%3Crect x='10' y='10' width='44' height='44' rx='8' fill='%23f3e7cc'/%3E%3Cpath d='M10 28h16l4 6h14l4-6h6' fill='none' stroke='%23a63f27' stroke-width='5' stroke-linejoin='round'/%3E%3Ccircle cx='20' cy='44' r='4' fill='%232b7fb8'/%3E%3C/svg%3E">
+<link rel="canonical" href="https://furkiozknn.github.io/fay-hatti/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Fay Hattı">
+<meta property="og:title" content="Fay Hattı — Fault Line">
+<meta property="og:description" content="Anadolu haritasında günlük kaydırma bulmacası: satır ve sütunları kaydırıp köylere nehir ve yol götür. Her hamleden sonra küçük bir deprem bir satırı oynatır. · A daily sliding-tile puzzle on a map of Anatolia.">
+<meta property="og:url" content="https://furkiozknn.github.io/fay-hatti/">
+<meta property="og:image" content="https://furkiozknn.github.io/fay-hatti/docs/screenshot.png">
+<meta property="og:image:alt" content="Fay Hattı: parşömen Anadolu haritası üzerinde kaydırmalı bulmaca tahtası">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Fay Hattı — Fault Line">
+<meta name="twitter:description" content="Günlük kaydırma bulmacası: köylere nehir ve yol götür, depreme dikkat et.">
+<meta name="twitter:image" content="https://furkiozknn.github.io/fay-hatti/docs/screenshot.png">
 <style>
 :root{--bg:#1b2830;--bg2:#23343d;--ink:#f3ead8;--ink2:#c9bda4;--paper:#f3e7cc;--paper-ink:#2b2118;--terra:#a63f27;--gold:#f2b33d;--quake:#e0553a;--focus:#7cc4f0}
 *{box-sizing:border-box}
@@ -48,6 +61,18 @@ body.biome-ege .res-speedrun b,body.theme-ege .res-speedrun b{color:#2a2016}
 body.biome-ege .tb,body.theme-ege .tb{border-color:#384f3c;background:var(--bg2)}
 body.biome-ege .tb:hover,body.theme-ege .tb:hover{background:#2f4233}
 body.biome-ege #bot,body.theme-ege #bot{background:#3a543e;color:#e8f4ea}
+.ver-tag{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;font-size:13px;opacity:.8}
+.ver-tag a{color:inherit;min-height:44px;display:inline-flex;align-items:center;padding:0 6px;text-decoration:underline}
+.news-list{margin:10px 0;padding-left:20px}.news-list li{margin:8px 0}
+.led-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:10px 0}
+.led-stats div{background:rgba(0,0,0,.07);border-radius:10px;padding:8px 10px;font-size:13px}
+.led-stats b{display:block;font-size:20px}
+.led-stats div:last-child:nth-child(odd){grid-column:1/-1}
+.led-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:10px 0}
+.ld{aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;background:rgba(0,0,0,.08);color:#2b2118;overflow:hidden}
+.ld b{font-size:13px;line-height:1.1}
+.ld.s1{background:#e8d4a2}.ld.s2{background:#e8b45a}.ld.s3{background:#d99a2b}
+.ld.today{outline:2px solid var(--terra);outline-offset:1px}
 button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
 button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 body.high-contrast{--bg:#081014;--bg2:#101a20;--ink:#ffffff;--ink2:#f5eedd;--paper:#ffffff;--paper-ink:#111111;--terra:#8a200a;--gold:#ffb703;--quake:#ff2a05;--focus:#00e5ff;background:#081014}
@@ -1155,6 +1180,8 @@ body.high-contrast .cp-teaser{color:#111111}
     </div>
     <button class="btn alt" id="bHow"></button>
     <button class="btn alt" id="bVerify"></button>
+    <button class="btn alt" id="bLedger"></button>
+    <button class="btn alt" id="bNews"></button>
     <button class="btn alt" id="bContrast" aria-pressed="false"></button>
     <button class="btn alt" id="bA11y"></button>
     <div class="mini"><button id="mSound"></button><button id="mHaptic" aria-pressed="false"></button></div>
@@ -1183,6 +1210,7 @@ body.high-contrast .cp-teaser{color:#111111}
         <button type="button" class="th-pill" id="bmEge" role="radio"></button>
       </div>
     </div>
+    <div class="ver-tag"><span id="verTag"></span><a id="lAllGames" href="https://furkiozknn.github.io/" target="_blank" rel="noopener"></a></div>
   </div>
 </div>
 <div class="ov" id="help" role="dialog" aria-modal="true" aria-labelledby="hTitle">
@@ -1192,6 +1220,25 @@ body.high-contrast .cp-teaser{color:#111111}
     <ol class="help" id="hList"></ol>
     <div class="legend" id="hLegend"></div>
     <div class="row"><button class="btn alt" id="bTutReplay" style="text-align:center"></button><button class="btn" id="bHelpOk" style="text-align:center"></button></div>
+  </div>
+</div>
+<div class="ov" id="news" role="dialog" aria-modal="true" aria-labelledby="nwTitle">
+  <div class="panel">
+    <button class="panel-close" id="bNewsClose" aria-label="Close">✕</button>
+    <h2 id="nwTitle"></h2>
+    <p class="sub" id="nwSub"></p>
+    <ul class="news-list" id="newsList"></ul>
+    <button class="btn" id="bNewsOk" style="text-align:center"></button>
+  </div>
+</div>
+<div class="ov" id="ledger" role="dialog" aria-modal="true" aria-labelledby="ldTitle">
+  <div class="panel">
+    <button class="panel-close" id="bLedgerClose" aria-label="Close">✕</button>
+    <h2 id="ldTitle"></h2>
+    <div class="led-stats" id="ledStats"></div>
+    <div class="led-grid" id="ledGrid" role="list"></div>
+    <p class="note" id="ledNote"></p>
+    <button class="btn" id="bLedgerOk" style="text-align:center"></button>
   </div>
 </div>
 <div class="ov" id="verify" role="dialog" aria-modal="true" aria-labelledby="vfyTitle">
@@ -2210,6 +2257,9 @@ const STR = {
     allMilestonesDone: 'All milestones achieved!',
     biomeKapadokya: 'Cappadocia', biomeKaradeniz: 'Karadeniz', biomeEge: 'Aegean', biomeBozkir: 'Steppe', biomeLabel: 'Region', biomeAuto: 'Automatic', regEge: 'Aegean',
     contrast: 'High contrast', contrastSub: 'Distinguish rivers from roads',
+    ledger: 'My Ledger', ledgerSub: 'Last 28 days, stars and journey', ledTitle: 'My Ledger', ledSolved: 'Days solved', ledStars: 'Total stars', ledPerfect: 'Three-star days', ledStreak: 'Current streak', ledEndless: 'Endless journey', ledLevel: 'Level {n}', ledNote: 'Kept only on this device. Gold = more stars; outlined = today.', ledDay: '{d}: {s} star(s)', ledNone: '{d}: not played',
+    news: 'What\'s new', newsSub: 'v1.4 · November 2026', newsTitle: 'What\'s New in v1.4', verLabel: 'v1.4 · November 2026', allGames: 'All games ↗',
+    n1: 'My Ledger: your last 28 daily results and total stars now live in the menu.', n2: 'Link previews and a site icon appear when the game is shared; wrong addresses open a friendly 404 page.', n3: 'A version tag and a link to all games sit at the bottom of the menu.', n4: 'Your saved progress is untouched: streaks, stars and settings carry over.',
     a11y: 'Accessibility', a11ySub: 'Text size, reduced motion, auto-pause', anotherGame: 'Try another game ↗',
     awFirstWin: 'Fay Hattı: first map solved', awPerfect: 'Fay Hattı: 3 stars', awMilestone: 'Fay Hattı: endless badge',
     tierLabel: 'Endless difficulty', tier_kolay: 'Easy', tier_normal: 'Normal', tier_zor: 'Hard',
@@ -2274,6 +2324,9 @@ const STR = {
     allMilestonesDone: 'Tüm aşamalar tamamlandı!',
     biomeKapadokya: 'Kapadokya', biomeKaradeniz: 'Karadeniz', biomeEge: 'Ege', biomeBozkir: 'Bozkır', biomeLabel: 'Bölge', biomeAuto: 'Otomatik', regEge: 'Ege',
     contrast: 'Yüksek kontrast', contrastSub: 'Nehir ve yolları belirginleştir',
+    ledger: 'Defterim', ledgerSub: 'Son 28 gün, yıldızlar ve yolculuk', ledTitle: 'Defterim', ledSolved: 'Çözülen gün', ledStars: 'Toplam yıldız', ledPerfect: 'Üç yıldızlı gün', ledStreak: 'Güncel seri', ledEndless: 'Sonsuz yolculuk', ledLevel: '{n}. seviye', ledNote: 'Yalnızca bu cihazda saklanır. Altın rengi = daha çok yıldız; çerçeveli kutu = bugün.', ledDay: '{d}: {s} yıldız', ledNone: '{d}: oynanmadı',
+    news: 'Yenilikler', newsSub: 'v1.4 · Kasım 2026', newsTitle: 'v1.4 Yenilikleri', verLabel: 'v1.4 · Kasım 2026', allGames: 'Tüm oyunlar ↗',
+    n1: 'Defterim: son 28 günlük sonuçların ve toplam yıldızların artık menüde.', n2: 'Oyun paylaşılınca önizleme kartı ve site simgesi görünür; yanlış adreste Türkçe 404 sayfası açılır.', n3: 'Menünün altında sürüm etiketi ve tüm oyunlara bağlantı var.', n4: 'Kayıtların aynen korunur: seri, yıldız ve ayarların sıfırlanmaz.',
     a11y: 'Erişilebilirlik', a11ySub: 'Yazı boyutu, az hareket, otomatik duraklatma', anotherGame: 'Başka oyun dene ↗',
     awFirstWin: 'Fay Hattı: ilk harita çözüldü', awPerfect: 'Fay Hattı: 3 yıldız', awMilestone: 'Fay Hattı: sonsuz mod rozeti',
     tierLabel: 'Sonsuz mod zorluğu', tier_kolay: 'Kolay', tier_normal: 'Normal', tier_zor: 'Zor',
@@ -5287,6 +5340,8 @@ addEventListener('keydown', (e) => {
   if ($('help').classList.contains('on') && (e.key === 'Escape' || e.key === 'Enter')) { closeHelp(); e.preventDefault(); return; }
   if ($('hint') && $('hint').classList.contains('on') && (e.key === 'Escape' || e.key === 'Enter')) { closeHint(); e.preventDefault(); return; }
   if ($('verify').classList.contains('on') && (e.key === 'Escape' || e.key === 'Enter')) { closeVerify(); e.preventDefault(); return; }
+  if ($('news').classList.contains('on') && (e.key === 'Escape' || e.key === 'Enter')) { closeNews(); e.preventDefault(); return; }
+  if ($('ledger').classList.contains('on') && (e.key === 'Escape' || e.key === 'Enter')) { closeLedger(); e.preventDefault(); return; }
   if ($('cardPick') && $('cardPick').classList.contains('on') && e.key === 'Escape') { closeCardPick(); e.preventDefault(); return; }
   if (e.key === 'Escape' && (($('menu').classList.contains('on') && G.pz) || $('result').classList.contains('on'))) { sfx.click(); closeAll(); e.preventDefault(); return; }
   if (document.querySelector('.ov.on')) return;
@@ -5493,6 +5548,11 @@ function fillMenu() {
   if (bMarathon) bMarathon.innerHTML = `${t('marathon')}<small>${t('marathonTag', { d: seedLabel(ds), s: mStage })}</small>`;
   renderMilestones();
   $('bHow').textContent = t('how');
+  $('bLedger').innerHTML = `${t('ledger')}<small>${t('ledgerSub')}</small>`;
+  $('bNews').innerHTML = `${t('news')}<small>${t('newsSub')}</small>`;
+  $('verTag').textContent = t('verLabel'); $('lAllGames').textContent = t('allGames');
+  if ($('news').classList.contains('on')) renderNews();
+  if ($('ledger').classList.contains('on')) renderLedger();
   $('bVerify').innerHTML = `${t('integrity')}<small>${t('freezeSub')}</small>`;
   $('bContrast').innerHTML = `${t('contrast')}: <b>${highContrast ? t('on') : t('off')}</b><small>${t('contrastSub')}</small>`;
   $('bContrast').setAttribute('aria-pressed', String(highContrast));
@@ -5671,6 +5731,52 @@ function closeVerify() {
   if (verifyReturn === 'menu') openMenu();
   else resumeTimer();
 }
+let newsReturn = null, ledgerReturn = null;
+function renderNews() {
+  $('nwTitle').textContent = t('newsTitle'); $('nwSub').textContent = t('verLabel');
+  $('newsList').innerHTML = ['n1', 'n2', 'n3', 'n4'].map((k) => '<li>' + t(k) + '</li>').join('');
+  $('bNewsOk').textContent = t('gotIt'); $('bNewsClose').setAttribute('aria-label', t('close'));
+}
+function openNews() {
+  pauseTimer(); newsReturn = $('menu').classList.contains('on') ? 'menu' : null;
+  closeAll(false); renderNews(); $('news').classList.add('on');
+  if (!COARSE) setTimeout(() => $('bNewsOk').focus(), 30);
+}
+function closeNews() { sfx.click(); $('news').classList.remove('on'); if (newsReturn === 'menu') openMenu(); else resumeTimer(); }
+function ledgerData() {
+  const days = []; let sd = todaySeed();
+  for (let i = 0; i < 28 && sd; i++) { days.unshift({ seed: sd, r: store.get('daily.' + sd, null) }); sd = prevDateStr(sd); }
+  let solved = 0, stars = 0, perfect = 0;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k || k.indexOf('fayhatti.daily.') !== 0) continue;
+      const v = JSON.parse(localStorage.getItem(k));
+      if (v && typeof v.s === 'number') { solved++; stars += v.s; if (v.s >= 3) perfect++; }
+    }
+  } catch (e) {}
+  return { days, solved, stars, perfect };
+}
+function renderLedger() {
+  const d = ledgerData(), today = todaySeed();
+  $('ldTitle').textContent = t('ledTitle');
+  const cell = (lbl, val) => '<div>' + lbl + '<b>' + val + '</b></div>';
+  $('ledStats').innerHTML = cell(t('ledSolved'), d.solved) + cell(t('ledStars'), d.stars) + cell(t('ledPerfect'), d.perfect) + cell(t('ledStreak'), checkStreak())
+    + cell(t('ledEndless'), t('ledLevel', { n: store.get('endless', 1) }));
+  $('ledGrid').innerHTML = d.days.map((x) => {
+    const s = x.r && typeof x.r.s === 'number' ? Math.max(0, Math.min(3, x.r.s)) : 0;
+    const ds = x.seed.slice(6) + '.' + x.seed.slice(4, 6) + '.' + x.seed.slice(0, 4);
+    const lbl = s ? t('ledDay', { d: ds, s }) : t('ledNone', { d: ds });
+    return '<div class="ld' + (s ? ' s' + s : '') + (x.seed === today ? ' today' : '') + '" role="listitem" aria-label="' + lbl + '" title="' + lbl + '"><b>' + (+x.seed.slice(6)) + '</b><span aria-hidden="true">' + (s ? '★'.repeat(s) : '·') + '</span></div>';
+  }).join('');
+  $('ledNote').textContent = t('ledNote'); $('bLedgerOk').textContent = t('gotIt'); $('bLedgerClose').setAttribute('aria-label', t('close'));
+}
+function openLedger() {
+  pauseTimer(); ledgerReturn = $('menu').classList.contains('on') ? 'menu' : null;
+  closeAll(false); renderLedger(); $('ledger').classList.add('on');
+  if (!COARSE) setTimeout(() => $('bLedgerOk').focus(), 30);
+}
+function closeLedger() { sfx.click(); $('ledger').classList.remove('on'); if (ledgerReturn === 'menu') openMenu(); else resumeTimer(); }
 function updateVerifyUi(rep) {
   $('vfySeal').innerHTML = renderSealSvg(rep.ok);
   $('vfyStatus').textContent = t('freezeStatus', { ok: rep.solvable, total: rep.total });
@@ -6239,6 +6345,10 @@ $('bTutNext').onclick = () => { sfx.click(); if (tutStep < 3) setTutStep(tutStep
 $('bTutPrev').onclick = () => { sfx.click(); if (tutStep > 1) setTutStep(tutStep - 1); };
 $('bTutClose').onclick = () => { sfx.click(); hideTut(true); };
 $('bVerifyClose').onclick = closeVerify;
+$('bNews').onclick = () => { sfx.click(); openNews(); };
+$('bNewsOk').onclick = closeNews; $('bNewsClose').onclick = closeNews;
+$('bLedger').onclick = () => { sfx.click(); openLedger(); };
+$('bLedgerOk').onclick = closeLedger; $('bLedgerClose').onclick = closeLedger;
 $('bHiClose').onclick = closeHint;
 $('bStepHint').onclick = stepHint;
 $('bCloseHint').onclick = () => { G.hintActive = false; updateHintHud(); updateHud(); };
