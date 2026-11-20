@@ -24,6 +24,13 @@
 
 <!-- gameplay gif -->
 
+## What's new in v1.4 (November 2026)
+
+- **My Ledger / Defterim:** the menu shows your last 28 daily results, total stars, three-star days, current streak and endless level, read from the progress already saved on your device.
+- **What's new + version tag:** a "Yenilikler" dialog and a "v1.4 · Kasım 2026" tag at the bottom of the menu, with a link to all games.
+- **Page polish:** link-preview card (Open Graph / Twitter), site icon, canonical link and a Turkish `404.html`.
+- **Smoke test:** `node test/duman.mjs` (needs `playwright-core` supplied from outside the repo via `PW_CORE`, and optionally `BROWSER_EXE`) opens the page, checks the console, makes a move and checks the phone layout. Add `--yeni` to also check the v1.4 additions.
+
 ## Features
 
 - **Daily puzzle & endless journey:** Everyone solves the same 5x5 map each day seeded by the date; endless mode levels ramp from 2 villages and short solutions up to 3 villages, mountains, and longer solutions.
