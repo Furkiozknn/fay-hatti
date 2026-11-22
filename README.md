@@ -1,5 +1,11 @@
 <p align="center">
   <a href="https://furkiozknn.github.io/fay-hatti/">
+    <img src="docs/card-3d.jpg" width="100%" alt="Fay Hattı: a mapmaker and a shepherd girl on an Anatolian fault-line map. Click to play in your browser.">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://furkiozknn.github.io/fay-hatti/">
     <img src="docs/screenshot.png" width="320" alt="Fay Hattı: a daily sliding-tile puzzle on an Anatolian parchment map. Click to play in your browser.">
   </a>
 </p>
@@ -33,13 +39,29 @@
 
 ## Features
 
+<p align="center">
+  <img src="docs/features.jpg" width="100%" alt="A wooden signpost with five arrow boards lists the features of Fay Hattı: a daily puzzle and endless mode, a living fault line, par and star ratings, two built-in bots, and zero install. A mapmaker and a shepherd girl stand on a clay map diorama with a river.">
+</p>
+
+<details>
+<summary><b>Feature details</b></summary>
+
 - **Daily puzzle & endless journey:** Everyone solves the same 5x5 map each day seeded by the date; endless mode levels ramp from 2 villages and short solutions up to 3 villages, mountains, and longer solutions.
 - **Living fault line mechanic:** After every move, a small earthquake shifts 1 row by 1 tile—anticipate tremors via the red indicator band, or solve the puzzle so the ground stays calm.
 - **Par scoring & star ratings:** Solve within par (the fewest possible moves) for 3 stars, or par + 2 for 2 stars, with spoiler-free result sharing.
 - **Dual-solver AI built-in:** Includes 2 bot strategies—strategy A (optimal planner via iterative deepening) and strategy B (greedy beam search at ~0.8 s per move)—for in-engine demonstrations and benchmarking.
 - **Ultra-lean zero-install web design:** One HTML file with no downloads, no external requests, and zero dependencies, running smoothly on desktop and phone with touch, mouse, and keyboard in English and Turkish.
 
+</details>
+
 ## How to play
+
+<p align="center">
+  <img src="docs/how-to-play.jpg" width="100%" alt="An open ledger shows how to play Fay Hattı in four steps (shift rows and columns, connect every need, mind the earthquake, score stars) next to the keyboard and touch controls, with the mapmaker and the shepherd girl at its edges.">
+</p>
+
+<details>
+<summary><b>Goal and steps</b></summary>
 
 > [!TIP]
 > **Goal:** Connect every village's needs—a water drop (river from the spring) and/or a road sign (road from the caravanserai)—by shifting rows and columns. If your move solves the map, the ground stays calm!
@@ -62,6 +84,8 @@
 | Menu / pause | `Esc` | Menu button |
 
 - **Persistence:** Settings (language, mute, daily results, endless level, help seen) are saved in `localStorage` under keys starting with `fayhatti.`. Turkish is the default for Turkish browsers, English otherwise.
+
+</details>
 
 <details>
 <summary><b>URL flags for testing</b></summary>
