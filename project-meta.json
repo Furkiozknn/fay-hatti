@@ -44,7 +44,7 @@
   },
   "tests": null,
   "ci": {
-    "workflows": [],
+    "workflows": ["gate.yml"],
     "badge": null
   },
   "docs": {
