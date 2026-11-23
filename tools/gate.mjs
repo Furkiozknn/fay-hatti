@@ -56,7 +56,7 @@ const GAME = {
   },
 };
 // ======================================================================= core
-import { readFileSync, writeFileSync, existsSync, mkdtempSync, mkdirSync, copyFileSync, rmSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdtempSync, mkdirSync, copyFileSync, cpSync, rmSync } from 'node:fs';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -106,6 +106,8 @@ for (const [k, html] of Object.entries(builds)) {
   const d = join(tmp, k); mkdirSync(join(d, 'tools'), { recursive: true });
   writeFileSync(join(d, GAME.entry), html);
   for (const f of ['sim.mjs', 'cardcheck.mjs']) copyFileSync(join(root, 'tools', f), join(d, 'tools', f));
+  // the 3D art (assets/) always comes from the working tree, like the tools; a base without it simply never asks for it
+  if (existsSync(join(root, 'assets'))) cpSync(join(root, 'assets'), join(d, 'assets'), { recursive: true });
   dirs[k] = d;
 }
 log(`gate ${GAME.name}: node ${process.version}, candidate ${candFile === join(root, GAME.entry) ? GAME.entry + ' (working tree)' : candFile} sha ${sha(builds.cand)}`);

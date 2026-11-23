@@ -21,10 +21,10 @@
 <meta name="twitter:description" content="Günlük kaydırma bulmacası: köylere nehir ve yol götür, depreme dikkat et.">
 <meta name="twitter:image" content="https://furkiozknn.github.io/fay-hatti/docs/screenshot.png">
 <style>
-:root{--bg:#1b2830;--bg2:#23343d;--ink:#f3ead8;--ink2:#c9bda4;--paper:#f3e7cc;--paper-ink:#2b2118;--terra:#a63f27;--gold:#f2b33d;--quake:#e0553a;--focus:#7cc4f0}
+:root{--bg:#3a2e22;--bg2:#4a3a2b;--ink:#fff3e6;--ink2:#e3cfb2;--paper:#f8ead2;--paper-ink:#2e2117;--terra:#b9521f;--gold:#f2b33d;--quake:#e0553a;--focus:#7cc4f0}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.4 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-body{background:radial-gradient(120% 80% at 50% 0%,#2a3f49 0%,var(--bg) 60%)}
+body{background:radial-gradient(120% 80% at 50% 0%,#5a4632 0%,var(--bg) 60%)}
 body.biome-kapadokya{background:radial-gradient(120% 80% at 50% 0%,#35262c 0%,#1f161a 60%);--bg:#1f161a;--bg2:#2a1e24;--ink:#f6ede2;--ink2:#cdbdae;--paper:#f5ebd8;--paper-ink:#2d1e16;--terra:#b54c30;--gold:#e8a436;--quake:#e45838}
 /* Karadeniz region visual theme: mist-tinted deep greens, highland paper, tea plantation tones */
 body.biome-karadeniz,body.theme-karadeniz{--bg:#12241d;--bg2:#193228;--ink:#edf7f0;--ink2:#b2cebf;--paper:#e6f2e2;--paper-ink:#1b2d20;--terra:#2c7444;--gold:#e2a83b;--quake:#db5035;--focus:#59cf9e;background:radial-gradient(120% 80% at 50% 0%,#1e3d31 0%,var(--bg) 60%)}
@@ -468,6 +468,33 @@ body.high-contrast .cp-card-front{background:#ffffff;border:2px solid #111111;co
 body.high-contrast .cp-card-type-badge{background:#111111;color:#ffffff;border:1px solid #111111}
 body.high-contrast .cp-card-stamp{background:#0f5132;color:#ffffff;box-shadow:inset 0 0 0 1px #ffffff}
 body.high-contrast .cp-teaser{color:#111111}
+/* stil-3d: the song video's warm clay-diorama look (classic theme; gece, kağıt and high contrast keep their own look) */
+html[data-theme="classic"] body:not(.high-contrast){background:linear-gradient(180deg,color-mix(in srgb,var(--bg) 52%,transparent) 0%,color-mix(in srgb,var(--bg) 70%,transparent) 55%,color-mix(in srgb,var(--bg) 90%,transparent) 100%),url(assets/3d/arka.webp) center 30%/cover no-repeat,var(--bg)}
+html[data-theme="classic"] body:not(.high-contrast) .tb{border:1px solid rgba(255,226,184,.22);background:linear-gradient(180deg,color-mix(in srgb,var(--bg2) 82%,#fff) 0%,var(--bg2) 100%);border-radius:14px;box-shadow:0 3px 0 rgba(0,0,0,.28),0 8px 16px rgba(20,10,4,.28),inset 0 1px 0 rgba(255,255,255,.16)}
+html[data-theme="classic"] body:not(.high-contrast) .tb:hover{background:color-mix(in srgb,var(--bg2) 75%,#fff)}
+html[data-theme="classic"] body:not(.high-contrast) .tb:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.28),0 4px 10px rgba(20,10,4,.25)}
+html[data-theme="classic"] body:not(.high-contrast) .ov{background:rgba(40,26,16,.72)}
+html[data-theme="classic"] body:not(.high-contrast) .panel{border-radius:22px;background:linear-gradient(180deg,#fff7e8 0%,var(--paper) 46%,color-mix(in srgb,var(--paper) 88%,#c99a5c) 100%);box-shadow:0 22px 50px rgba(30,16,6,.5),0 6px 0 rgba(120,72,30,.35),inset 0 0 0 2px rgba(214,180,120,.9),inset 0 2px 0 rgba(255,255,255,.9)}
+html[data-theme="classic"] body:not(.high-contrast) .btn{border-radius:14px;background:linear-gradient(180deg,color-mix(in srgb,var(--terra) 80%,#ffd2a0) 0%,var(--terra) 100%);box-shadow:0 4px 0 color-mix(in srgb,var(--terra) 60%,#000),0 8px 14px rgba(80,30,10,.22),inset 0 1px 0 rgba(255,255,255,.28)}
+html[data-theme="classic"] body:not(.high-contrast) .btn:active{transform:translateY(3px);box-shadow:0 1px 0 color-mix(in srgb,var(--terra) 60%,#000),0 3px 8px rgba(80,30,10,.2)}
+html[data-theme="classic"] body:not(.high-contrast) .btn.alt{background:linear-gradient(180deg,#f6e6c4 0%,#e6cf9e 100%);box-shadow:0 3px 0 #c09a5c,0 6px 12px rgba(80,40,10,.14),inset 0 1px 0 rgba(255,255,255,.7)}
+html[data-theme="classic"] body:not(.high-contrast) .btn.marathon{background:linear-gradient(180deg,#5c7a3e 0%,#3f5a2a 100%);box-shadow:0 4px 0 #2b3f1c,0 8px 14px rgba(30,40,10,.25),inset 0 1px 0 rgba(255,255,255,.22)}
+html[data-theme="classic"] body:not(.high-contrast) .btn.marathon small{color:#e4f0cf}
+html[data-theme="classic"] body:not(.high-contrast) #tutTip{border-radius:20px;box-shadow:0 14px 36px rgba(30,16,6,.5),0 4px 0 rgba(120,72,30,.35),inset 0 0 0 2px rgba(214,180,120,.9)}
+/* characters: the shepherd girl and the mapmaker from the song video */
+.hero3d{display:none}
+.face3d{display:none}
+html[data-theme="classic"] body:not(.high-contrast) .hero3d{display:flex;align-items:flex-end;gap:0;position:absolute;top:10px;right:58px;height:66px;pointer-events:none;z-index:1}
+html[data-theme="classic"] body:not(.high-contrast) .hero3d img{height:100%;width:auto;filter:drop-shadow(0 6px 6px rgba(70,35,10,.28))}
+html[data-theme="classic"] body:not(.high-contrast) #mTitle{padding-right:150px}
+html[data-theme="classic"] body:not(.high-contrast) .big-stars{position:relative}
+html[data-theme="classic"] body:not(.high-contrast) .face3d{display:block;position:absolute;top:50%;width:54px;height:54px;margin-top:-27px;border-radius:50%;box-shadow:0 4px 10px rgba(70,35,10,.35),0 0 0 3px #fff4de;pointer-events:none}
+html[data-theme="classic"] body:not(.high-contrast) .face3d.l{left:4px}
+html[data-theme="classic"] body:not(.high-contrast) .face3d.r{right:4px}
+html[data-theme="classic"] body:not(.high-contrast) .tut-title-wrap::before{content:"";flex:none;width:38px;height:38px;border-radius:50%;background:url(assets/3d/cob-yuz.webp) center/cover;box-shadow:0 3px 8px rgba(70,35,10,.3),0 0 0 2px #fff4de}
+html[data-theme="classic"] body:not(.high-contrast) #quake::before{content:"";flex:none;width:26px;height:26px;border-radius:50%;background:url(assets/3d/har-yuz.webp) center/cover;box-shadow:0 2px 6px rgba(0,0,0,.35),0 0 0 2px rgba(255,240,215,.85)}
+@media (max-width:370px){html[data-theme="classic"] body:not(.high-contrast) .hero3d{height:56px;right:56px}html[data-theme="classic"] body:not(.high-contrast) #mTitle{padding-right:128px}}
+@media (max-width:360px){html[data-theme="classic"] body:not(.high-contrast) .face3d{width:44px;height:44px;margin-top:-22px}}
 </style>
 <script>/*ARENA-KIT:BEGIN v1.3.2 sha256:ce77e23fab7c*/
 /* ARENA-KIT v1 — shared layer for the 21 Claude Game Arena games.
@@ -1156,6 +1183,7 @@ body.high-contrast .cp-teaser{color:#111111}
 <div class="ov" id="menu" role="dialog" aria-modal="true" aria-labelledby="mTitle">
   <div class="panel">
     <button class="panel-close" id="bMenuClose" aria-label="Close">✕</button>
+    <div class="hero3d" aria-hidden="true"><img src="assets/3d/har.webp" alt=""><img src="assets/3d/cob.webp" alt=""></div>
     <h1 id="mTitle">Fay Hattı<small>Fault Line</small></h1>
     <p class="sub" id="mSub"></p>
     <button class="btn" id="bDaily"></button>
@@ -3625,6 +3653,35 @@ function mkCanvas(w, h) {
   return [c, x];
 }
 function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+// stil-3d: clay diorama sprites for the fixed landmarks (classic theme). The code drawings stay as the fallback
+// (gece, kağıt, high contrast, ?noassets, or before the images load). Purely cosmetic: rules and layout untouched.
+const SPR = {}; let sprReady = false;
+const use3d = () => sprReady && !highContrast && currentTheme === 'classic';
+(function loadSprites() {
+  if (QS.has('noassets')) return;
+  const names = ['dag', 'pinar', 'han', 'koy']; let n = 0;
+  for (const k of names) {
+    const im = new Image();
+    im.onload = () => { if (++n === names.length) { sprReady = true; if (G.pz && cs) buildCaches(); } };
+    im.src = 'assets/3d/' + k + '.webp'; SPR[k] = im;
+  }
+})();
+function drawSprite(x, k, X, Y, s, flip) {
+  x.save(); x.translate(X + s / 2, Y + s / 2); if (flip) x.scale(-1, 1);
+  x.drawImage(SPR[k], -s * 0.49, -s * 0.5, s * 0.98, s * 0.98); x.restore();
+}
+// soft studio light on a movable plate: warm key light from the top-left, clay shade at the bottom, a rim highlight
+function clayLight(c, s, ins, r) {
+  c.save(); rr(c, ins, ins, s - 2 * ins, s - 2 * ins - s * 0.02, r); c.clip();
+  const hl = c.createRadialGradient(s * 0.28, s * 0.2, 1, s * 0.28, s * 0.2, s * 0.8);
+  hl.addColorStop(0, 'rgba(255,250,232,.34)'); hl.addColorStop(0.5, 'rgba(255,238,205,.06)'); hl.addColorStop(1, 'rgba(120,64,24,.18)');
+  c.fillStyle = hl; c.fillRect(0, 0, s, s);
+  const lo = c.createLinearGradient(0, s * 0.6, 0, s); lo.addColorStop(0, 'rgba(96,52,20,0)'); lo.addColorStop(1, 'rgba(96,52,20,.24)');
+  c.fillStyle = lo; c.fillRect(0, 0, s, s);
+  c.restore();
+  c.strokeStyle = 'rgba(255,255,255,.6)'; c.lineWidth = Math.max(1, s * 0.022); c.lineCap = 'round';
+  c.beginPath(); c.moveTo(ins + r, ins + c.lineWidth); c.lineTo(s - ins - r, ins + c.lineWidth); c.stroke();
+}
 function layout() {
   const r = $('stage').getBoundingClientRect();
   W = Math.max(1, r.width); H = Math.max(1, r.height); DPR = Math.min(2, window.devicePixelRatio || 1);
@@ -4073,8 +4130,8 @@ function drawPlate(c, v, id) {
         c.save(); c.translate(-s * 0.03, -s * 0.03); strokePath(c, m, s, s * 0.05, 'rgba(255,255,255,.32)'); c.restore();
       } else {
         strokePath(c, m, s, s * 0.44, isK ? 'rgba(185,92,62,.36)' : 'rgba(105,140,62,.40)');
-        strokePath(c, m, s, s * 0.3, isK ? '#226b96' : '#2a6c99');
-        strokePath(c, m, s, s * 0.22, isK ? '#3ca6d8' : '#3d95cf');
+        strokePath(c, m, s, s * 0.3, isK ? '#226b96' : '#1d8fae');
+        strokePath(c, m, s, s * 0.22, isK ? '#3ca6d8' : '#43c1d8');
         c.save(); c.translate(-s * 0.03, -s * 0.03); strokePath(c, m, s, s * 0.05, isK ? 'rgba(255,255,255,.24)' : 'rgba(255,255,255,.22)'); c.restore();
       }
     } else if (k === KD) {
@@ -4102,8 +4159,8 @@ function drawPlate(c, v, id) {
         strokePath(c, m, s, s * 0.22, '#2bb1c9');
       } else {
         strokePath(c, m, s, s * 0.44, isK ? 'rgba(185,92,62,.36)' : 'rgba(105,140,62,.40)');
-        strokePath(c, m, s, s * 0.3, isK ? '#226b96' : '#2a6c99');
-        strokePath(c, m, s, s * 0.22, isK ? '#3ca6d8' : '#3d95cf');
+        strokePath(c, m, s, s * 0.3, isK ? '#226b96' : '#1d8fae');
+        strokePath(c, m, s, s * 0.22, isK ? '#3ca6d8' : '#43c1d8');
       }
       drawFerryDetail(c, s, false, 'classic');
     } else if (k === KB) {
@@ -4120,12 +4177,13 @@ function drawPlate(c, v, id) {
         c.save(); c.translate(-s * 0.03, -s * 0.03); strokePath(c, rm, s, s * 0.05, 'rgba(255,255,255,.32)'); c.restore();
       } else {
         strokePath(c, rm, s, s * 0.44, isK ? 'rgba(185,92,62,.36)' : 'rgba(105,140,62,.40)');
-        strokePath(c, rm, s, s * 0.3, isK ? '#226b96' : '#2a6c99');
-        strokePath(c, rm, s, s * 0.22, isK ? '#3ca6d8' : '#3d95cf');
+        strokePath(c, rm, s, s * 0.3, isK ? '#226b96' : '#1d8fae');
+        strokePath(c, rm, s, s * 0.22, isK ? '#3ca6d8' : '#43c1d8');
         c.save(); c.translate(-s * 0.03, -s * 0.03); strokePath(c, rm, s, s * 0.05, isK ? 'rgba(255,255,255,.24)' : 'rgba(255,255,255,.22)'); c.restore();
       }
       drawBridgeDeck(c, s, dm, false, 'classic');
     }
+    if (use3d()) clayLight(c, s, ins, r);
   }
   if (isKervansarayActive() && k === KD && popcount(m) >= 3) {
     drawKervansarayStop(c, s, m, R);
@@ -4638,6 +4696,8 @@ function buildCaches() {
       x.fillStyle = isKrd ? 'rgba(30,65,35,.12)' : isEge ? 'rgba(80,72,40,.12)' : isK ? 'rgba(120,55,30,.13)' : 'rgba(105,72,34,.13)'; rr(x, X + 2, Y + 2, cs - 4, cs - 4, cs * 0.14); x.fill();
       if (!pz.fixed[i]) continue;
       const k = pz.tiles[i] >> 4;
+      const sp = use3d() ? (k === KM ? 'dag' : k === KS ? 'pinar' : k === KH ? 'han' : k === KV ? 'koy' : null) : null;
+      if (sp) { drawSprite(x, sp, X, Y, cs, (i * 7 + 3) % 2 === 1); continue; }
       if (k === KM) drawMountain(x, X, Y, cs); else if (k === KS) drawSpring(x, X, Y, cs); else if (k === KH) drawHan(x, X, Y, cs); else if (k === KV) drawVillage(x, X, Y, cs, i * 31 + 5);
     }
   }
@@ -4934,7 +4994,7 @@ function frame(now) {
           ctx.beginPath(); ctx.moveTo(X + p[0], Y + p[1]); ctx.lineTo(ix, iy); ctx.stroke();
         } else {
           ctx.lineWidth = cs * (inR ? 0.2 : 0.18);
-          const inRCol = currentTheme === 'gece' ? '#30bde2' : currentTheme === 'kagit' ? '#268ec7' : (G.biome === 'ege' ? '#2bb1c9' : G.biome === 'karadeniz' ? '#2ea8b8' : G.biome === 'kapadokya' ? '#3ca6d8' : '#3d95cf');
+          const inRCol = currentTheme === 'gece' ? '#30bde2' : currentTheme === 'kagit' ? '#268ec7' : (G.biome === 'ege' ? '#2bb1c9' : G.biome === 'karadeniz' ? '#2ea8b8' : G.biome === 'kapadokya' ? '#3ca6d8' : '#43c1d8');
           const inDCol = currentTheme === 'gece' ? '#3b4555' : currentTheme === 'kagit' ? '#bca27c' : (G.biome === 'ege' ? '#b87545' : G.biome === 'karadeniz' ? '#9e8f78' : G.biome === 'kapadokya' ? '#caa16a' : '#c79a5e');
           ctx.strokeStyle = inR ? inRCol : inDCol;
           ctx.beginPath(); ctx.moveTo(X + p[0], Y + p[1]); ctx.lineTo(ix, iy); ctx.stroke();
@@ -6179,7 +6239,7 @@ function showResult() {
   if (!G.won) return;
   closeAll(false);
   $('rTitle').textContent = t('solvedT');
-  $('rStars').innerHTML = [0, 1, 2].map((i) => starSvg(i < G.stars, 46)).join('');
+  $('rStars').innerHTML = [0, 1, 2].map((i) => starSvg(i < G.stars, 46)).join('') + '<img class="face3d l" src="assets/3d/cob-yuz.webp" alt=""><img class="face3d r" src="assets/3d/har-yuz.webp" alt="">';
   const mb = $('rMilestone');
   if (mb) {
     if (G.newMilestone) {
